@@ -17,7 +17,7 @@ export default function Navbar() {
       {/* Links */}
       <div className="flex gap-6 text-[#1E293B]">
         <Link href="/">Inicio</Link>
-        <Link href="/citas">Agendar Cita</Link>
+        <Link href="/agendarcita">Agendar Cita</Link>
         <Link href="/productos">Productos</Link>
         <Link href="/servicios">Servicios</Link>
       </div>

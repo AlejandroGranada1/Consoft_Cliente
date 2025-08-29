@@ -4,6 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { User } from "lucide-react"
@@ -12,25 +13,46 @@ export default function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <User className="h-5 w-5 cursor-pointer text-[#1E293B] hover:text-[#5C3A21]" />
+        <User className="h-6 w-6 cursor-pointer text-[#1E293B] hover:text-[#5C3A21]" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48 bg-white border shadow-md">
-        <DropdownMenuItem className="text-[#1E293B] hover:text-[#5C3A21] cursor-pointer">
+
+      <DropdownMenuContent className="w-52 bg-white border rounded-xl shadow-lg p-1">
+        {/* Acceso */}
+        <DropdownMenuItem
+          onClick={() => (window.location.href = "/auth/login")}
+          className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
+        >
           Iniciar Sesión
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-[#1E293B] hover:text-[#5C3A21] cursor-pointer">
+
+        <DropdownMenuItem
+          onClick={() => (window.location.href = "/auth/register")}
+          className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
+        >
           Registrarme
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-[#1E293B] hover:text-[#5C3A21] cursor-pointer">
-          Modo oscuro
-        </DropdownMenuItem>
-        <DropdownMenuItem className="text-[#1E293B] hover:text-[#5C3A21] cursor-pointer">
+
+        <DropdownMenuSeparator />
+
+        {/* Funciones extra */}
+        <DropdownMenuItem
+          onClick={() => (window.location.href = "/pedidos")}
+          className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
+        >
           Mis pedidos
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-[#1E293B] hover:text-[#5C3A21] cursor-pointer">
+
+        <DropdownMenuItem
+          onClick={() => (window.location.href = "/notificaciones")}
+          className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
+        >
           Notificaciones
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-[#1E293B] hover:text-[#5C3A21] cursor-pointer">
+
+        <DropdownMenuItem
+          onClick={() => (window.location.href = "/configuracion")}
+          className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
+        >
           Configuración
         </DropdownMenuItem>
       </DropdownMenuContent>

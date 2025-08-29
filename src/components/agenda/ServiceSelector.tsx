@@ -16,6 +16,7 @@ export function ServiceSelector({ value, onSelect }: ServiceSelectorProps) {
         <Button
           key={service}
           onClick={() => onSelect(service)}
+          type="button"
           className={`px-4 py-2 rounded-xl shadow-md transition font-medium ${
             value === service
               ? "bg-[#8B5E3C] text-white"
