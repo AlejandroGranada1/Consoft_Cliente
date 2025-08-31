@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Star } from "lucide-react"
 import ReviewCard from "@/components/servicios/ReviewCard"
+import Link from "next/link"
 
 export default function ServiciosPage() {
   return (
@@ -75,9 +76,11 @@ export default function ServiciosPage() {
               <li>🪵 Selección de materiales</li>
               <li>👁️ Asesoría y visualización previa</li>
             </ul>
-            <Button className="mt-6 bg-[#4b2e1a] hover:bg-[#3a2314] text-white px-6 py-3 rounded-full text-lg shadow-md ml-50">
-              Agenda tu Cita
-            </Button>
+            <Link href="/agendarcita">
+              <Button className="mt-6 bg-[#4b2e1a] hover:bg-[#3a2314] text-white px-6 py-3 rounded-full text-lg shadow-md ml-50">
+                Agenda tu Cita
+              </Button>
+            </Link>
           </div>
         </div>
 

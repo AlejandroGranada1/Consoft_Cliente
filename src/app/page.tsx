@@ -1,4 +1,7 @@
+"use client"
+
 import { Paintbrush, Ruler, Home, Wrench } from "lucide-react";
+import Link from "next/link";
 
 export default function HomePage() {
   return (
@@ -16,9 +19,12 @@ export default function HomePage() {
           <h1 className="text-5xl font-bold mb-6">
             Estilo y calidad para tu hogar
           </h1>
-          <button className="bg-[#8B5E3C] text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-[#6F452A] transition">
+          <Link
+            href="/agendarcita"
+            className="inline-block bg-[#8B5E3C] text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-[#6F452A] transition"
+          >
             Agenda tu cita
-          </button>
+          </Link>
         </div>
       </section>
 
@@ -33,45 +39,45 @@ export default function HomePage() {
 
         {/* Grid + imagen central */}
         <div className="relative max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-2 gap-30">
+          <div className="grid grid-cols-2 gap-8 md:gap-16">
             {/* Arriba izquierda */}
-            <div className="bg-yellow-200 rounded-2xl shadow-md p-8 flex flex-col items-start">
-              <Ruler className="text-[#8B5E3C] w-6 h-6 mb-2" />
-              <h3 className="font-bold text-lg text-gray-900">
+            <div className="bg-[#f3eee9] rounded-2xl shadow-md p-8 flex flex-col items-start hover:shadow-lg transition">
+              <Ruler className="text-[#8B5E3C] w-7 h-7 mb-3" />
+              <h3 className="font-bold text-xl text-gray-900">
                 Diseño Personalizado
               </h3>
-              <p className="text-gray-700 text-sm">
+              <p className="text-gray-700 mt-2">
                 Creamos muebles a medida que se adaptan a tu estilo y espacio.
               </p>
             </div>
 
             {/* Arriba derecha */}
-            <div className="bg-yellow-200 rounded-2xl shadow-md p-8 flex flex-col items-start">
-              <Home className="text-[#8B5E3C] w-6 h-6 mb-2" />
-              <h3 className="font-bold text-lg text-gray-900">
+            <div className="bg-[#f3eee9] rounded-2xl shadow-md p-8 flex flex-col items-start hover:shadow-lg transition">
+              <Home className="text-[#8B5E3C] w-7 h-7 mb-3" />
+              <h3 className="font-bold text-xl text-gray-900">
                 Revisión a Domicilio
               </h3>
-              <p className="text-gray-700 text-sm">
+              <p className="text-gray-700 mt-2">
                 Vamos y revisamos tu producto en tu hogar.
               </p>
             </div>
 
             {/* Abajo izquierda */}
-            <div className="bg-yellow-200 rounded-2xl shadow-md p-8 flex flex-col items-start">
-              <Paintbrush className="text-[#8B5E3C] w-6 h-6 mb-2" />
-              <h3 className="font-bold text-lg text-gray-900">
+            <div className="bg-[#f3eee9] rounded-2xl shadow-md p-8 flex flex-col items-start hover:shadow-lg transition">
+              <Paintbrush className="text-[#8B5E3C] w-7 h-7 mb-3" />
+              <h3 className="font-bold text-xl text-gray-900">
                 Lacado y Pintura
               </h3>
-              <p className="text-gray-700 text-sm">
+              <p className="text-gray-700 mt-2">
                 Dale un nuevo acabado a tus muebles con técnicas profesionales.
               </p>
             </div>
 
             {/* Abajo derecha */}
-            <div className="bg-yellow-200 rounded-2xl shadow-md p-8 flex flex-col items-start">
-              <Wrench className="text-[#8B5E3C] w-6 h-6 mb-2" />
-              <h3 className="font-bold text-lg text-gray-900">Restauración</h3>
-              <p className="text-gray-700 text-sm">
+            <div className="bg-[#f3eee9] rounded-2xl shadow-md p-8 flex flex-col items-start hover:shadow-lg transition">
+              <Wrench className="text-[#8B5E3C] w-7 h-7 mb-3" />
+              <h3 className="font-bold text-xl text-gray-900">Restauración</h3>
+              <p className="text-gray-700 mt-2">
                 Reparamos y devolvemos la vida a piezas antiguas o dañadas.
               </p>
             </div>

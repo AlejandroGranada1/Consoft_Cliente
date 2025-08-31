@@ -7,7 +7,7 @@ interface ServiceSelectorProps {
   onSelect: (service: string) => void
 }
 
-const defaultServices = ["Consulta", "Instalación", "Mantenimiento"]
+const defaultServices = ["Reparacion", "Fabricacion", "Mantenimiento", "Lacado"]
 
 export function ServiceSelector({ value, onSelect }: ServiceSelectorProps) {
   return (
