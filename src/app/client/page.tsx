@@ -20,7 +20,7 @@ export default function HomePage() {
             Estilo y calidad para tu hogar
           </h1>
           <Link
-            href="/agendarcita"
+            href="/client/agendarcita"
             className="inline-block bg-[#8B5E3C] text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-[#6F452A] transition"
           >
             Agenda tu cita

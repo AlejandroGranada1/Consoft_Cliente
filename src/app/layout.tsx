@@ -1,20 +1,16 @@
+// app/layout.tsx
+import type { Metadata } from "next";
+import "@/app/globals.css"
 
-import "./globals.css";
-import Navbar from "@/components/Global/Navbar";
-
-
-export const metadata = {
+export const metadata: Metadata = {
   title: "ConSoft",
-  description: "Pagina realizada paa la empresa de Confort & Estilo",
+  description: "Aplicación Web desarrollada para Confort & Estilo",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body className="min-h-screen flex flex-col">
-        <Navbar/>
-        <main className="flex-1">{children}</main>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

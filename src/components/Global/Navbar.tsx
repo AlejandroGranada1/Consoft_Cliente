@@ -8,7 +8,7 @@ export default function Navbar() {
   return (
     <nav className="flex items-center justify-between px-6 py-4 bg-white shadow-sm">
       {/* Logo */}
-      <Link href="/" className="text-xl font-bold">
+      <Link href="/client" className="text-xl font-bold">
         <span className="text-[#1E293B]">Confort</span>{" "}
         <span className="text-[#5C3A21]">&</span>{" "}
         <span className="text-[#1E293B]">Estilo</span>
@@ -16,10 +16,10 @@ export default function Navbar() {
 
       {/* Links */}
       <div className="flex gap-6 text-[#1E293B]">
-        <Link href="/">Inicio</Link>
-        <Link href="/agendarcita">Agendar Cita</Link>
-        <Link href="/productos">Productos</Link>
-        <Link href="/servicios">Servicios</Link>
+        <Link href="/client">Inicio</Link>
+        <Link href="/client/agendarcita">Agendar Cita</Link>
+        <Link href="/client/productos">Productos</Link>
+        <Link href="/client/servicios">Servicios</Link>
       </div>
 
       {/* Icons */}

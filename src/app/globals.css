@@ -1,2 +1,17 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
+@theme {
+    --color-brown: #6e4424;
+    --color-green: #0ea425;
+    --color-red: #fe3134;
+    --color-gray: #efecec;
+    --color-orange: #ff852f;
+}
+
+.modal-bg {
+    @apply fixed inset-0 bg-black/60 flex justify-center items-center z-50;
+}
+
+.modal-frame {
+    @apply bg-white p-6 rounded-xl relative shadow-lg;
+}

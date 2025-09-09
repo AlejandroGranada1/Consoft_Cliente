@@ -19,14 +19,14 @@ export default function UserMenu() {
       <DropdownMenuContent className="w-52 bg-white border rounded-xl shadow-lg p-1">
         {/* Acceso */}
         <DropdownMenuItem
-          onClick={() => (window.location.href = "/auth/login")}
+          onClick={() => (window.location.href = "/client/notificaciones/auth/login")}
           className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
         >
           Iniciar Sesión
         </DropdownMenuItem>
 
         <DropdownMenuItem
-          onClick={() => (window.location.href = "/auth/register")}
+          onClick={() => (window.location.href = "/client/notificaciones/auth/register")}
           className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
         >
           Registrarme
@@ -36,21 +36,21 @@ export default function UserMenu() {
 
         {/* Funciones extra */}
         <DropdownMenuItem
-          onClick={() => (window.location.href = "/pedidos")}
+          onClick={() => (window.location.href = "/client/pedidos")}
           className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
         >
           Mis pedidos
         </DropdownMenuItem>
 
         <DropdownMenuItem
-          onClick={() => (window.location.href = "/notificaciones")}
+          onClick={() => (window.location.href = "/client/notificaciones")}
           className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
         >
           Notificaciones
         </DropdownMenuItem>
 
         <DropdownMenuItem
-          onClick={() => (window.location.href = "/configuracion")}
+          onClick={() => (window.location.href = "/client/configuracion")}
           className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
         >
           Configuración
