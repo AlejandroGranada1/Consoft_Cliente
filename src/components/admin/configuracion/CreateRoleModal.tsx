@@ -1,8 +1,8 @@
-import { DefaultModalProps, PermissionProps, RoleProps } from '@/app/types';
+import { DefaultModalProps, Permission, Role } from '@/app/types';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 
-const permissionsConfig: PermissionProps[] = [
+const permissionsConfig: Permission[] = [
     { id: '1', module: 'Usuarios', action: 'view' },
     { id: '2', module: 'Usuarios', action: 'create' },
     { id: '3', module: 'Usuarios', action: 'update' },
@@ -13,13 +13,15 @@ const permissionsConfig: PermissionProps[] = [
     { id: '8', module: 'Configuracion', action: 'delete' },
 ];
 
-function CreateRoleModal({ isOpen, onClose, extraProps }: DefaultModalProps<RoleProps>) {
-    const [roleData, setRoleData] = useState<RoleProps>({
+function CreateRoleModal({ isOpen, onClose, extraProps }: DefaultModalProps<Role>) {
+    const [roleData, setRoleData] = useState<Role>({
         id: crypto.randomUUID(),
         name: '',
         description: '',
         status: true,
         permissions: [],
+        createdAt: '',
+        usersCount: 0,
     });
 
     const modules = Array.from(new Set(permissionsConfig.map((p) => p.module)));
@@ -33,7 +35,7 @@ function CreateRoleModal({ isOpen, onClose, extraProps }: DefaultModalProps<Role
         }));
     };
 
-    const togglePermission = (permission: PermissionProps) => {
+    const togglePermission = (permission: Permission) => {
         setRoleData((prev) => {
             const exists = prev.permissions?.some((p) => p.id === permission.id);
             return {
@@ -55,8 +57,10 @@ function CreateRoleModal({ isOpen, onClose, extraProps }: DefaultModalProps<Role
             description: '',
             status: true,
             permissions: [],
+            createdAt: '',
+            usersCount: 0,
         });
-        onClose()
+        onClose();
     };
 
     if (!isOpen) return null; // 👈 que no renderice nada si está cerrado

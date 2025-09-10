@@ -1,11 +1,11 @@
-import { DefaultModalProps, UserProps } from '@/app/types';
+import { DefaultModalProps, User } from '@/app/types';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import EditUserModal from './EditUserModal';
 import deleteElement from '../global/DeleteElement';
 import Swal from 'sweetalert2';
 
-function DetailsUserModal({ isOpen, onClose, extraProps }: DefaultModalProps<UserProps>) {
+function DetailsUserModal({ isOpen, onClose, extraProps }: DefaultModalProps<User>) {
     const [editModal, setEditModal] = useState(false);
 
     const handleDeleteUser = async () => {

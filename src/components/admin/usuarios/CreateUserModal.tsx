@@ -1,24 +1,24 @@
 'use client';
-import { DefaultModalProps, UserProps } from '@/app/types';
+import { DefaultModalProps, User } from '@/app/types';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 
-function CreateUserModal({ isOpen, onClose, extraProps }: DefaultModalProps<UserProps>) {
-    const [userData, setUserData] = useState<UserProps>({
+function CreateUserModal({ isOpen, onClose, extraProps }: DefaultModalProps<User>) {
+    const [userData, setUserData] = useState<User>({
         id: '',
         name: '',
         address: '',
-        document: '',
         email: '',
         password: '',
         phone: '',
-        register_date: new Date(),
+        registeredAt: '2025-02-02',
         role: {
             id: '',
             description: '',
             name: '',
             permissions: [],
-            createDate: new Date(),
+            createdAt: '2025-02-02',
+            usersCount: 1,
             status: true,
         },
         status: true,

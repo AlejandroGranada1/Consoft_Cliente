@@ -1,22 +1,23 @@
-import { DefaultModalProps, UserProps } from '@/app/types';
+import { DefaultModalProps, User } from '@/app/types';
 import React, { useState, useEffect } from 'react';
 import { IoMdClose } from 'react-icons/io';
 
-function EditUserModal({ isOpen, onClose, extraProps }: DefaultModalProps<UserProps>) {
-    const [userData, setUserData] = useState<UserProps>({
+function EditUserModal({ isOpen, onClose, extraProps }: DefaultModalProps<User>) {
+    const [userData, setUserData] = useState<User>({
         id: '',
         name: '',
         address: '',
-        document: '',
         email: '',
         password: '',
         phone: '',
-        register_date: new Date(),
+        registeredAt: '2025-02-02',
         role: {
             id: '',
             name: '',
             description: '',
             permissions: [],
+            createdAt: '2025-02-02',
+            usersCount: 2,
             status: true,
         },
         status: true,

@@ -1,5 +1,5 @@
 'use client';
-import { UserProps } from '@/app/types';
+import { User } from '@/app/types';
 import CreateUserModal from '@/components/admin/usuarios/CreateUserModal';
 import DetailsUserModal from '@/components/admin/usuarios/DetailsUserModal';
 import Pagination from '@mui/material/Pagination';
@@ -10,24 +10,26 @@ import { IoMdAdd } from 'react-icons/io';
 function page() {
     const [createModal, setCreateModal] = useState(false);
     const [detailsModal, setDetailsModal] = useState(false);
-    const [user, setUser] = useState<UserProps>();
-    const [users, setUsers] = useState<UserProps[]>([
+    const [user, setUser] = useState<User>();
+    const [users, setUsers] = useState<User[]>([
         {
             id: 'askdljaklsdajklsd',
             name: 'Mark Wilson',
             email: 'Markwilson@gmail.com',
             address: 'Medellin',
-            document: '1234567890',
             phone: '12344556778',
             password: 'aslkdlkasjkld',
             role: {
+                id: '',
                 name: 'administrador',
                 description: 'Acceso completo',
                 permissions: [],
-                createDate: new Date('2025/02/02'),
+                createdAt: '',
+                status: true,
+                usersCount: 0,
             },
-            register_date: new Date('2025/02/02'),
             status: true,
+            registeredAt: '2025/02/02',
         },
     ]);
     return (
@@ -80,7 +82,7 @@ function page() {
                                 <p>{user.name}</p>
                                 <p>{user.email}</p>
                                 <p>{user.address}</p>
-                                <p>{user.register_date?.toLocaleDateString()}</p>
+                                <p>{user.registeredAt}</p>
                                 <p
                                     className={`${
                                         user.status

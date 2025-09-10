@@ -1,5 +1,5 @@
 'use client';
-import { RoleProps } from '@/app/types';
+import { Role } from '@/app/types';
 import CreateRoleModal from '@/components/admin/configuracion/CreateRoleModal';
 import RoleDetailsModal from '@/components/admin/configuracion/RoleDetailsModal';
 import Pagination from '@mui/material/Pagination';
@@ -10,15 +10,15 @@ import { IoMdAdd } from 'react-icons/io';
 function page() {
     const [createModal, setCreateModal] = useState(false);
     const [detailsModal, setDetailsModal] = useState(false);
-    const [role, setRole] = useState<RoleProps>();
+    const [role, setRole] = useState<Role>();
 
-    const [roles, setRoles] = useState<RoleProps[]>([
+    const [roles, setRoles] = useState<Role[]>([
         {
             id: '5ca1abb6ce037511f000628e',
             name: 'Administrador',
             description: 'Acceso completo',
-            users: 1,
-            createDate: new Date('2026/02/02'),
+            usersCount: 1,
+            createdAt: '2025/25/25',
             permissions: [],
             status: true,
         },
@@ -26,8 +26,8 @@ function page() {
             id: '5ca1abb6ce037511f000627e',
             name: 'Administrador',
             description: 'Acceso completo',
-            users: 1,
-            createDate: new Date('2026/02/02'),
+            usersCount: 1,
+            createdAt: '2025/25/25',
             permissions: [],
             status: false,
         },
@@ -66,7 +66,7 @@ function page() {
                         <p>Nombre del rol</p>
                         <p>Descripción</p>
                         <p>Usuarios</p>
-                        <p>Creado en</p>
+                        <p>Fecha de Creación</p>
                         <p>Estado</p>
                     </div>
 
@@ -82,8 +82,8 @@ function page() {
                                 className='grid grid-cols-5 place-items-center py-3 border border-brown rounded-lg cursor-pointer'>
                                 <p>{role.name}</p>
                                 <p>{role.description}</p>
-                                <p>{role.users}</p>
-                                <p>{role.createDate?.toLocaleDateString()}</p>
+                                <p>{role.usersCount}</p>
+                                <p>{role.createdAt}</p>
                                 <p
                                     className={`${
                                         role.status

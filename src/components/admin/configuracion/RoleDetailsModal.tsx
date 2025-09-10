@@ -1,11 +1,11 @@
-import { DefaultModalProps, PermissionProps, RoleProps } from '@/app/types';
+import { DefaultModalProps, Permission, Role } from '@/app/types';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import EditRoleModal from './EditRoleModal';
 import deleteElement from '../global/DeleteElement';
 import Swal from 'sweetalert2';
 
-const permissionsConfig: PermissionProps[] = [
+const permissionsConfig: Permission[] = [
     { id: '1', module: 'Usuarios', action: 'view' },
     { id: '2', module: 'Usuarios', action: 'create' },
     { id: '3', module: 'Usuarios', action: 'update' },
@@ -16,7 +16,7 @@ const permissionsConfig: PermissionProps[] = [
     { id: '8', module: 'Configuracion', action: 'delete' },
 ];
 
-function RoleDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<RoleProps>) {
+function RoleDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Role>) {
     const [editModal, setEditModal] = useState(false);
     if (!isOpen || !extraProps) return null;
     const modules = Array.from(new Set(permissionsConfig.map((p) => p.module)));
@@ -29,7 +29,7 @@ function RoleDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Rol
                 icon: 'success',
                 timer: 1000,
                 showConfirmButton: false,
-                position: "top-right",
+                position: 'top-right',
             });
         }
         onClose();

@@ -1,38 +1,115 @@
 export interface pagination {
-    size: number;
+	size: number;
 }
 
 export interface DefaultModalProps<T = {}> {
-    isOpen: boolean;
-    onClose: () => void;
-    extraProps?: T;
+	isOpen: boolean;
+	onClose: () => void;
+	extraProps?: T;
 }
 
-export interface PermissionProps {
-    id: string;
-    module: string;
-    action: string;
+// ✅ Permissions
+export interface Permission {
+	id: string;
+	module: string; // e.g. "Users"
+	action: string; // e.g. "create"
 }
 
-export interface RoleProps {
-    id?: string;
-    name: string;
-    description: string;
-    users?: number;
-    createDate?: Date;
-    permissions: PermissionProps[];
-    status?: boolean;
+// ✅ Roles
+export interface Role {
+	id: string;
+	name: string;
+	description?: string;
+	usersCount: number;
+	status: boolean;
+	createdAt: string; // ISO date string
+	permissions: Permission[]; // Array of Permission IDs
 }
 
-export interface UserProps {
-    id: string;
-    name: string;
-    email: string;
-    address: string;
-    register_date: Date;
-    password: string;
-    document: string;
-    phone: string;
-    role: RoleProps;
-    status: boolean;
+// ✅ Users
+export interface User {
+	id: string;
+	name: string;
+	email: string;
+	password: string;
+	address?: string;
+	phone?: string;
+	role: Role; // Role ID
+	status: boolean;
+	registeredAt: string; // ISO date string
+	featuredProducts: Product[];
+}
+
+// ✅ Categories
+export interface Category {
+	id: string;
+	name: string;
+	description?: string;
+	products: Product[];
+	status: boolean;
+}
+
+// ✅ Products
+export interface Product {
+	id: string;
+	name: string;
+	description?: string;
+	category: Category; // Category ID
+	status: boolean; // e.g. "Available"
+	imageUrl?: string;
+}
+
+// ✅ Services
+export interface Service {
+	id: string;
+	name: string;
+	description?: string;
+	imageUrl?: string;
+	status: boolean;
+}
+
+// ✅ Visits
+export interface Visit {
+	id: string;
+	user: string; // User ID
+	scheduledAt: string; // ISO date string
+	address: string;
+	status: string;
+	services: string[]; // Array of Service IDs
+}
+
+// ✅ Orders
+export interface OrderItem {
+	service: string; // Service ID
+	details?: string;
+	value: number;
+}
+
+export interface Payment {
+	id: string;
+	amount: number;
+	paymentDate: string; // ISO date string
+	method: string;
+	status: string; // e.g. "Pending", "Approved"
+}
+
+export interface Attachment {
+	id: string;
+	fileUrl: string;
+	type: string;
+	uploadedBy: string; // User ID
+	uploadedAt: string; // ISO date string
+}
+
+export interface Order {
+	id: string;
+	user: string; // User ID
+	status: string; // e.g. "In process", "Completed"
+	address: string;
+	startDate: string;
+	endDate?: string;
+	rating?: number;
+	items: OrderItem[];
+	payments: Payment[];
+	attachments: Attachment[];
 }
