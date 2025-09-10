@@ -20,6 +20,19 @@ export interface RoleProps {
     description: string;
     users?: number;
     createDate?: Date;
-    permissions: PermissionProps[]
+    permissions: PermissionProps[];
     status?: boolean;
+}
+
+export interface UserProps {
+    id: string;
+    name: string;
+    email: string;
+    address: string;
+    register_date: Date;
+    password: string;
+    document: string;
+    phone: string;
+    role: RoleProps;
+    status: boolean;
 }

@@ -2,6 +2,8 @@ import { DefaultModalProps, PermissionProps, RoleProps } from '@/app/types';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import EditRoleModal from './EditRoleModal';
+import deleteElement from '../global/DeleteElement';
+import Swal from 'sweetalert2';
 
 const permissionsConfig: PermissionProps[] = [
     { id: '1', module: 'Usuarios', action: 'view' },
@@ -18,6 +20,20 @@ function RoleDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Rol
     const [editModal, setEditModal] = useState(false);
     if (!isOpen || !extraProps) return null;
     const modules = Array.from(new Set(permissionsConfig.map((p) => p.module)));
+
+    const handleDeleteRole = async () => {
+        const result = await deleteElement('Rol');
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Rol Eliminado con exito',
+                icon: 'success',
+                timer: 1000,
+                showConfirmButton: false,
+                position: "top-right",
+            });
+        }
+        onClose();
+    };
 
     return (
         <div className='modal-bg'>
@@ -103,9 +119,9 @@ function RoleDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Rol
                             Editar Rol
                         </button>
                         <button
-                            onClick={onClose}
-                            className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
-                            Cerrar
+                            onClick={handleDeleteRole}
+                            className='px-10 py-2 rounded-lg border border-red bg-red text-white cursor-pointer'>
+                            Eliminar Rol
                         </button>
                     </div>
                 </div>
