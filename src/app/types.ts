@@ -31,7 +31,7 @@ export interface User {
 	id: string;
 	name: string;
 	email: string;
-	password: string;
+	password?: string;
 	address?: string;
 	phone?: string;
 	role: Role; // Role ID
@@ -71,11 +71,11 @@ export interface Service {
 // ✅ Visits
 export interface Visit {
 	id: string;
-	user: string; // User ID
+	user: User; // User ID
 	scheduledAt: string; // ISO date string
 	address: string;
 	status: string;
-	services: string[]; // Array of Service IDs
+	services: Visit[]; // Array of Service IDs
 }
 
 // ✅ Orders
