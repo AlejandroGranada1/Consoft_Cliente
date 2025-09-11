@@ -1,17 +1,52 @@
 @import 'tailwindcss';
 
 @theme {
-    --color-brown: #6e4424;
-    --color-green: #0ea425;
-    --color-red: #fe3134;
-    --color-gray: #efecec;
-    --color-orange: #ff852f;
+	--color-brown: #6e4424;
+	--color-green: #0ea425;
+	--color-red: #fe3134;
+	--color-gray: #efecec;
+	--color-orange: #ff852f;
 }
 
 .modal-bg {
-    @apply fixed inset-0 bg-black/60 flex justify-center items-center z-50;
+	@apply fixed inset-0 bg-black/60 flex justify-center items-center z-50;
 }
 
 .modal-frame {
-    @apply bg-white p-6 rounded-xl relative shadow-lg;
+	@apply bg-white p-6 rounded-xl relative shadow-lg;
+}
+
+meter {
+	width: 100%;
+	height: 20px; /* 👈 Cambias la altura */
+	border-radius: 8px;
+}
+
+/* Barra base */
+meter::-webkit-meter-bar {
+	background: #e5e7eb; /* gris claro */
+	border-radius: 8px;
+	height: 10px;
+}
+
+/* Valor (óptimo = dentro del rango bueno) */
+meter::-webkit-meter-optimum-value {
+    background: black;
+	border-radius: 8px;
+}
+
+/* Subóptimo (cuando está en rango medio) */
+meter::-webkit-meter-suboptimum-value {
+	background: orange;
+	border-radius: 8px;
+}
+
+/* Crítico (valor bajo o muy alto) */
+meter::-webkit-meter-even-less-good-value {
+	background: red;
+	border-radius: 8px;
+}
+
+html::-webkit-scrollbar{
+    display: none;
 }
