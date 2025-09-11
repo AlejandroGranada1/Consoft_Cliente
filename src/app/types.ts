@@ -93,6 +93,7 @@ export interface Payment {
 	status: string; // e.g. "Pending", "Approved"
 }
 
+//! PENDIENTE POR REVISION
 export interface Attachment {
 	id: string;
 	fileUrl: string;
@@ -103,7 +104,7 @@ export interface Attachment {
 
 export interface Order {
 	id: string;
-	user: string; // User ID
+	user: User; // User ID
 	status: string; // e.g. "In process", "Completed"
 	address: string;
 	startDate: string;
@@ -111,5 +112,11 @@ export interface Order {
 	rating?: number;
 	items: OrderItem[];
 	payments: Payment[];
-	attachments: Attachment[];
+	attachments?: Attachment[];
+}
+
+export interface PaymentDetails {
+	order: Order;
+	payment: Order['payments'][0];
+	total: number;
 }

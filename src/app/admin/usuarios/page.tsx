@@ -30,6 +30,7 @@ function page() {
             },
             status: true,
             registeredAt: '2025/02/02',
+            featuredProducts: []
         },
     ]);
     return (
