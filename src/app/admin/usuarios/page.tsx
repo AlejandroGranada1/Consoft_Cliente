@@ -19,8 +19,9 @@ function Page() {
     const fetchUsers = async () =>{
       const response = await api.get('/api/users');
       console.log(response)
-      setUsers(response.data)
+      setUsers(response.data.users)
     }
+    fetchUsers()
   }, []);
 
   return (
