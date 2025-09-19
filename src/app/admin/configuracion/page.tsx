@@ -2,8 +2,9 @@
 import { Role } from '@/app/types';
 import CreateRoleModal from '@/components/admin/configuracion/CreateRoleModal';
 import RoleDetailsModal from '@/components/admin/configuracion/RoleDetailsModal';
+import api from '@/components/Global/axios';
 import Pagination from '@mui/material/Pagination';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import { IoMdAdd } from 'react-icons/io';
 
@@ -12,26 +13,20 @@ function page() {
     const [detailsModal, setDetailsModal] = useState(false);
     const [role, setRole] = useState<Role>();
 
-    const [roles, setRoles] = useState<Role[]>([
-        {
-            id: '5ca1abb6ce037511f000628e',
-            name: 'Administrador',
-            description: 'Acceso completo',
-            usersCount: 1,
-            createdAt: '2025/25/25',
-            permissions: [],
-            status: true,
-        },
-        {
-            id: '5ca1abb6ce037511f000627e',
-            name: 'Administrador',
-            description: 'Acceso completo',
-            usersCount: 1,
-            createdAt: '2025/25/25',
-            permissions: [],
-            status: false,
-        },
-    ]);
+    const [roles, setRoles] = useState<Role[]>([]);
+
+    useEffect(()=>{
+        const fetchRoles = async () => {
+            try {
+                const response = await api.get('/api/roles');
+                setRoles(response.data);
+                console.log(response.data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchRoles();
+    }, [])
 
     return (
         <div>
@@ -78,12 +73,12 @@ function page() {
                                     setDetailsModal(true);
                                     setRole(role);
                                 }}
-                                key={role.id}
+                                key={role._id}
                                 className='grid grid-cols-5 place-items-center py-3 border border-brown rounded-lg cursor-pointer'>
                                 <p>{role.name}</p>
                                 <p>{role.description}</p>
                                 <p>{role.usersCount}</p>
-                                <p>{role.createdAt}</p>
+                                <p>{new Date(role.createdAt).toLocaleDateString()}</p>
                                 <p
                                     className={`${
                                         role.status

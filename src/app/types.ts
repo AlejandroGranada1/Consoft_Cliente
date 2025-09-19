@@ -17,12 +17,12 @@ export interface Permission {
 
 // ✅ Roles
 export interface Role {
-	id: string;
+	_id: string;
 	name: string;
 	description?: string;
 	usersCount: number;
 	status: boolean;
-	createdAt: string; // ISO date string
+	createdAt: Date; // ISO date string
 	permissions: Permission[]; // Array of Permission IDs
 }
 
@@ -86,7 +86,7 @@ export interface OrderItem {
 }
 
 export interface Payment {
-	id: string;
+	_id: string;
 	amount: number;
 	paymentDate: string; // ISO date string
 	method: string;
@@ -103,7 +103,7 @@ export interface Attachment {
 }
 
 export interface Order {
-	id: string;
+	_id: string;
 	user: User; // User ID
 	status: string; // e.g. "In process", "Completed"
 	address: string;
