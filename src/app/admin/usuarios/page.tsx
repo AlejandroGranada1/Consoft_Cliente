@@ -2,6 +2,7 @@
 import { User } from '@/app/types';
 import CreateUserModal from '@/components/admin/usuarios/CreateUserModal';
 import DetailsUserModal from '@/components/admin/usuarios/DetailsUserModal';
+import api from '@/components/Global/axios';
 import Pagination from '@mui/material/Pagination';
 import React, { useEffect, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
@@ -15,10 +16,11 @@ function Page() {
 
   // 🔹 Llamada al backend
   useEffect(() => {
-    fetch('http://localhost:3000/users') // 👈 ajusta al puerto donde corre tu API
-      .then((res) => res.json())
-      .then((data) => setUsers(data))
-      .catch((err) => console.error('Error cargando usuarios:', err));
+    const fetchUsers = async () =>{
+      const response = await api.get('/api/users');
+      console.log(response)
+      setUsers(response.data)
+    }
   }, []);
 
   return (
