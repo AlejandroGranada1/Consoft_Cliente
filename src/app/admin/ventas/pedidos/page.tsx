@@ -2,60 +2,27 @@
 import { Order } from '@/app/types';
 import CreateOrderModal from '@/components/admin/ventas/Pedidos/CreateOrderModal';
 import OrderDetailsModal from '@/components/admin/ventas/Pedidos/OrderDetails';
+import api from '@/components/Global/axios';
 import Pagination from '@mui/material/Pagination';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import { IoMdAdd } from 'react-icons/io';
 
 function page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
-	const [orders, setOrders] = useState<Order[]>([
-		{
-			id: 'ORD-001',
-			user: {
-				id: 'askdljaklsdajklsd',
-				name: 'Mark Wilson',
-				email: 'Markwilson@gmail.com',
-				address: 'Medellin',
-				phone: '12344556778',
-				password: 'aslkdlkasjkld',
-				role: {
-					id: '',
-					name: 'administrador',
-					description: 'Acceso completo',
-					permissions: [],
-					createdAt: '',
-					status: true,
-					usersCount: 0,
-				},
-				status: true,
-				registeredAt: '2025/02/02',
-				featuredProducts: [],
-			},
-			status: 'Completado',
-			address: 'Mi Casa',
-			startDate: '',
-			endDate: '',
-			items: [
-				{
-					service: 'Fabricacion',
-					details: 'Fabricar mueble 2 plazas',
-					value: 2323,
-				},
-			],
-			payments: [
-				{
-					id: '',
-					amount: 20,
-					method: 'slakdlkl',
-					paymentDate: '',
-					status: 'Aprobado',
-				},
-			],
-		},
-	]);
+	const [orders, setOrders] = useState<Order[]>([]);
 	const [order, setOrder] = useState<Order>();
+
+	useEffect(() => {
+		const fetchOrders = async () => {
+			const response = await api.get('/api/orders');
+			console.log(response.data);
+			setOrders(response.data);
+		};
+		fetchOrders();
+	}, []);
+
 	return (
 		<div>
 			<header className='flex flex-col h-60 justify-around px-20'>
@@ -101,13 +68,13 @@ function page() {
 									setDetailsModal(true);
 									setOrder(order);
 								}}
-								key={order.id}
+								key={order._id}
 								className='grid grid-cols-6 place-items-center py-3 border border-brown rounded-lg cursor-pointer'>
-								<p>{order.id}</p>
+								<p className='truncate w-20'>{order._id}</p>
 								<p>{order.user.name}</p>
 								<p>
 									{order.items
-										.reduce((total, item) => total + item.value, 0)
+										.reduce((total, item) => total + item.valor, 0)
 										.toLocaleString('es-CO', {
 											style: 'currency',
 											currency: 'COP',
@@ -123,8 +90,14 @@ function page() {
 									} px-2 py-1 rounded-xl`}>
 									{order.status}
 								</p>
-								{/* //TODO PENSAR COMO APLICAR PAGOS */}
-								<p></p>
+								<p
+									className={`${
+										order.paymentStatus === 'Pagado'
+											? 'bg-green-500/30 text-green-500'
+											: 'bg-orange/30 text-orange'
+									} px-2 py-1 rounded-xl`}>
+									{order.paymentStatus}
+								</p>
 								<p>{order.items.length}</p>
 							</div>
 						))}
@@ -140,11 +113,11 @@ function page() {
 				isOpen={createModal}
 				onClose={() => setCreateModal(false)}
 			/>
-      <OrderDetailsModal
-      isOpen={detailsModal}
-      onClose={()=> setDetailsModal(false)}
-      extraProps={order}
-      />
+			<OrderDetailsModal
+				isOpen={detailsModal}
+				onClose={() => setDetailsModal(false)}
+				extraProps={order}
+			/>
 		</div>
 	);
 }

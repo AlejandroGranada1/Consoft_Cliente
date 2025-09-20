@@ -17,7 +17,7 @@ export interface Permission {
 
 // ✅ Roles
 export interface Role {
-	id: string;
+	_id: string;
 	name: string;
 	description?: string;
 	usersCount: number;
@@ -82,7 +82,7 @@ export interface Visit {
 export interface OrderItem {
 	service: string; // Service ID
 	details?: string;
-	value: number;
+	valor: number;
 }
 
 export interface Payment {
@@ -103,7 +103,7 @@ export interface Attachment {
 }
 
 export interface Order {
-	id: string;
+	_id: string;
 	user: User; // User ID
 	status: string; // e.g. "In process", "Completed"
 	address: string;
@@ -112,11 +112,39 @@ export interface Order {
 	rating?: number;
 	items: OrderItem[];
 	payments: Payment[];
+	paymentStatus: string;
 	attachments?: Attachment[];
 }
 
-export interface PaymentDetails {
-	order: Order;
-	payment: Order['payments'][0];
+export interface Sale {
+	_id: string;
 	total: number;
+	paid: number;
+	restante: number;
+	user: {
+		_id: string;
+		name: string;
+	};
+}
+
+export interface PaymentDetails {
+	summary: PaymentSummary;
+	payment: Payment;
+}
+
+export interface Payment {
+	_id: string;
+	amount: number;
+	paidAt: string;
+	method: string;
+	restante: number;
+	status: string;
+}
+
+export interface PaymentSummary {
+	_id: string; // id del pedido
+	total: number; // total del pedido
+	paid: number; // total pagado
+	restante: number; // lo que falta
+	payments: Payment[]; // lista de pagos
 }
