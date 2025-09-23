@@ -1,26 +1,26 @@
-"use client";
-import { Order, PaymentDetails } from "@/app/types";
-import PaymentDetailsModal from "@/components/admin/ventas/Pagos/PaymentDetails";
-import api from "@/components/Global/axios";
-import Pagination from "@mui/material/Pagination";
-import React, { useEffect, useState } from "react";
-import { FaSearch } from "react-icons/fa";
+'use client';
+import { Order, PaymentDetails, PaymentSummary } from '@/app/types';
+import PaymentDetailsModal from '@/components/admin/ventas/Pagos/PaymentDetails';
+import api from '@/components/Global/axios';
+import Pagination from '@mui/material/Pagination';
+import React, { useEffect, useState } from 'react';
+import { FaSearch } from 'react-icons/fa';
 
 function Page() {
-  const [detailsModal, setDetailsModal] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentDetails>();
-  const [order, setOrder] = useState<Order>();
+	const [detailsModal, setDetailsModal] = useState(false);
+	const [selectedPayment, setSelectedPayment] = useState<PaymentDetails>();
+	const [order, setOrder] = useState();
 
-  const [orders, setOrders] = useState<Order[]>([]);
+	const [payments, setPayments] = useState<PaymentSummary[]>([]);
 
-  useEffect(() => {
-    const fetchPayments = async () => {
-      const response = await api.get("/api/sales");
-      setOrders(response.data);
-      console.log(response);
-    };
-	fetchPayments();
-  }, []);
+	useEffect(() => {
+		const fetchPayments = async () => {
+			const response = await api.get('/api/payments');
+			console.log(response.data);
+			setPayments(response.data.payments); // 👈 usamos el array "payments" del backend
+		};
+		fetchPayments();
+	}, []);
 
   return (
     <div>
@@ -55,65 +55,67 @@ function Page() {
             <p>Estado</p>
           </div>
 
-          {/* Lista de pagos */}
-          <div className="mx-auto border-t border-brown pt-5 flex flex-col gap-4">
-            {orders.map((order) => {
-              const total = order.items.reduce(
-                (sum, item) => sum + item.value,
-                0
-              );
-              return order.payments.map((payment) => (
-                <div
-                  onClick={() => {
-                    const total = order.items.reduce(
-                      (sum, item) => sum + item.value,
-                      0
-                    );
-                    setDetailsModal(true);
-                    setSelectedPayment({
-                      order,
-                      payment,
-                      total,
-                    });
-                  }}
-                  key={payment._id}
-                  className="grid grid-cols-7 place-items-center py-3 border border-brown rounded-lg cursor-pointer"
-                >
-                  <p className="text-elipsis w-2">{payment._id}</p>
-                  <p className="truncate w-20">{order._id}</p>
-                  <p>${total.toLocaleString("es-CO")}</p>
-                  <p>${payment.amount.toLocaleString("es-CO")}</p>
-                  <p>${(total - payment.amount).toLocaleString("es-CO")}</p>
-                  <p>{payment.paymentDate || "---"}</p>
-                  <p
-                    className={`${
-                      payment.status == "Aprobado"
-                        ? "bg-green/30 text-green"
-                        : order.status == "Rechazado"
-                        ? "bg-red/30 text-red"
-                        : "bg-orange/30 text-orange"
-                    } px-2 py-1 rounded-xl`}
-                  >
-                    {payment.status}
-                  </p>
-                </div>
-              ));
-            })}
-          </div>
-        </div>
+					{/* Lista de pagos */}
+					<div className='mx-auto border-t border-brown pt-5 flex flex-col gap-4'>
+						{payments.map((order) =>
+							order.payments.map((payment) => (
+								<div
+									key={payment._id}
+									onClick={() => {
+										setDetailsModal(true);
+										setSelectedPayment({
+											summary: order,
+											payment,
+										});
+									}}
+									className='grid grid-cols-7 place-items-center py-3 border border-brown rounded-lg cursor-pointer'>
+									<p className='truncate w-20'>{payment._id}</p>
+									<p className='truncate w-20'>{order._id}</p>
+									<p>
+										{order.total.toLocaleString('es-CO', {
+											style: 'currency',
+											currency: 'COP',
+										})}
+									</p>
+									<p>
+										{payment.amount.toLocaleString('es-CO', {
+											style: 'currency',
+											currency: 'COP',
+										})}
+									</p>
+									<p>
+										{payment.restante.toLocaleString('es-CO', {
+											style: 'currency',
+											currency: 'COP',
+										})}
+									</p>
+									<p>{new Date(payment.paidAt).toLocaleDateString('es-CO')}</p>
+									<p
+										className={`${
+											payment.status.toLowerCase() === 'aprobado'
+												? 'bg-green/30 text-green'
+												: 'bg-orange/30 text-orange'
+										} px-2 py-1 rounded-xl`}>
+										{payment.status}
+									</p>
+								</div>
+							))
+						)}
+					</div>
+				</div>
 
-        {/* Paginación al fondo */}
-        <div className="w-full flex justify-center mt-5">
-          <Pagination count={Math.ceil(orders.length / 10)} />
-        </div>
-      </section>
-      <PaymentDetailsModal
-        isOpen={detailsModal}
-        onClose={() => setDetailsModal(false)}
-        extraProps={selectedPayment}
-      />
-    </div>
-  );
+				{/* Paginación al fondo */}
+				<div className='w-full flex justify-center mt-5'>
+					<Pagination count={Math.ceil(payments.length / 10)} />
+				</div>
+			</section>
+			<PaymentDetailsModal
+				isOpen={detailsModal}
+				onClose={() => setDetailsModal(false)}
+				extraProps={selectedPayment}
+			/>
+		</div>
+	);
 }
 
 export default Page;
