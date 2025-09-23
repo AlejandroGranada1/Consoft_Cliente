@@ -1,26 +1,30 @@
 'use client';
 import { Role } from '@/app/types';
 import CreateRoleModal from '@/components/admin/configuracion/CreateRoleModal';
+import EditRoleModal from '@/components/admin/configuracion/EditRoleModal';
 import RoleDetailsModal from '@/components/admin/configuracion/RoleDetailsModal';
+import { deleteElement } from '@/components/admin/global/alerts';
 import api from '@/components/Global/axios';
 import Pagination from '@mui/material/Pagination';
+import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { FaSearch } from 'react-icons/fa';
+import { FaEdit, FaEye, FaSearch, FaTrash } from 'react-icons/fa';
 import { IoMdAdd } from 'react-icons/io';
 
 function page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
+	const [editModal, setEditModal] = useState(false);
 	const [role, setRole] = useState<Role>();
 
 	const [roles, setRoles] = useState<Role[]>([]);
 
+	const fetchRoles = async () => {
+		const response = await api.get('/api/roles');
+		console.log(response.data);
+		setRoles(response.data.roles);
+	};
 	useEffect(() => {
-		const fetchRoles = async () => {
-			const response = await api.get('/api/roles');
-			console.log(response.data);
-			setRoles(response.data.roles);
-		};
 		fetchRoles();
 	}, []);
 
@@ -53,24 +57,21 @@ function page() {
 			<section className='w-8/9 mx-auto h-[420px] flex flex-col justify-between border-t border-gray'>
 				{/* Encabezado de la tabla */}
 				<div>
-					<div className='grid grid-cols-5 place-items-center py-6'>
+					<div className='grid grid-cols-6 place-items-center py-6'>
 						<p>Nombre del rol</p>
 						<p>Descripción</p>
 						<p>Usuarios</p>
 						<p>Fecha de Creación</p>
 						<p>Estado</p>
+						<p>Acciones</p>
 					</div>
 
 					{/* Lista de roles */}
 					<div className='mx-auto border-t border-brown pt-5 flex flex-col gap-4'>
 						{roles.map((role) => (
 							<div
-								onClick={() => {
-									setDetailsModal(true);
-									setRole(role);
-								}}
 								key={role._id}
-								className='grid grid-cols-5 place-items-center py-3 border border-brown rounded-lg cursor-pointer'>
+								className='grid grid-cols-6 place-items-center py-3 border-b border-brown rounded-lg'>
 								<p>{role.name}</p>
 								<p>{role.description}</p>
 								<p>{role.usersCount}</p>
@@ -82,6 +83,37 @@ function page() {
 											: 'bg-red/30 text-red'
 									} px-2 py-1 rounded-xl`}>
 									{role.status ? 'Activo' : 'Inactivo'}
+								</p>
+								<p className='flex justify-evenly place-items-center w-full'>
+									<FaEye
+										size={25}
+										color='orange'
+										onClick={() => {
+											setDetailsModal(true);
+											setRole(role);
+										}}
+										cursor={'pointer'}
+									/>
+									<FaEdit
+										size={25}
+										color='blue'
+										onClick={() => {
+											setEditModal(true);
+											setRole(role);
+										}}
+										cursor={'pointer'}
+									/>
+									<FaTrash
+										size={25}
+										color='red'
+										onClick={() => {
+											deleteElement('Rol', `/api/roles/${role._id}`, () =>
+												fetchRoles()
+											);
+											setRole(role);
+										}}
+										cursor={'pointer'}
+									/>
 								</p>
 							</div>
 						))}
@@ -96,11 +128,18 @@ function page() {
 			<CreateRoleModal
 				isOpen={createModal}
 				onClose={() => setCreateModal(false)}
+				updateList={() => fetchRoles()}
 			/>
 			<RoleDetailsModal
 				isOpen={detailsModal}
 				onClose={() => setDetailsModal(false)}
 				extraProps={role}
+			/>
+			<EditRoleModal
+				isOpen={editModal}
+				onClose={() => setEditModal(false)}
+				extraProps={role}
+				updateList={() => fetchRoles()}
 			/>
 		</div>
 	);
