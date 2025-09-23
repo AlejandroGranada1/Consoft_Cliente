@@ -67,7 +67,7 @@ export interface Product {
 
 // ✅ Services
 export interface Service {
-	id: string;
+	_id: string;
 	name: string;
 	description?: string;
 	imageUrl?: string;
