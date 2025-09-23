@@ -6,42 +6,58 @@ import RoleDetailsModal from '@/components/admin/configuracion/RoleDetailsModal'
 import { deleteElement } from '@/components/admin/global/alerts';
 import api from '@/components/Global/axios';
 import Pagination from '@mui/material/Pagination';
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { FaEdit, FaEye, FaSearch, FaTrash } from 'react-icons/fa';
 import { IoMdAdd } from 'react-icons/io';
 
-function page() {
+function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [editModal, setEditModal] = useState(false);
 	const [role, setRole] = useState<Role>();
 
 	const [roles, setRoles] = useState<Role[]>([]);
+	const [filterText, setFilterText] = useState(''); // 📌 texto de búsqueda
 
 	const fetchRoles = async () => {
 		const response = await api.get('/api/roles');
-		console.log(response.data);
 		setRoles(response.data.roles);
 	};
 	useEffect(() => {
 		fetchRoles();
 	}, []);
 
+	// 📌 Filtrar roles
+	const filteredRoles = roles.filter((r) =>
+		r.name.toLowerCase().includes(filterText.toLowerCase())
+	);
+
 	return (
 		<div>
 			<header className='flex flex-col h-60 justify-around px-20'>
-				<h1 className='text-2xl  text-brown'>CONFIGURACION DE ROLES</h1>
+				<h1 className='text-2xl text-brown'>CONFIGURACIÓN DE ROLES</h1>
+
 				{/* actions */}
 				<div className='flex justify-between items-center'>
 					<div className='relative w-64'>
 						{/* Icono */}
 						<FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
 
+						<datalist id='roles'>
+							{roles.map((role) => (
+								<option
+									key={role._id}
+									value={role.name}></option>
+							))}
+						</datalist>
+
 						{/* Input */}
 						<input
 							type='text'
+							list='roles'
 							placeholder='Buscar Rol'
+							value={filterText}
+							onChange={(e) => setFilterText(e.target.value)} // 📌 actualiza filtro
 							className='pl-10 pr-4 py-2 border border-brown rounded-lg w-full text-sm placeholder-gray-400 focus:outline-none focus:ring focus:ring-brown'
 						/>
 					</div>
@@ -68,7 +84,7 @@ function page() {
 
 					{/* Lista de roles */}
 					<div className='mx-auto border-t border-brown pt-5 flex flex-col gap-4'>
-						{roles.map((role) => (
+						{filteredRoles.map((role) => (
 							<div
 								key={role._id}
 								className='grid grid-cols-6 place-items-center py-3 border-b border-brown rounded-lg'>
@@ -117,14 +133,21 @@ function page() {
 								</p>
 							</div>
 						))}
+
+						{filteredRoles.length === 0 && (
+							<p className='text-center text-gray-500 py-5'>
+								No se encontraron roles.
+							</p>
+						)}
 					</div>
 				</div>
 
 				{/* Paginación al fondo */}
 				<div className='w-full flex justify-center mt-5'>
-					<Pagination count={Math.ceil(roles.length / 10)} />
+					<Pagination count={Math.ceil(filteredRoles.length / 10)} />
 				</div>
 			</section>
+
 			<CreateRoleModal
 				isOpen={createModal}
 				onClose={() => setCreateModal(false)}
@@ -145,4 +168,4 @@ function page() {
 	);
 }
 
-export default page;
+export default Page;
