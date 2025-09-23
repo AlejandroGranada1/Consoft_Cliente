@@ -50,3 +50,7 @@ meter::-webkit-meter-even-less-good-value {
 html::-webkit-scrollbar{
     display: none;
 }
+
+.swal2-progress-bar {
+  background-color: var(--color-green) !important;  /* Asegúrate de usar la variable que deseas */
+}
