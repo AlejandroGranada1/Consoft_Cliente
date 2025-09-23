@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   DropdownMenu,
@@ -6,10 +6,15 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { User } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { useUser } from "@/context/userContext";
+import { User } from "lucide-react";
 
 export default function UserMenu() {
+  const { user } = useUser();
+
+  console.log(user)
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -49,13 +54,15 @@ export default function UserMenu() {
           Notificaciones
         </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onClick={() => (window.location.href = "/client/configuracion")}
-          className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
-        >
-          Configuración
-        </DropdownMenuItem>
+        {user?.role === "admin" && (
+          <DropdownMenuItem
+            onClick={() => (window.location.href = "/admin/configuracion")}
+            className="px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer"
+          >
+            Panel administrativo
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
