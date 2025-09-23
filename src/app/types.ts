@@ -6,13 +6,19 @@ export interface DefaultModalProps<T = {}> {
 	isOpen: boolean;
 	onClose: () => void;
 	extraProps?: T;
+	updateList?: () => void;
 }
 
 // ✅ Permissions
 export interface Permission {
-	id: string;
+	_id: string;
 	module: string; // e.g. "Users"
 	action: string; // e.g. "create"
+}
+
+export interface GroupPermission {
+	module: string;
+	permissions: Permission[];
 }
 
 // ✅ Roles
