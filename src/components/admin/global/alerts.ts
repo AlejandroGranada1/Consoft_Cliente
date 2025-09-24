@@ -51,7 +51,7 @@ export async function createElement(
   title: string,
   endpoint: string,
   data: object,
-  updateList: () => void
+  updateList?: () => void
 ) {
   const result = await Swal.fire({
     title: `Agregar un nuevo ${title}`,
@@ -78,7 +78,7 @@ export async function createElement(
           timerProgressBar: "swal2-progress-bar",
         },
       });
-      updateList();
+      updateList!();
       return response.data;
     } catch (error) {
       Swal.fire({
