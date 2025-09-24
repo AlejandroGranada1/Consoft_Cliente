@@ -89,7 +89,7 @@ function Page() {
                 className="grid grid-cols-6 place-items-center py-3 border-b border-brown/60 rounded-lg"
               >
                 <p>{role.name}</p>
-                <p className="truncate w-40">{role.description}</p>
+                <p className="truncate w-40 text-center">{role.description}</p>
                 <p>{role.usersCount}</p>
                 <p>{new Date(role.createdAt).toLocaleDateString()}</p>
                 <p className={role.status ? "text-green-500" : "text-red-500"}>

@@ -30,6 +30,7 @@ function Page() {
 
   useEffect(() => {
     fetchUsers();
+    console.log(users)
   }, []);
 
   // 📌 Filtrar usuarios
@@ -80,7 +81,7 @@ function Page() {
           <div className="grid grid-cols-6 place-items-center py-6 font-semibold">
             <p>Usuario</p>
             <p>Correo</p>
-            <p>Dirección</p>
+            <p>Rol</p>
             <p>Fecha de Registro</p>
             <p>Estado</p>
             <p>Acciones</p>
@@ -95,7 +96,7 @@ function Page() {
               >
                 <p>{u.name}</p>
                 <p className='truncate w-40'>{u.email}</p>
-                <p>{u.address || "-"}</p>
+                <p>{u.role?.name}</p>
                 <p>{new Date(u.registeredAt).toLocaleDateString()}</p>
                 <p className={u.status ? "text-green-500" : "text-red-500"}>
                   {u.status ? "Activo" : "Inactivo"}

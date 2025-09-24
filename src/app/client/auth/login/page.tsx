@@ -23,7 +23,9 @@ export default function LoginPage() {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		console.log(loginData)
 		const response = await api.post('/api/auth/login', loginData);
+		console.log(response)
 		if (response.status == 200) {
 			const userData = await fetchCurrentUser();
 			setUser(userData);

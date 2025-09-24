@@ -13,7 +13,7 @@ function Sidebar() {
         <aside className='h-screen w-[240px] bg-white flex flex-col'>
             {/* Logo + TopBar */}
             <div className='flex items-center justify-between px-4 py-3 border-b border-gray-200 h-20'>
-                <Link href={"/client"} className='font-bold text-lg'>ConSoft</Link>
+                <Link href={"/client"} className='font-bold text-lg'>Confort & Estilo</Link>
             </div>
 
             {/* Links */}
