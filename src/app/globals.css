@@ -10,10 +10,15 @@
 
 .modal-bg {
 	@apply fixed inset-0 bg-black/60 flex justify-center items-center z-50;
+
 }
 
 .modal-frame {
-	@apply bg-white p-6 rounded-xl relative shadow-lg;
+	@apply bg-white p-6 rounded-xl relative shadow-lg max-h-[90vh] overflow-auto;
+}
+
+.modal-frame::-webkit-scrollbar{
+	width: 0px;
 }
 
 meter {
@@ -49,6 +54,7 @@ meter::-webkit-meter-even-less-good-value {
 
 html::-webkit-scrollbar{
     display: none;
+	appearance: nonne;
 }
 
 .swal2-progress-bar {

@@ -28,7 +28,7 @@ export interface Role {
 	description?: string;
 	usersCount: number;
 	status: boolean;
-	createdAt: Date; // ISO date string
+	createdAt: string | Date; // ISO date string
 	permissions: Permission[]; // Array of Permission IDs
 }
 
@@ -84,10 +84,10 @@ export interface Visit {
 	services: Visit[]; // Array of Service IDs
 }
 
-// ✅ Orders
 export interface OrderItem {
-	service: string; // Service ID
-	details?: string;
+	_id?: string; // lo pones opcional para nuevos items
+	id_servicio: string | Service; // 👈 puede ser ID o documento populado
+	detalles?: string;
 	valor: number;
 }
 
@@ -110,7 +110,7 @@ export interface Attachment {
 
 export interface Order {
 	_id: string;
-	user: User; // User ID
+	user: string | User; // User ID
 	status: string; // e.g. "In process", "Completed"
 	address: string;
 	startDate: string;
@@ -119,8 +119,9 @@ export interface Order {
 	items: OrderItem[];
 	payments: Payment[];
 	paymentStatus: string;
-	attachments?: Attachment[];
 }
+
+export type OrderWithPartialUser = Omit<Order, 'user'> & { user: string | Partial<User> };
 
 export interface Sale {
 	_id: string;

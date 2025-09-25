@@ -1,60 +1,90 @@
 'use client';
-import { DefaultModalProps, Order } from '@/app/types';
-import React, { useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
-import { IoMdAdd, IoMdRemove } from 'react-icons/io';
+import { DefaultModalProps, Order, OrderWithPartialUser, User } from '@/app/types';
+import React, { useEffect, useState } from 'react';
+import { IoMdClose, IoMdAdd, IoMdRemove } from 'react-icons/io';
+import api from '@/components/Global/axios';
+import { updateElement } from '../../global/alerts';
 
-function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order>) {
-	const [orderData, setOrderData] = useState<Order>(
+interface Service {
+	_id: string;
+	name: string;
+}
+
+function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Order>) {
+	const [orderData, setOrderData] = useState<OrderWithPartialUser>(
 		extraProps ?? {
-			id: '',
-			user: {
-				id: '',
-				name: '',
-				email: '',
-				address: '',
-				phone: '',
-				password: '',
-				role: {
-					id: '',
-					name: '',
-					description: '',
-					permissions: [],
-					createdAt: '',
-					status: true,
-					usersCount: 0,
-				},
-				status: true,
-				registeredAt: '',
-				featuredProducts: [],
-			},
-			status: 'En proceso',
+			_id: '',
+			user: { _id: '', name: '' } as User,
+			status: '',
 			address: '',
 			startDate: '',
 			endDate: '',
 			items: [],
 			payments: [],
-			attachments: [],
+			rating: 0,
+			paymentStatus: '',
 		}
 	);
+
+	const [services, setServices] = useState<Service[]>([]);
+
+	// 🔹 Mantener sincronizado el estado con extraProps
+	useEffect(() => {
+		if (extraProps) {
+			setOrderData({
+				...extraProps,
+				user:
+					typeof extraProps.user === 'object'
+						? extraProps.user
+						: { _id: String(extraProps.user), name: '' }, // fallback si no viene populado
+			});
+		}
+	}, [extraProps]);
+
+	// Traer servicios del backend
+	useEffect(() => {
+		const fetchServices = async () => {
+			try {
+				const { data } = await api.get<Service[]>('/api/services');
+				setServices(data);
+			} catch (err) {
+				console.error('Error cargando servicios', err);
+			}
+		};
+		fetchServices();
+	}, []);
 
 	// Cambiar inputs generales
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = e.target;
-		setOrderData((prev) => ({
-			...prev,
-			[name]: value,
-		}));
+
+		// Si el cambio es en un campo del cliente (user)
+		if (name.startsWith('user.')) {
+			const field = name.split('.')[1] as keyof User;
+			setOrderData((prev) => ({
+				...prev,
+				user: {
+					...(typeof prev.user === 'object' ? prev.user : { _id: '' }),
+					[field]: value,
+				} as User,
+			}));
+		} else {
+			// Caso general (address, status, startDate, etc.)
+			setOrderData((prev) => ({
+				...prev,
+				[name]: value,
+			}));
+		}
 	};
 
 	// Cambiar valores de los servicios
 	const handleItemChange = (
 		index: number,
-		field: 'service' | 'details' | 'value',
+		field: 'id_servicio' | 'detalles' | 'valor',
 		value: string | number
 	) => {
 		const newItems = [...orderData.items];
-		newItems[index][field] = field === 'value' ? Number(value) : (value as string);
+		(newItems[index] as any)[field] = field === 'valor' ? Number(value) : value;
 		setOrderData((prev) => ({ ...prev, items: newItems }));
 	};
 
@@ -62,7 +92,7 @@ function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order
 	const addItem = () => {
 		setOrderData((prev) => ({
 			...prev,
-			items: [...prev.items, { service: '', details: '', value: 0 }],
+			items: [...prev.items, { id_servicio: '', detalles: '', valor: 0 }],
 		}));
 	};
 
@@ -75,7 +105,7 @@ function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order
 	};
 
 	// Calcular total
-	const total = orderData.items.reduce((sum, item) => sum + item.value, 0);
+	const total = orderData.items.reduce((sum, item) => sum + (item.valor || 0), 0);
 
 	// Colores dinámicos del estado
 	const getStatusClass = (status: string) => {
@@ -84,6 +114,25 @@ function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order
 			: status === 'Cancelado'
 			? 'bg-red/30 text-red'
 			: 'bg-orange/30 text-orange';
+	};
+
+	// 🔹 Guardar cambios (PUT al backend)
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		try {
+			const payload = {
+				...orderData,
+				user: typeof orderData.user === 'object' ? orderData.user._id : orderData.user, // 🔹 enviar solo el _id
+			};
+
+			const response = await updateElement('Pedido', `/api/orders/${payload._id}`, payload);
+
+			onClose(); // cerrar modal
+			updateList!()
+		} catch (err) {
+			console.error('Error al actualizar el pedido', err);
+			alert('Error al actualizar el pedido ❌');
+		}
 	};
 
 	if (!isOpen) return null;
@@ -100,21 +149,19 @@ function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order
 					<h1 className='text-xl font-semibold text-center'>Editar Pedido</h1>
 				</header>
 
-				<section className='flex flex-col gap-4'>
+				{/* Formulario con handleSubmit */}
+				<form
+					onSubmit={handleSubmit}
+					className='flex flex-col gap-4'>
 					{/* Cliente */}
 					<div className='flex flex-col'>
 						<label>Cliente</label>
 						<input
-							name='user'
+							name='user.name'
 							type='text'
 							placeholder='Nombre del cliente'
-							value={orderData.user.name}
-							onChange={(e) =>
-								setOrderData((prev) => ({
-									...prev,
-									user: { ...prev.user, name: e.target.value },
-								}))
-							}
+							value={(orderData.user as User)?.name || ''}
+							onChange={handleChange}
 							className='border px-3 py-2 rounded-md'
 						/>
 					</div>
@@ -132,7 +179,7 @@ function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order
 						/>
 					</div>
 
-					{/* Fecha de inicio */}
+					{/* Fechas */}
 					<div className='flex flex-col'>
 						<label>Fecha de inicio</label>
 						<input
@@ -143,8 +190,6 @@ function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order
 							className='border px-3 py-2 rounded-md'
 						/>
 					</div>
-
-					{/* Fecha de finalización */}
 					<div className='flex flex-col'>
 						<label>Fecha de finalización</label>
 						<input
@@ -156,7 +201,7 @@ function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order
 						/>
 					</div>
 
-					{/* Estado del pedido */}
+					{/* Estado */}
 					<div className='flex flex-col'>
 						<label>Estado</label>
 						<select
@@ -173,11 +218,11 @@ function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order
 					</div>
 
 					{/* Tabla de items */}
-					<div className='mt-4 h-[137px] overflow-y-scroll'>
+					<div className='mt-4 h-[138px] overflow-y-scroll'>
 						<div className='grid grid-cols-4 gap-2 font-semibold border-b pb-2 items-center'>
 							<p>Servicios</p>
-							<p>Valor del servicio</p>
-							<p>Detalles del servicio</p>
+							<p>Valor</p>
+							<p>Detalles</p>
 							<button
 								type='button'
 								onClick={addItem}
@@ -190,31 +235,48 @@ function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order
 							<div
 								key={idx}
 								className='grid grid-cols-4 gap-2 py-2 border-b items-center'>
-								<input
-									type='text'
-									placeholder='Servicio'
-									value={item.service}
-									onChange={(e) =>
-										handleItemChange(idx, 'service', e.target.value)
+								{/* Selector de servicio */}
+								<select
+									value={
+										typeof item.id_servicio === 'string'
+											? item.id_servicio
+											: item.id_servicio?._id
 									}
-									className='border px-2 py-1 rounded-md'
-								/>
+									onChange={(e) =>
+										handleItemChange(idx, 'id_servicio', e.target.value)
+									}
+									className='border px-2 py-1 rounded-md'>
+									<option value=''>Seleccione servicio</option>
+									{services.map((s) => (
+										<option
+											key={s._id}
+											value={s._id}>
+											{s.name}
+										</option>
+									))}
+								</select>
+
+								{/* Valor */}
 								<input
 									type='number'
 									placeholder='Valor'
-									value={item.value}
-									onChange={(e) => handleItemChange(idx, 'value', e.target.value)}
+									value={item.valor}
+									onChange={(e) => handleItemChange(idx, 'valor', e.target.value)}
 									className='border px-2 py-1 rounded-md'
 								/>
+
+								{/* Detalles */}
 								<input
 									type='text'
 									placeholder='Detalles'
-									value={item.details}
+									value={(item as any).detalles || ''}
 									onChange={(e) =>
-										handleItemChange(idx, 'details', e.target.value)
+										handleItemChange(idx, 'detalles', e.target.value)
 									}
 									className='border px-2 py-1 rounded-md'
 								/>
+
+								{/* Eliminar */}
 								<button
 									type='button'
 									onClick={() => removeItem(idx)}
@@ -245,7 +307,7 @@ function EditOrderModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order
 							Cancelar
 						</button>
 					</div>
-				</section>
+				</form>
 			</div>
 		</div>
 	);
