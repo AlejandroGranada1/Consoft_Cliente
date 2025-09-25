@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { IoMdClose, IoMdAdd, IoMdRemove } from 'react-icons/io';
 import api from '@/components/Global/axios';
 import { updateElement } from '../../global/alerts';
+import { formatDateForInput } from '@/lib/formatDate';
 
 interface Service {
 	_id: string;
@@ -17,8 +18,8 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 			user: { _id: '', name: '' } as User,
 			status: '',
 			address: '',
-			startDate: '',
-			endDate: '',
+			startedAt: '',
+			deliveredAt: '',
 			items: [],
 			payments: [],
 			rating: 0,
@@ -128,7 +129,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 			const response = await updateElement('Pedido', `/api/orders/${payload._id}`, payload);
 
 			onClose(); // cerrar modal
-			updateList!()
+			updateList!();
 		} catch (err) {
 			console.error('Error al actualizar el pedido', err);
 			alert('Error al actualizar el pedido ❌');
@@ -173,7 +174,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 							name='address'
 							type='text'
 							placeholder='Dirección'
-							value={orderData.address}
+							value={orderData.address || ''}
 							onChange={handleChange}
 							className='border px-3 py-2 rounded-md'
 						/>
@@ -185,7 +186,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 						<input
 							name='startDate'
 							type='date'
-							value={orderData.startDate}
+							value={formatDateForInput(orderData.startedAt)}
 							onChange={handleChange}
 							className='border px-3 py-2 rounded-md'
 						/>
@@ -193,9 +194,9 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 					<div className='flex flex-col'>
 						<label>Fecha de finalización</label>
 						<input
-							name='endDate'
+							name='deliveredAt'
 							type='date'
-							value={orderData.endDate || ''}
+							value={formatDateForInput(orderData.deliveredAt)}
 							onChange={handleChange}
 							className='border px-3 py-2 rounded-md'
 						/>
@@ -206,7 +207,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 						<label>Estado</label>
 						<select
 							name='status'
-							value={orderData.status}
+							value={orderData.status || ''}
 							onChange={handleChange}
 							className={`border px-3 py-2 rounded-md ${getStatusClass(
 								orderData.status

@@ -109,12 +109,12 @@ export interface Attachment {
 }
 
 export interface Order {
-	_id: string;
+	_id: string | undefined;
 	user: string | User; // User ID
 	status: string; // e.g. "In process", "Completed"
 	address: string;
-	startDate: string;
-	endDate?: string;
+	startedAt: string;
+	deliveredAt?: string;
 	rating?: number;
 	items: OrderItem[];
 	payments: Payment[];

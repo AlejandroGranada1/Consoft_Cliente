@@ -1,21 +1,25 @@
 'use client';
-import { DefaultModalProps, Order } from '@/app/types';
-import React, { useState } from 'react';
+import { DefaultModalProps, Order, Service, User } from '@/app/types';
+import api from '@/components/Global/axios';
+import React, { useEffect, useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import { IoMdAdd, IoMdRemove } from 'react-icons/io';
+import { createElement } from '../../global/alerts';
 
-function CreateOrderModal({ isOpen, onClose }: DefaultModalProps<Order>) {
+function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Order>) {
+	const [users, setUsers] = useState<User[]>([]);
+	const [services, setServices] = useState<Service[]>([]);
 	const [orderData, setOrderData] = useState<Order>({
-		id: 'ORD-001',
+		_id: undefined,
 		user: {
-			id: 'askdljaklsdajklsd',
+			_id: '',
 			name: '',
 			email: '',
 			address: '',
 			phone: '',
 			password: '',
 			role: {
-				id: '',
+				_id: '',
 				name: 'administrador',
 				description: 'Acceso completo',
 				permissions: [],
@@ -29,14 +33,14 @@ function CreateOrderModal({ isOpen, onClose }: DefaultModalProps<Order>) {
 		},
 		status: 'En proceso',
 		address: '',
-		startDate: '',
+		startedAt: '',
 		items: [],
+		paymentStatus: '',
 		payments: [],
-		attachments: [],
 	});
 
 	// Cambiar inputs generales
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = e.target;
 		setOrderData((prev) => ({
 			...prev,
@@ -44,14 +48,26 @@ function CreateOrderModal({ isOpen, onClose }: DefaultModalProps<Order>) {
 		}));
 	};
 
+	const handleUserChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const userId = e.target.value;
+		const selectedUser = users.find((u) => u._id === userId);
+		if (selectedUser) {
+			setOrderData((prev) => ({ ...prev, user: selectedUser }));
+		}
+	};
+
 	// Cambiar valores de los servicios
 	const handleItemChange = (
 		index: number,
-		field: 'service' | 'details' | 'value',
+		field: 'id_servicio' | 'detalles' | 'valor',
 		value: string | number
 	) => {
 		const newItems = [...orderData.items];
-		newItems[index][field] = field === 'value' ? Number(value) : (value as string);
+		if (field == 'valor') {
+			newItems[index][field] = Number(value);
+		} else {
+			newItems[index][field] = value as string;
+		}
 		setOrderData((prev) => ({ ...prev, items: newItems }));
 	};
 
@@ -59,7 +75,7 @@ function CreateOrderModal({ isOpen, onClose }: DefaultModalProps<Order>) {
 	const addItem = () => {
 		setOrderData((prev) => ({
 			...prev,
-			items: [...prev.items, { service: '', details: '', value: 0 }],
+			items: [...prev.items, { id_servicio: '', detalles: '', valor: 0 }],
 		}));
 	};
 
@@ -71,8 +87,38 @@ function CreateOrderModal({ isOpen, onClose }: DefaultModalProps<Order>) {
 		}));
 	};
 
+	const fetchUsers = async () => {
+		const response = await api.get('/api/users');
+		if (response.status == 200) {
+			setUsers(response.data.users);
+		}
+	};
+
+	const fetchServices = async () => {
+		const response = await api.get('/api/services');
+		if (response.status == 200) {
+			setServices(response.data);
+			console.log(response.data);
+		}
+	};
+
+	useEffect(() => {
+		fetchUsers();
+		fetchServices();
+	}, []);
+
+	console.log(services);
+
 	// Calcular total
-	const total = orderData.items.reduce((sum, item) => sum + item.value, 0);
+	const total = orderData.items.reduce((sum, item) => sum + item.valor, 0);
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		console.log(orderData);
+		const response = await createElement('Pedido', '/api/orders', orderData, updateList);
+		onClose()
+		console.log(response);
+	};
 
 	if (!isOpen) return null;
 
@@ -88,23 +134,27 @@ function CreateOrderModal({ isOpen, onClose }: DefaultModalProps<Order>) {
 					<h1 className='text-xl font-semibold text-center'>Agregar Pedido</h1>
 				</header>
 
-				<section className='flex flex-col gap-4'>
+				<form
+					onSubmit={handleSubmit}
+					className='flex flex-col gap-4'>
 					{/* Cliente */}
 					<div className='flex flex-col'>
 						<label>Cliente</label>
-						<input
+						<select
 							name='user'
-							type='text'
-							placeholder='Nombre del cliente'
-							value={orderData.user.name}
-							onChange={(e) =>
-								setOrderData((prev) => ({
-									...prev,
-									user: { ...prev.user, name: e.target.value },
-								}))
-							}
-							className='border px-3 py-2 rounded-md'
-						/>
+							id='user'
+							className='border px-2 py-1 rounded-md'
+							value={(orderData.user as User)._id}
+							onChange={handleUserChange}>
+							<option value=''>Seleccione un usuario</option>
+							{users.map((user) => (
+								<option
+									key={user._id}
+									value={user._id}>
+									{user.name}
+								</option>
+							))}
+						</select>
 					</div>
 
 					{/* Dirección */}
@@ -124,16 +174,16 @@ function CreateOrderModal({ isOpen, onClose }: DefaultModalProps<Order>) {
 					<div className='flex flex-col'>
 						<label>Fecha de inicio</label>
 						<input
-							name='startDate'
+							name='startedAt'
 							type='date'
-							value={orderData.startDate}
+							value={orderData.startedAt}
 							onChange={handleChange}
 							className='border px-3 py-2 rounded-md'
 						/>
 					</div>
 
 					{/* Tabla de items */}
-					<div className='mt-4 h-[188px] overflow-y-scroll'>
+					<div className='mt-4 h-[138px] overflow-y-scroll'>
 						<div className='grid grid-cols-4 gap-2 font-semibold border-b pb-2 items-center'>
 							<p>Servicios</p>
 							<p>Valor del servicio</p>
@@ -150,28 +200,33 @@ function CreateOrderModal({ isOpen, onClose }: DefaultModalProps<Order>) {
 							<div
 								key={idx}
 								className='grid grid-cols-4 gap-2 py-2 border-b items-center'>
-								<input
-									type='text'
-									placeholder='Servicio'
-									value={item.service}
+								<select
+									value={item.id_servicio as string}
 									onChange={(e) =>
-										handleItemChange(idx, 'service', e.target.value)
-									}
-									className='border px-2 py-1 rounded-md'
-								/>
+										handleItemChange(idx, 'id_servicio', e.target.value)
+									}>
+									<option value=''>Seleccione un servicio</option>
+									{services.map((service) => (
+										<option
+											key={service._id}
+											value={service._id}>
+											{service.name}
+										</option>
+									))}
+								</select>
 								<input
 									type='number'
 									placeholder='Valor'
-									value={item.value}
-									onChange={(e) => handleItemChange(idx, 'value', e.target.value)}
+									value={item.valor}
+									onChange={(e) => handleItemChange(idx, 'valor', e.target.value)}
 									className='border px-2 py-1 rounded-md'
 								/>
 								<input
 									type='text'
 									placeholder='Detalles'
-									value={item.details}
+									value={item.detalles}
 									onChange={(e) =>
-										handleItemChange(idx, 'details', e.target.value)
+										handleItemChange(idx, 'detalles', e.target.value)
 									}
 									className='border px-2 py-1 rounded-md'
 								/>
@@ -205,7 +260,7 @@ function CreateOrderModal({ isOpen, onClose }: DefaultModalProps<Order>) {
 							Cancelar
 						</button>
 					</div>
-				</section>
+				</form>
 			</div>
 		</div>
 	);

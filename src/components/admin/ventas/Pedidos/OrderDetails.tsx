@@ -61,7 +61,7 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Fecha de inicio</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{new Date(extraProps.startDate).toLocaleDateString('es-CO')}
+							{new Date(extraProps.startedAt).toLocaleDateString('es-CO')}
 						</p>
 					</div>
 
@@ -69,8 +69,8 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Fecha de finalización</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps.endDate
-								? new Date(extraProps.endDate).toLocaleDateString('es-CO')
+							{extraProps.deliveredAt
+								? new Date(extraProps.deliveredAt).toLocaleDateString('es-CO')
 								: 'No definida'}
 						</p>
 					</div>
