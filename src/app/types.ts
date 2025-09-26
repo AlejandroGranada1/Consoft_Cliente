@@ -34,13 +34,13 @@ export interface Role {
 
 // ✅ Users
 export interface User {
-	_id: string;
+	_id: string | undefined;
 	name: string;
 	email: string;
 	password?: string;
 	address?: string;
 	phone?: string;
-	role: Role; // Role ID
+	role: Role | string; // Role ID
 	status: boolean;
 	registeredAt: string; // ISO date string
 	featuredProducts: Product[];
