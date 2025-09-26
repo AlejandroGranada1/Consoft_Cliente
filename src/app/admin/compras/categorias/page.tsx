@@ -113,7 +113,7 @@ function Page() {
 							paginatedCategories.map((category) => (
 								<div
 									key={category._id}
-									className='grid grid-cols-4 place-items-center py-3 border border-brown rounded-lg'>
+									className='grid grid-cols-4 place-items-center py-3 border-b border-brown/10 rounded-lg'>
 									<p>{category.name}</p>
 									<p>{category.description}</p>
 									<p>{category.products.length}</p>
@@ -173,7 +173,9 @@ function Page() {
 								<p className='text-sm'>Productos: {category.products.length}</p>
 
 								{/* Acciones */}
-								<div className='hidden md:flex justify-evenly place-items-center w-full'>
+							<div className='hidden md:flex justify-evenly place-items-center w-full'>
+
+								<div className='flex gap-4 mt-2 justify-center'>
 									<FaEye
 										size={20}
 										color='#d9b13b'
@@ -204,6 +206,7 @@ function Page() {
 										}
 										cursor='pointer'
 									/>
+										</div>
 								</div>
 							</div>
 						))

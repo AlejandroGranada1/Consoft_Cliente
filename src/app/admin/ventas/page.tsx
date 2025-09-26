@@ -62,7 +62,7 @@ function SalesPage() {
 					{(sale: Sale) => (
 						<div
 							key={sale._id}
-							className={`grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown rounded-lg p-4 md:py-2 transition-colors ${
+							className={`grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown/10 rounded-lg p-4 md:py-2 transition-colors ${
 								sale.restante === 0
 									? 'bg-green-50 hover:bg-green-100'
 									: 'bg-orange-50 hover:bg-orange-100'
