@@ -1,9 +1,45 @@
-import { DefaultModalProps, PaymentDetails } from '@/app/types';
-import React from 'react';
-import { IoMdClose } from 'react-icons/io';
+'use client';
 
-function PaymentDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<PaymentDetails>) {
-	if (!isOpen) return;
+import { DefaultModalProps, Payment, PaymentDetails } from '@/app/types';
+import api from '@/components/Global/axios';
+import React, { useState } from 'react';
+import { IoMdClose } from 'react-icons/io';
+import { updateElement } from '../../global/alerts';
+
+function PaymentDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<PaymentDetails>) {
+	if (!isOpen) return null;
+
+	const payment = extraProps?.payment;
+	const order = extraProps?.summary;
+
+	const [paymentData, setPaymentData] = useState<Payment>({
+		_id: payment?._id || '',
+		amount: payment?.amount || 0,
+		method: payment?.method || '',
+		paidAt: payment?.paidAt || new Date,
+		restante: order ? order.total - (payment?.amount || 0) : 0,
+		status: payment?.status || '',
+	});
+
+	console.log(extraProps);
+
+	const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const newStatus = e.target.value;
+
+		// Actualizar estado local
+		setPaymentData((prev) => ({ ...prev, status: newStatus }));
+
+		// Preparamos el objeto que la API espera
+		const payload = { ...paymentData, status: newStatus, paymentId: paymentData._id };
+
+		try {
+			await updateElement('Pago', `/api/payments/${order?._id}`, payload, updateList );
+			onClose()
+		} catch (err) {
+			console.error('Error al actualizar el pago', err);
+		}
+	};
+
 	return (
 		<div className='modal-bg'>
 			<div className='modal-frame w-[800px]'>
@@ -19,24 +55,23 @@ function PaymentDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 					{/* Id Pago */}
 					<div className='flex flex-col'>
 						<label className='font-semibold'>ID Pago</label>
-						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps?.payment.id}
-						</p>
+						<p className='border px-3 py-2 rounded-md bg-gray-100'>{payment?._id}</p>
 					</div>
 
 					{/* Id Pedido */}
 					<div className='flex flex-col'>
 						<label className='font-semibold'>ID Pedido</label>
-						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps?.order.id}
-						</p>
+						<p className='border px-3 py-2 rounded-md bg-gray-100'>{order?._id}</p>
 					</div>
 
 					{/* Monto Total */}
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Monto Total</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps?.total}
+							{order?.total?.toLocaleString('es-CO', {
+								style: 'currency',
+								currency: 'COP',
+							})}
 						</p>
 					</div>
 
@@ -44,7 +79,10 @@ function PaymentDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Valor del pago</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps?.payment.amount}
+							{payment?.amount?.toLocaleString('es-CO', {
+								style: 'currency',
+								currency: 'COP',
+							})}
 						</p>
 					</div>
 
@@ -52,40 +90,47 @@ function PaymentDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Valor pendiente</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps?.total! - extraProps?.payment.amount!}
+							{(order?.total! - payment?.amount!)?.toLocaleString('es-CO', {
+								style: 'currency',
+								currency: 'COP',
+							})}
 						</p>
 					</div>
 
 					{/* Metodo */}
 					<div className='flex flex-col'>
-						<label className='font-semibold'>Metrodo de pago</label>
-						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps?.payment.method}
-						</p>
+						<label className='font-semibold'>Método de pago</label>
+						<p className='border px-3 py-2 rounded-md bg-gray-100'>{payment?.method}</p>
 					</div>
 
-					{/* Estado del  pago */}
+					{/* Estado del pago */}
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Estado del pago</label>
-						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps?.payment.status}
-						</p>
+						<select
+							className='border px-3 py-2 rounded-md bg-gray-100 focus:outline-none focus:ring focus:ring-brown'
+							value={payment?.status} // valor actual
+							onChange={handleChange}>
+							<option value='aprobado'>Aprobado</option>
+							<option value='En revision'>En revisión</option>
+						</select>
 					</div>
 
 					{/* Fecha de pago */}
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Fecha de pago</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps?.payment.paymentDate}
+							{payment?.paidAt
+								? new Date(payment.paidAt).toLocaleDateString('es-CO')
+								: '-'}
 						</p>
 					</div>
 
-                    <button
-							type='submit'
-                            onClick={onClose}
-							className='px-6 py-2 border border-brown rounded-md text-brown hover:bg-brown hover:text-white transition col-span-2'>
-							Volver
-						</button>
+					<button
+						type='button'
+						onClick={onClose}
+						className='px-6 py-2 border border-brown rounded-md text-brown hover:bg-brown hover:text-white transition col-span-2'>
+						Volver
+					</button>
 				</section>
 			</div>
 		</div>

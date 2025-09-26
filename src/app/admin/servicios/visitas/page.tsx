@@ -2,171 +2,198 @@
 import { Visit } from '@/app/types';
 import CreateVisitModal from '@/components/admin/servicios/visitas/CreateVisitModal';
 import VisitDetailsModal from '@/components/admin/servicios/visitas/VisitDetailsModal';
-import Pagination from '@mui/material/Pagination';
-import React, { useState } from 'react';
-import { FaSearch } from 'react-icons/fa';
+import PaginatedList from '@/components/Global/Pagination';
+import React, { useState, useEffect } from 'react';
+import { FaSearch, FaEye, FaTrash } from 'react-icons/fa';
 import { IoMdAdd } from 'react-icons/io';
+import api from '@/components/Global/axios';
+import { deleteElement } from '@/components/admin/global/alerts';
 
-function page() {
+function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
-	const [visits, setVisits] = useState<Visit[]>([
-		{
-			id: 'VIS-001',
-			scheduledAt: '2025-02-02',
-			user: {
-				id: '',
-				name: 'Raúl',
-				email: '',
-				address: '',
-				phone: '',
-				role: {
-					id: '',
-					name: '',
-					description: '',
-					usersCount: 0,
-					createdAt: '',
-					permissions: [],
-					status: true,
-				},
-				featuredProducts: [],
-				registeredAt: '',
-				status: true,
-			},
-			address: '',
-			services: [],
-			status: 'Pendiente',
-		},
-		{
-			id: 'VIS-002',
-			scheduledAt: '2025-02-02',
-			user: {
-				id: '',
-				name: 'Raúl 2',
-				email: '',
-				address: '',
-				phone: '',
-				role: {
-					id: '',
-					name: '',
-					description: '',
-					usersCount: 0,
-					createdAt: '',
-					permissions: [],
-					status: true,
-				},
-				featuredProducts: [],
-				registeredAt: '',
-				status: true,
-			},
-			address: '',
-			services: [],
-			status: 'Cancelada',
-		},
-		{
-			id: 'VIS-003',
-			scheduledAt: '2025-02-02',
-			user: {
-				id: '',
-				name: 'Raúl 3',
-				email: '',
-				address: '',
-				phone: '',
-				role: {
-					id: '',
-					name: '',
-					description: '',
-					usersCount: 0,
-					createdAt: '',
-					permissions: [],
-					status: true,
-				},
-				featuredProducts: [],
-				registeredAt: '',
-				status: true,
-			},
-			address: 'Mi Casa',
-			services: [],
-			status: 'Terminada',
-		},
-	]);
+	const [visits, setVisits] = useState<Visit[]>([]);
 	const [visit, setVisit] = useState<Visit>();
-	return (
-		<div>
-			<header className='flex flex-col h-60 justify-around px-20'>
-				<h1 className='text-2xl  text-brown'>GESTION DE VISITAS</h1>
-				{/* actions */}
-				<div className='flex justify-between items-center'>
-					<div className='relative w-64'>
-						{/* Icono */}
-						<FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+	const [filterText, setFilterText] = useState('');
 
-						{/* Input */}
+	// 🔹 Traer visitas desde API
+	const fetchVisits = async () => {
+		try {
+			const response = await api.get('/api/visits');
+			setVisits(response.data.visits); // ajusta según tu respuesta de API
+		} catch (err) {
+			console.error('Error al traer visitas:', err);
+		}
+	};
+
+	useEffect(() => {
+		fetchVisits();
+	}, []);
+
+	console.log(visits);
+	// Filtrar visitas
+	const filteredVisits = visits.filter(
+		(v) =>
+			v._id?.toLowerCase().includes(filterText.toLowerCase()) ||
+			v.user.name.toLowerCase().includes(filterText.toLowerCase()) ||
+			v.status.toLowerCase().includes(filterText.toLowerCase())
+	);
+
+	return (
+		<div className='px-4 md:px-20'>
+			<header className='flex flex-col gap-4 md:h-40 justify-around'>
+				<h1 className='text-xl md:text-2xl text-brown text-center md:text-left'>
+					GESTIÓN DE VISITAS
+				</h1>
+
+				<div className='flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center'>
+					<div className='relative w-full md:w-64'>
+						<FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
 						<input
 							type='text'
 							placeholder='Buscar Visita'
+							value={filterText}
+							onChange={(e) => setFilterText(e.target.value)}
 							className='pl-10 pr-4 py-2 border border-brown rounded-lg w-full text-sm placeholder-gray-400 focus:outline-none focus:ring focus:ring-brown'
 						/>
 					</div>
 
 					<button
 						onClick={() => setCreateModal(true)}
-						className='flex items-center py-2 w-fit px-10 border border-brown rounded-lg cursor-pointer text-brown'>
-						<IoMdAdd size={25} /> Agregar Nueva Visita
+						className='flex items-center justify-center py-2 px-6 md:px-10 border border-brown rounded-lg cursor-pointer text-brown w-full md:w-fit'>
+						<IoMdAdd
+							size={25}
+							className='mr-2'
+						/>{' '}
+						Agregar Nueva Visita
 					</button>
 				</div>
 			</header>
-			<section className='w-8/9 mx-auto h-[420px] flex flex-col justify-between border-t border-gray'>
-				<div>
-					<div className='grid grid-cols-4 place-items-center py-6'>
-						<p>Id de Visita</p>
-						<p>Fecha de Visita</p>
-						<p>Cliente</p>
-						<p>Estado</p>
-					</div>
 
-					<div className='mx-auto border-t border-brown pt-5 flex flex-col gap-4'>
-						{visits.map((visit) => (
-							<div
-								onClick={() => {
-									setDetailsModal(true);
-									setVisit(visit);
-								}}
-								key={visit.id}
-								className='grid grid-cols-4 place-items-center py-3 border border-brown rounded-lg cursor-pointer'>
-								<p>{visit.id}</p>
-								<p>{visit.scheduledAt}</p>
-								<p>{visit.user.name}</p>
-								<p
-									className={`${
-										visit.status == 'Terminada'
-											? 'bg-green/30 text-green'
-											: visit.status == 'Cancelada'
-											? 'bg-red/30 text-red'
-											: 'bg-orange/30 text-orange'
-									} px-2 py-1 rounded-xl`}>
-									{visit.status}
+			<section className='w-full mx-auto mt-6 flex flex-col justify-between border-t border-gray'>
+				{/* Encabezado tabla desktop */}
+				<div className='hidden md:grid grid-cols-5 place-items-center py-6 font-semibold'>
+					<p>ID de Visita</p>
+					<p>Fecha</p>
+					<p>Cliente</p>
+					<p>Estado</p>
+					<p>Acciones</p>
+				</div>
+
+				{/* Listado con paginación */}
+				<PaginatedList
+					data={filteredVisits}
+					itemsPerPage={5}>
+					{(v: Visit) => (
+						<div
+							key={v._id}
+							className='grid grid-cols-1 md:grid-cols-5 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown rounded-lg p-4 md:py-2'>
+							{/* Vista mobile */}
+							<div className='w-full md:hidden text-center space-y-2 border-b pb-4'>
+								<p>
+									<span className='font-semibold'>ID:</span> {v._id}
 								</p>
+								<p>
+									<span className='font-semibold'>Fecha:</span>{' '}
+									{new Date(v.visitDate).toLocaleDateString()}
+								</p>
+								<p>
+									<span className='font-semibold'>Cliente:</span> {v.user.name}
+								</p>
+								<p>
+									<span className='font-semibold'>Estado:</span>{' '}
+									<span
+										className={`${
+											v.status === 'Terminada'
+												? 'text-green-500'
+												: v.status === 'Cancelada'
+												? 'text-red-500'
+												: 'text-orange-500'
+										}`}>
+										{v.status}
+									</span>
+								</p>
+								<div className='flex gap-4 mt-2 justify-center'>
+									<FaEye
+										size={20}
+										color='#d9b13b'
+										onClick={() => {
+											setDetailsModal(true);
+											setVisit(v);
+										}}
+										cursor='pointer'
+									/>
+									<FaTrash
+										size={19}
+										color='#fa4334'
+										onClick={() =>
+											deleteElement(
+												'Visita',
+												`/api/visits/${v._id}`,
+												fetchVisits
+											)
+										}
+										cursor='pointer'
+									/>
+								</div>
 							</div>
-						))}
-					</div>
-				</div>
 
-				<div className='w-full flex justify-center mt-5'>
-					<Pagination count={Math.ceil(visits.length / 10)} />
-				</div>
+							{/* Vista desktop */}
+							<p className='truncate w-40 hidden md:block'>{v._id}</p>
+							<p className='hidden md:block'>
+								{new Date(v.visitDate).toLocaleDateString()}
+							</p>
+							<p className='hidden md:block'>{v.user.name}</p>
+							<p
+								className={`hidden md:block px-2 py-1 rounded-xl ${
+									v.status === 'Terminada'
+										? 'bg-green/30 text-green'
+										: v.status === 'Cancelada'
+										? 'bg-red/30 text-red'
+										: 'bg-orange/30 text-orange'
+								}`}>
+								{v.status}
+							</p>
+							<div className='flex gap-4 mt-2 justify-center'>
+								<FaEye
+									size={20}
+									color='#d9b13b'
+									onClick={() => {
+										setDetailsModal(true);
+										setVisit(v);
+									}}
+									cursor='pointer'
+								/>
+								<FaTrash
+									size={19}
+									color='#fa4334'
+									onClick={() =>
+										deleteElement('Visita', `/api/visits/${v._id}`, fetchVisits)
+									}
+									cursor='pointer'
+								/>
+							</div>
+						</div>
+					)}
+				</PaginatedList>
 			</section>
+
+			{/* Modales */}
 			<CreateVisitModal
 				isOpen={createModal}
-				onClose={() => setCreateModal(false)}
+				onClose={() => {
+					setCreateModal(false);
+					fetchVisits();
+				}}
 			/>
 			<VisitDetailsModal
 				isOpen={detailsModal}
 				onClose={() => setDetailsModal(false)}
 				extraProps={visit}
+				updateList={() => fetchVisits()}
 			/>
 		</div>
 	);
 }
 
-export default page;
+export default Page;

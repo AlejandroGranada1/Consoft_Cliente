@@ -2,14 +2,20 @@
 import { DefaultModalProps, Category } from '@/app/types';
 import React, { useState, useEffect } from 'react';
 import { IoMdClose } from 'react-icons/io';
+import { updateElement } from '../../global/alerts';
+import api from '@/components/Global/axios';
 
-function EditCategoryModal({ isOpen, onClose, extraProps }: DefaultModalProps<Category>) {
+function EditCategoryModal({
+	isOpen,
+	onClose,
+	extraProps,
+	updateList,
+}: DefaultModalProps<Category>) {
 	const [categoryData, setCategoryData] = useState<Category>({
-		id: '',
+		_id: '',
 		name: '',
 		description: '',
 		products: [],
-		status: true,
 	});
 
 	// 🔹 Prellenar datos cuando se abre el modal
@@ -27,10 +33,22 @@ function EditCategoryModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ca
 		}));
 	};
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		console.log('Categoría actualizada:', categoryData);
-		onClose();
+
+		try {
+			// llamada al helper (muestra alertas)
+			const resposne = await updateElement(
+				'Categoría',
+				`/api/categories/${categoryData._id}`,
+				{ name: categoryData.name, description: categoryData.description },
+				updateList
+			);
+
+			onClose();
+		} catch (error) {
+			console.error('Error al actualizar categoría:', error);
+		}
 	};
 
 	if (!isOpen) return null;
@@ -72,26 +90,6 @@ function EditCategoryModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ca
 							onChange={handleChange}
 							className='border px-3 py-2 rounded-md'
 						/>
-					</div>
-
-					{/* Estado */}
-					<div className='flex items-center gap-3 mt-4'>
-						<input
-							id='status'
-							name='status'
-							type='checkbox'
-							checked={categoryData.status}
-							onChange={(e) =>
-								setCategoryData((prev) => ({
-									...prev,
-									status: e.target.checked,
-								}))
-							}
-							className='h-4 w-4 cursor-pointer'
-						/>
-						<span className={categoryData.status ? 'text-green-600' : 'text-red-600'}>
-							{categoryData.status ? 'Activo' : 'Inactivo'}
-						</span>
 					</div>
 
 					{/* Botones */}

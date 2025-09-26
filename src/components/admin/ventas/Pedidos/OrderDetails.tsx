@@ -1,19 +1,14 @@
 'use client';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
-import { DefaultModalProps, Order } from '@/app/types';
+import { DefaultModalProps, Order, Service, User } from '@/app/types';
 import EditOrderModal from './EditOrderModal';
 
-interface OrderDetailsModalProps {
-	isOpen: boolean;
-	onClose: () => void;
-	order?: Order;
-	handleDeleteOrder: () => void;
-}
+
 
 function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order>) {
 	const [editModal, setEditModal] = useState(false);
-
+	console.log(extraProps)
 	if (!isOpen || !extraProps) return null;
 
 	// Colores dinámicos del estado
@@ -26,7 +21,7 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 	};
 
 	// Calcular total
-	const total = extraProps.items.reduce((sum, item) => sum + item.value, 0);
+	const total = extraProps.items.reduce((sum, item) => sum + item.valor, 0);
 
 	return (
 		<div className='modal-bg'>
@@ -45,7 +40,7 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Cliente</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps.user.name}
+							{(extraProps.user as User).name}
 						</p>
 					</div>
 
@@ -61,7 +56,7 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Fecha de inicio</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{new Date(extraProps.startDate).toLocaleDateString('es-CO')}
+							{new Date(extraProps.startedAt).toLocaleDateString('es-CO')}
 						</p>
 					</div>
 
@@ -69,8 +64,8 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Fecha de finalización</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps.endDate
-								? new Date(extraProps.endDate).toLocaleDateString('es-CO')
+							{extraProps.deliveredAt
+								? new Date(extraProps.deliveredAt).toLocaleDateString('es-CO')
 								: 'No definida'}
 						</p>
 					</div>
@@ -94,18 +89,18 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 							<p>Detalles del servicio</p>
 						</div>
 
-						{extraProps.items.map((item, idx) => (
+						{extraProps.items.map((item) => (
 							<div
-								key={idx}
+								key={item._id}
 								className='grid grid-cols-3 gap-2 py-2 border-b items-center'>
 								<p className='border px-2 py-1 rounded-md bg-gray-100'>
-									{item.service}
+									{(item.id_servicio as Service).name}
 								</p>
 								<p className='border px-2 py-1 rounded-md bg-gray-100'>
-									${item.value.toLocaleString('es-CO')}
+									${item.valor.toLocaleString('es-CO')}
 								</p>
 								<p className='border px-2 py-1 rounded-md bg-gray-100'>
-									{item.details || 'Sin detalles'}
+									{item.detalles || 'Sin detalles'}
 								</p>
 							</div>
 						))}
@@ -116,22 +111,6 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 						Valor total del pedido:{' '}
 						<span className='text-brown'>${total.toLocaleString('es-CO')}</span>
 					</p>
-
-					{/* Botones */}
-					<div className='flex justify-between mt-6'>
-						<button
-							type='button'
-							onClick={() => setEditModal(true)}
-							className='px-6 py-2 border border-brown rounded-md text-brown hover:bg-brown hover:text-white transition'>
-							Editar Pedido
-						</button>
-						<button
-							type='button'
-							onClick={onClose}
-							className='px-6 py-2 border border-gray-400 rounded-md text-gray-600 hover:bg-gray-200 transition'>
-							Cancelar
-						</button>
-					</div>
 				</section>
 			</div>
 

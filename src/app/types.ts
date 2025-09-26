@@ -28,7 +28,7 @@ export interface Role {
 	description?: string;
 	usersCount: number;
 	status: boolean;
-	createdAt: string; // ISO date string
+	createdAt: string | Date; // ISO date string
 	permissions: Permission[]; // Array of Permission IDs
 }
 
@@ -48,16 +48,15 @@ export interface User {
 
 // ✅ Categories
 export interface Category {
-	id: string;
+	_id: string | undefined;
 	name: string;
 	description?: string;
 	products: Product[];
-	status: boolean;
 }
 
 // ✅ Products
 export interface Product {
-	id: string;
+	_id: string | undefined;
 	name: string;
 	description?: string;
 	category: Category; // Category ID
@@ -67,7 +66,7 @@ export interface Product {
 
 // ✅ Services
 export interface Service {
-	_id: string;
+	_id: string | undefined;
 	name: string;
 	description?: string;
 	imageUrl?: string;
@@ -76,27 +75,19 @@ export interface Service {
 
 // ✅ Visits
 export interface Visit {
-	id: string;
+	_id: string | undefined;
 	user: User; // User ID
-	scheduledAt: string; // ISO date string
+	visitDate: Date; // ISO date string
 	address: string;
 	status: string;
 	services: Visit[]; // Array of Service IDs
 }
 
-// ✅ Orders
 export interface OrderItem {
-	service: string; // Service ID
-	details?: string;
+	_id?: string; // lo pones opcional para nuevos items
+	id_servicio: string | Service; // 👈 puede ser ID o documento populado
+	detalles?: string;
 	valor: number;
-}
-
-export interface Payment {
-	id: string;
-	amount: number;
-	paymentDate: string; // ISO date string
-	method: string;
-	status: string; // e.g. "Pending", "Approved"
 }
 
 //! PENDIENTE POR REVISION
@@ -109,21 +100,23 @@ export interface Attachment {
 }
 
 export interface Order {
-	_id: string;
-	user: User; // User ID
+	_id: string | undefined;
+	user: string | User; // User ID
 	status: string; // e.g. "In process", "Completed"
 	address: string;
-	startDate: string;
-	endDate?: string;
+	startedAt: string;
+	deliveredAt?: string;
 	rating?: number;
 	items: OrderItem[];
 	payments: Payment[];
 	paymentStatus: string;
-	attachments?: Attachment[];
 }
+
+export type OrderWithPartialUser = Omit<Order, 'user'> & { user: string | Partial<User> };
 
 export interface Sale {
 	_id: string;
+	order: Order;
 	total: number;
 	paid: number;
 	restante: number;
@@ -141,7 +134,7 @@ export interface PaymentDetails {
 export interface Payment {
 	_id: string;
 	amount: number;
-	paidAt: string;
+	paidAt: Date;
 	method: string;
 	restante: number;
 	status: string;
@@ -150,6 +143,7 @@ export interface Payment {
 export interface PaymentSummary {
 	_id: string; // id del pedido
 	total: number; // total del pedido
+	order: Order;
 	paid: number; // total pagado
 	restante: number; // lo que falta
 	payments: Payment[]; // lista de pagos

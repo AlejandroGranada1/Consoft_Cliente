@@ -6,13 +6,14 @@ import { GiPayMoney } from 'react-icons/gi';
 import { VscServerEnvironment } from 'react-icons/vsc';
 import { CiLocationOn } from 'react-icons/ci';
 import { TbCategoryPlus } from 'react-icons/tb';
+import Link from 'next/link';
 
 function Sidebar() {
     return (
         <aside className='h-screen w-[240px] bg-white flex flex-col'>
             {/* Logo + TopBar */}
             <div className='flex items-center justify-between px-4 py-3 border-b border-gray-200 h-20'>
-                <h1 className='font-bold text-lg'>ConSoft</h1>
+                <Link href={"/client"} className='font-bold text-lg'>Confort & Estilo</Link>
             </div>
 
             {/* Links */}
