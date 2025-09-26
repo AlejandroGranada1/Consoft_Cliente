@@ -2,10 +2,11 @@
 import { DefaultModalProps, Service } from '@/app/types';
 import React, { useState, useEffect } from 'react';
 import { IoMdClose } from 'react-icons/io';
+import { updateElement } from '../../global/alerts';
 
-function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Service>) {
+function EditServiceModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Service>) {
 	const [serviceData, setServiceData] = useState<Service>({
-		id: '',
+		_id: '',
 		name: '',
 		description: '',
 		imageUrl: '',
@@ -20,16 +21,19 @@ function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ser
 	}, [extraProps, isOpen]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target;
-		setServiceData((prev) => ({
-			...prev,
-			[name]: value,
-		}));
+		const { name, value, files } = e.target;
+		if (name === 'imageUrl' && files) {
+			setServiceData((prev) => ({ ...prev, imageUrl: URL.createObjectURL(files[0]) }));
+		} else {
+			setServiceData((prev) => ({ ...prev, [name]: value }));
+		}
 	};
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		console.log('Categoría actualizada:', serviceData);
+		if (!serviceData._id) return;
+		await updateElement('Servicio', `/api/services/${serviceData._id}`, serviceData, updateList);
+		console.log('Servicio actualizado:', serviceData);
 		onClose();
 	};
 
@@ -46,11 +50,14 @@ function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ser
 					</button>
 					<h1 className='text-xl font-semibold mb-4'>EDITAR SERVICIO</h1>
 				</header>
+
 				<section className='grid grid-cols-2 gap-4'>
-					<form onSubmit={handleSubmit}>
+					<form
+						onSubmit={handleSubmit}
+						className='flex flex-col justify-between gap-4'>
 						{/* Nombre */}
 						<div className='flex flex-col'>
-							<label htmlFor='name'>Producto</label>
+							<label htmlFor='name'>Servicio</label>
 							<input
 								id='name'
 								name='name'
@@ -60,6 +67,7 @@ function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ser
 								className='border px-3 py-2 rounded-md'
 							/>
 						</div>
+
 						{/* Descripción */}
 						<div className='flex flex-col mt-4'>
 							<label htmlFor='description'>Descripción</label>
@@ -72,13 +80,14 @@ function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ser
 								className='border px-3 py-2 rounded-md'
 							/>
 						</div>
+
+						{/* Imagen */}
 						<div className='flex flex-col mt-4'>
-							<label htmlFor='description'>Imagen</label>
+							<label htmlFor='imageUrl'>Imagen</label>
 							<input
-								id='description'
-								name='description'
+								id='imageUrl'
+								name='imageUrl'
 								type='file'
-								placeholder='Descripción de la categoría'
 								onChange={handleChange}
 								className='border px-3 py-2 rounded-md'
 							/>
@@ -106,22 +115,32 @@ function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ser
 						</div>
 
 						{/* Botones */}
+						<div className='w-full flex justify-between mt-10'>
+							<button
+								type='submit'
+								className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
+								Guardar
+							</button>
+							<button
+								type='button'
+								onClick={onClose}
+								className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
+								Cancelar
+							</button>
+						</div>
 					</form>
-					<div className='border rounded-lg'></div>
+
+					{/* Preview de imagen */}
+					<div className='border rounded-lg flex items-center justify-center'>
+						{serviceData.imageUrl && (
+							<img
+								src={serviceData.imageUrl}
+								alt='Preview'
+								className='max-h-40 object-contain'
+							/>
+						)}
+					</div>
 				</section>
-				<div className='w-full flex justify-between mt-10'>
-					<button
-						type='submit'
-						className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-						Guardar
-					</button>
-					<button
-						type='button'
-						onClick={onClose}
-						className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
-						Cancelar
-					</button>
-				</div>
 			</div>
 		</div>
 	);

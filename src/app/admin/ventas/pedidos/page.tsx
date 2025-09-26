@@ -36,7 +36,7 @@ function Page() {
 	// 📌 Filtrar pedidos
 	const filteredOrders = orders.filter(
 		(o) =>
-			o._id.toLowerCase().includes(filterText.toLowerCase()) ||
+			o._id?.toLowerCase().includes(filterText.toLowerCase()) ||
 			(o.user as User).name.toLowerCase().includes(filterText.toLowerCase())
 	);
 

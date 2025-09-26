@@ -71,26 +71,7 @@ function CategoryDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps
 
 					</div>
 				</section>
-				<div className='w-full flex justify-between mt-10'>
-					<button
-						onClick={() => setEditModal(true)}
-						className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-						Editar Producto
-					</button>
-					<button
-						onClick={onClose}
-						className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
-						Eliminar Producto
-					</button>
-				</div>
 			</div>
-
-			{/* Edit Modal */}
-			<EditProductModal
-				isOpen={editModal}
-				onClose={() => setEditModal(false)}
-				extraProps={extraProps}
-			/>
 		</div>
 	);
 }

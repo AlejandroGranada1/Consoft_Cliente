@@ -4,16 +4,11 @@ import { IoMdClose } from 'react-icons/io';
 import { DefaultModalProps, Order, Service, User } from '@/app/types';
 import EditOrderModal from './EditOrderModal';
 
-interface OrderDetailsModalProps {
-	isOpen: boolean;
-	onClose: () => void;
-	order?: Order;
-	handleDeleteOrder: () => void;
-}
+
 
 function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Order>) {
 	const [editModal, setEditModal] = useState(false);
-
+	console.log(extraProps)
 	if (!isOpen || !extraProps) return null;
 
 	// Colores dinámicos del estado

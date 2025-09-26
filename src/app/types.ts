@@ -48,16 +48,15 @@ export interface User {
 
 // ✅ Categories
 export interface Category {
-	id: string;
+	_id: string | undefined;
 	name: string;
 	description?: string;
 	products: Product[];
-	status: boolean;
 }
 
 // ✅ Products
 export interface Product {
-	id: string;
+	_id: string | undefined;
 	name: string;
 	description?: string;
 	category: Category; // Category ID
@@ -67,7 +66,7 @@ export interface Product {
 
 // ✅ Services
 export interface Service {
-	_id: string;
+	_id: string | undefined;
 	name: string;
 	description?: string;
 	imageUrl?: string;
@@ -76,9 +75,9 @@ export interface Service {
 
 // ✅ Visits
 export interface Visit {
-	id: string;
+	_id: string | undefined;
 	user: User; // User ID
-	scheduledAt: string; // ISO date string
+	visitDate: Date; // ISO date string
 	address: string;
 	status: string;
 	services: Visit[]; // Array of Service IDs
@@ -89,14 +88,6 @@ export interface OrderItem {
 	id_servicio: string | Service; // 👈 puede ser ID o documento populado
 	detalles?: string;
 	valor: number;
-}
-
-export interface Payment {
-	_id: string;
-	amount: number;
-	paymentDate: string; // ISO date string
-	method: string;
-	status: string; // e.g. "Pending", "Approved"
 }
 
 //! PENDIENTE POR REVISION
@@ -125,6 +116,7 @@ export type OrderWithPartialUser = Omit<Order, 'user'> & { user: string | Partia
 
 export interface Sale {
 	_id: string;
+	order: Order;
 	total: number;
 	paid: number;
 	restante: number;
@@ -142,7 +134,7 @@ export interface PaymentDetails {
 export interface Payment {
 	_id: string;
 	amount: number;
-	paidAt: string;
+	paidAt: Date;
 	method: string;
 	restante: number;
 	status: string;
@@ -151,6 +143,7 @@ export interface Payment {
 export interface PaymentSummary {
 	_id: string; // id del pedido
 	total: number; // total del pedido
+	order: Order;
 	paid: number; // total pagado
 	restante: number; // lo que falta
 	payments: Payment[]; // lista de pagos

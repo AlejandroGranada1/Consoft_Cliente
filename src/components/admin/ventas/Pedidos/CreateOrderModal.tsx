@@ -98,7 +98,6 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 		const response = await api.get('/api/services');
 		if (response.status == 200) {
 			setServices(response.data);
-			console.log(response.data);
 		}
 	};
 
@@ -107,17 +106,42 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 		fetchServices();
 	}, []);
 
-	console.log(services);
-
 	// Calcular total
 	const total = orderData.items.reduce((sum, item) => sum + item.valor, 0);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		console.log(orderData);
 		const response = await createElement('Pedido', '/api/orders', orderData, updateList);
-		onClose()
-		console.log(response);
+		setOrderData({
+			_id: undefined,
+			user: {
+				_id: '',
+				name: '',
+				email: '',
+				address: '',
+				phone: '',
+				password: '',
+				role: {
+					_id: '',
+					name: 'administrador',
+					description: 'Acceso completo',
+					permissions: [],
+					createdAt: '',
+					status: true,
+					usersCount: 0,
+				},
+				status: true,
+				registeredAt: '2025/02/02',
+				featuredProducts: [],
+			},
+			status: 'En proceso',
+			address: '',
+			startedAt: '',
+			items: [],
+			paymentStatus: '',
+			payments: [],
+		});
+		onClose();
 	};
 
 	if (!isOpen) return null;
