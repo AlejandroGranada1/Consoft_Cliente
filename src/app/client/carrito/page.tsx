@@ -28,7 +28,6 @@ export default function CartPage() {
     });
 
     if (result.isConfirmed) {
-      // Simulación de envío
       await Swal.fire({
         icon: "success",
         title: "Cotización enviada",
@@ -47,20 +46,17 @@ export default function CartPage() {
         <p className="text-gray-600">Tu carrito está vacío.</p>
       ) : (
         <div className="space-y-6">
-
           {items.map((p) => (
             <div
-              key={p.id}
+              key={p.uniqueId}     // 👈 Usa el ID único
               className="flex gap-4 bg-white p-4 rounded-xl shadow-md"
             >
-              {/* Imagen del producto */}
               <img
                 src={p.image || "/placeholder.png"}
                 alt={p.name}
                 className="w-24 h-24 object-cover rounded-lg border"
               />
 
-              {/* Info */}
               <div className="flex-1">
                 <p className="font-semibold text-lg">{p.name}</p>
                 <p className="text-sm text-gray-500">
@@ -73,15 +69,18 @@ export default function CartPage() {
                 {p.size && (
                   <p className="text-sm text-gray-700">Tamaño: {p.size}</p>
                 )}
+                {p.notes && (
+                  <p className="text-sm text-gray-700">Notas: {p.notes}</p>
+                )}
               </div>
 
-              {/* Precio + eliminar */}
               <div className="text-right">
                 <p className="font-semibold text-lg">
                   ${p.price * p.quantity}
                 </p>
+
                 <button
-                  onClick={() => removeItem(p.id)}
+                  onClick={() => removeItem(p.uniqueId)}  // 👈 Elimina solo este ítem
                   className="text-red-600 text-sm mt-2 hover:underline"
                 >
                   Eliminar
@@ -95,7 +94,6 @@ export default function CartPage() {
           </div>
 
           <div className="flex gap-4 mt-6">
-            {/* Vaciar carrito */}
             <button
               onClick={() =>
                 Swal.fire({
@@ -113,7 +111,6 @@ export default function CartPage() {
               Vaciar carrito
             </button>
 
-            {/* Enviar cotización */}
             <button
               onClick={handleSendQuote}
               className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 ml-auto"
