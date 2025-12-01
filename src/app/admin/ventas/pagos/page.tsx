@@ -78,7 +78,7 @@ function Page() {
 					{(p) => (
 						<div
 							key={p.payment._id}
-							className='grid grid-cols-1 md:grid-cols-8 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown rounded-lg p-4 md:py-2'>
+							className='grid grid-cols-1 md:grid-cols-8 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown/10 rounded-lg p-4 md:py-2'>
 							{/* 📱 Vista mobile */}
 							<div className='w-full md:hidden text-center space-y-2 border-b pb-4'>
 								<p>

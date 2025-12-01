@@ -1,24 +1,16 @@
-import { DefaultModalProps, User } from '@/app/types';
+import { DefaultModalProps, Role, User } from '@/app/types';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import EditUserModal from './EditUserModal';
 import { deleteElement } from '../global/alerts';
 import Swal from 'sweetalert2';
 
-function DetailsUserModal({ isOpen, onClose, extraProps }: DefaultModalProps<User>) {
+function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<User>) {
 	const [editModal, setEditModal] = useState(false);
 
 	const handleDeleteUser = async () => {
-		const result = await deleteElement('Usuario');
-		if (result.isConfirmed) {
-			Swal.fire({
-				title: 'Usuario eliminado con exito',
-				icon: 'success',
-				showConfirmButton: false,
-				timer: 1000,
-				position: 'top-right',
-			});
-		}
+		const result = await deleteElement('Usuario', `/api/users/${extraProps?._id}`, updateList!);
+
 		onClose();
 	};
 
@@ -71,7 +63,7 @@ function DetailsUserModal({ isOpen, onClose, extraProps }: DefaultModalProps<Use
 					<div className='flex flex-col mt-4'>
 						<label className='font-semibold'>Rol</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps.role?.name || 'Sin rol'}
+							{(extraProps.role as Role)?.name || 'Sin rol'}
 						</p>
 					</div>
 
@@ -86,20 +78,6 @@ function DetailsUserModal({ isOpen, onClose, extraProps }: DefaultModalProps<Use
 							}`}>
 							{extraProps.status ? 'Activo' : 'Inactivo'}
 						</p>
-					</div>
-
-					{/* Botones */}
-					<div className='w-full flex justify-between mt-10'>
-						<button
-							onClick={() => setEditModal(true)}
-							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-							Editar Usuario
-						</button>
-						<button
-							onClick={handleDeleteUser}
-							className='px-10 py-2 rounded-lg border border-red bg-red text-white cursor-pointer'>
-							Eliminar Usuario
-						</button>
 					</div>
 				</div>
 			</div>

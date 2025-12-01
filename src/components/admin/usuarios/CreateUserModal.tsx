@@ -2,11 +2,16 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { IoMdClose } from "react-icons/io";
-import { createElement } from "@/components/admin/global/alerts"; 
-import api from "@/components/Global/axios"; 
+import { createElement } from "@/components/admin/global/alerts";
+import api from "@/components/Global/axios";
 import { DefaultModalProps } from "@/app/types";
 
-function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<any>) {
+function CreateUserModal({
+  isOpen,
+  onClose,
+  extraProps,
+  updateList,
+}: DefaultModalProps<any>) {
   const [userData, setUserData] = useState({
     name: "",
     email: "",
@@ -34,7 +39,9 @@ function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMod
     }
   }, [isOpen]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setUserData((prev) => ({ ...prev, [name]: value }));
   };
@@ -44,17 +51,15 @@ function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMod
 
     const { name, email, password, role } = userData;
     if (!name || !email || !password || !role) {
-      return Swal.fire("Campos incompletos", "Todos los campos son obligatorios", "warning");
+      return Swal.fire(
+        "Campos incompletos",
+        "Todos los campos son obligatorios",
+        "warning"
+      );
     }
 
     try {
-      await createElement(
-        "usuario",
-        "/api/users",
-        userData,
-        extraProps?.refresh || (() => {})
-      );
-      updateList!()
+      await createElement("usuario","/api/users",userData, updateList!)
       onClose();
     } catch (error) {
       console.error("Error al crear usuario:", error);

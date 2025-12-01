@@ -1,78 +1,167 @@
-"use client"
+"use client";
 
-import { use } from "react"
-import { ArrowLeft } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useCart } from "@/context/CartContext";
+import Swal from "sweetalert2";
 
-const products = [
-  {
-    id: "1",
-    name: "Silla de sala",
-    description: "Cómoda silla de madera con cojín beige.",
-    price: "$120",
-    image: "/sillaProduct.png",
-  },
-  {
-    id: "2",
-    name: "Mesa de comedor",
-    description: "Mesa de madera para 6 personas.",
-    price: "$300",
-    image: "/MesaProducts.jpeg",
-  },
-  {
-    id: "3",
-    name: "Silla de comedor",
-    description: "Sillas para tu comedor",
-    price: "$90",
-    image: "/SillaComedorProducts.jpeg",
-  },
-]
+export default function ProductDetailPage() {
+  const { id } = useParams();
+  const router = useRouter();
+  const { addItem } = useCart();
 
-export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter()
-  const { id: raw } = use(params)
+  const products = [
+    {
+      id: "1",
+      name: "Silla de sala",
+      price: 120,
+      priceApprox: "$120",
+      size: "70x20",
+      image: "/sillaProduct.png",
+      description: "Hermosa silla de sala hecha en madera fina."
+    },
+    {
+      id: "2",
+      name: "Mesa de comedor",
+      price: 300,
+      priceApprox: "$300",
+      size: "30x10",
+      image: "/MesaProducts.jpeg",
+      description: "Mesa amplia ideal para un comedor familiar."
+    },
+    {
+      id: "3",
+      name: "Silla de comedor",
+      price: 90,
+      priceApprox: "$90",
+      size: "26x70",
+      image: "/SillaComedorProducts.jpeg",
+      description: "Silla de comedor moderna y cómoda."
+    },
+  ];
 
-  const idNum = raw.match(/^\d+/)?.[0] ?? "1"
-  const product = products.find((p) => p.id === idNum) ?? products[0]
+  const product = products.find((p) => p.id === id);
+
+  const [quantity, setQuantity] = useState(1);
+  const [color, setColor] = useState("");
+  const [customSize, setCustomSize] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const addToCart = () => {
+    if (!product) return;
+
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      color,
+      size: customSize,
+      notes,
+      image: product.image
+    });
+
+    Swal.fire({
+      title: "Añadido al carrito",
+      text: "El producto ha sido añadido correctamente",
+      icon: "success",
+      confirmButtonColor: "#8B5A2B",
+    });
+
+    router.push("/client/productos");
+  };
+
+  if (!product) return <p className="p-10">Producto no encontrado</p>;
 
   return (
-    <div className="relative w-full min-h-screen bg-[#FAF4EF] flex flex-col">
-      {/* Botón volver */}
-      <button
-        onClick={() => router.push("/productos")}
-        className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-white/90 text-[#5C3A21] font-medium rounded-full shadow-lg hover:bg-[#F3E6DD] transition-colors"
-      >
-         Volver
-      </button>
+    <section className="bg-[#f2f2f2] min-h-screen py-10 px-6">
+      <div className="max-w-5xl mx-auto bg-white p-10 rounded-2xl shadow-lg">
 
-      {/* Contenido */}
-      <div className="flex flex-1 flex-col md:flex-row items-center justify-center gap-14 p-8 max-w-7xl mx-auto w-full">
-        {/* Imagen */}
-        <div className="w-full md:w-1/2 flex justify-center">
-          <div className="relative group">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+
+          {/* Imagen */}
+          <div className="w-full h-80 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center border">
             <img
               src={product.image}
               alt={product.name}
-              className="w-full max-w-lg h-[450px] md:h-[550px] object-cover rounded-3xl shadow-xl border-4 border-white group-hover:scale-105 transition-transform duration-300"
+              className="object-contain h-full p-4"
             />
           </div>
-        </div>
 
-        {/* Info */}
-        <div className="w-full md:w-1/2 max-w-md bg-white rounded-3xl shadow-lg p-8">
-          <h1 className="text-4xl font-bold text-[#4E2F1B]">{product.name}</h1>
-          <p className="mt-4 text-gray-700 text-lg leading-relaxed">
-            {product.description}
-          </p>
-          <p className="mt-6 text-3xl font-semibold text-[#8B5E3C]">
-            {product.price}
-          </p>
+          {/* Información */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+            <p className="text-gray-600 mt-2 leading-relaxed">
+              {product.description}
+            </p>
 
-          <button className="mt-10 w-full px-8 py-4 bg-[#8B5E3C] text-white rounded-2xl shadow-md hover:bg-[#70492F] hover:shadow-lg active:scale-95 transition-all text-lg font-medium">
-            Añadir al carrito
-          </button>
+            <div className="mt-5">
+              <p className="text-2xl font-semibold text-[#8B5A2B]">
+                {product.priceApprox}
+              </p>
+              <p className="text-sm text-gray-500">Tamaño estándar: {product.size}</p>
+            </div>
+
+            <hr className="my-6" />
+
+            {/* Inputs */}
+            <div className="space-y-4">
+
+              <div>
+                <label className="font-medium mr-4">Cantidad</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  className="input-style w-24"
+                />
+              </div>
+
+              <div>
+                <label className="font-medium">Color</label>
+                <input
+                  type="text"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="input-style w-full"
+                  placeholder="Ej: Nogal, blanco..."
+                />
+              </div>
+
+              <div>
+                <label className="font-medium">Tamaño personalizado</label>
+                <input
+                  type="text"
+                  value={customSize}
+                  onChange={(e) => setCustomSize(e.target.value)}
+                  className="input-style w-full"
+                  placeholder="Ej: 50x40"
+                />
+              </div>
+
+              <div>
+                <label className="font-medium">Notas adicionales</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="input-style w-full h-24"
+                  placeholder="Detalles, aclaraciones o ideas..."
+                />
+              </div>
+
+              <button
+                onClick={addToCart}
+                className="w-full bg-[#8B5A2B] hover:bg-[#70461f] text-white py-3 rounded-lg font-semibold transition"
+              >
+                Agregar al carrito
+              </button>
+
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
-  )
+    </section>
+  );
 }

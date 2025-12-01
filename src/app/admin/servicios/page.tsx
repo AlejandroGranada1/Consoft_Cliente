@@ -84,7 +84,7 @@ function Page() {
 					{(s: Service) => (
 						<div
 							key={s._id}
-							className='grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown rounded-lg p-4 md:py-2 hover:shadow-md transition-shadow cursor-pointer'>
+							className='grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown/10 rounded-lg p-4 md:py-2 hover:shadow-md transition-shadow cursor-pointer'>
 							{/* Mobile */}
 							<div className='w-full md:hidden text-center space-y-2 border-b pb-4'>
 								<p>
@@ -148,7 +148,7 @@ function Page() {
 								}`}>
 								{s.status ? 'Activo' : 'Inactivo'}
 							</p>
-							<div className='hidden md:flex justify-evenly place-items-center w-full'>
+							<div className='flex gap-4 mt-2 justify-center'>
 								<FaEye
 									size={20}
 									color='#d9b13b'
