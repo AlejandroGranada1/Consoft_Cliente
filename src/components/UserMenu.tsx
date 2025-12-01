@@ -7,7 +7,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useUser } from '@/context/userContext';
+import { useUser } from '@/providers/userContext';
 import { User } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api from './Global/axios';

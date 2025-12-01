@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
 import UserMenu from '@/components/UserMenu';
-import { useUser } from '@/context/userContext';
+import { useUser } from '@/providers/userContext';
 
 export default function Navbar() {
 	const { user } = useUser();

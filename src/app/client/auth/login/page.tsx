@@ -8,7 +8,7 @@ import api from '@/components/Global/axios';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/context/userContext';
+import { useUser } from '@/providers/userContext';
 import { fetchCurrentUser } from '@/lib/utils';
 
 export default function LoginPage() {
