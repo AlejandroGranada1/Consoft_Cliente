@@ -2,7 +2,7 @@
 
 import '../globals.css';
 import Navbar from '@/components/Global/Navbar';
-import { CartProvider } from '@/context/CartContext';
+import { CartProvider } from '@/providers/CartContext';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (

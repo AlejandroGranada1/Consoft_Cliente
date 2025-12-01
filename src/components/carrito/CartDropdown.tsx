@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/providers/CartContext";
 import { X } from "lucide-react";
 
 export default function CartDropdown({
@@ -14,7 +14,6 @@ export default function CartDropdown({
   const { items, removeItem } = useCart();
 
   // 🔥 Cálculo del total (ANTES fallaba porque no existía en el contexto)
-  const total = items.reduce((acc, p) => acc + p.price * p.quantity, 0);
 
   if (!isOpen) return null;
 
@@ -60,10 +59,9 @@ export default function CartDropdown({
               </div>
 
               <div className="text-right">
-                <p className="text-sm font-semibold">${p.price * p.quantity}</p>
 
                 <button
-                  onClick={() => removeItem(p.id)}
+                  onClick={() => removeItem(p.uniqueId)}
                   className="text-xs text-red-600 hover:underline"
                 >
                   Eliminar
@@ -77,10 +75,6 @@ export default function CartDropdown({
       {/* Footer */}
       {items.length > 0 && (
         <>
-          <div className="flex justify-between items-center mt-4 font-semibold text-lg">
-            <span>Total:</span>
-            <span>${total}</span>
-          </div>
 
           <Link
             href="/client/carrito"

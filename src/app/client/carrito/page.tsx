@@ -1,12 +1,11 @@
 "use client";
 
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/providers/CartContext";
 import Swal from "sweetalert2";
 
 export default function CartPage() {
   const { items, removeItem, clearCart } = useCart();
 
-  const total = items.reduce((acc, p) => acc + p.price * p.quantity, 0);
 
   const handleSendQuote = async () => {
     if (items.length === 0) {
@@ -75,9 +74,6 @@ export default function CartPage() {
               </div>
 
               <div className="text-right">
-                <p className="font-semibold text-lg">
-                  ${p.price * p.quantity}
-                </p>
 
                 <button
                   onClick={() => removeItem(p.uniqueId)}  // 👈 Elimina solo este ítem
@@ -88,10 +84,6 @@ export default function CartPage() {
               </div>
             </div>
           ))}
-
-          <div className="text-right text-2xl font-bold">
-            Total: ${total}
-          </div>
 
           <div className="flex gap-4 mt-6">
             <button
