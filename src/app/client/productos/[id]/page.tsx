@@ -2,45 +2,18 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/providers/CartContext";
 import Swal from "sweetalert2";
+import { useGetProductById } from '@/hooks/apiHooks';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { addItem } = useCart();
 
-  const products = [
-    {
-      id: "1",
-      name: "Silla de sala",
-      price: 120,
-      priceApprox: "$120",
-      size: "70x20",
-      image: "/sillaProduct.png",
-      description: "Hermosa silla de sala hecha en madera fina."
-    },
-    {
-      id: "2",
-      name: "Mesa de comedor",
-      price: 300,
-      priceApprox: "$300",
-      size: "30x10",
-      image: "/MesaProducts.jpeg",
-      description: "Mesa amplia ideal para un comedor familiar."
-    },
-    {
-      id: "3",
-      name: "Silla de comedor",
-      price: 90,
-      priceApprox: "$90",
-      size: "26x70",
-      image: "/SillaComedorProducts.jpeg",
-      description: "Silla de comedor moderna y cómoda."
-    },
-  ];
+  console.log(id)
 
-  const product = products.find((p) => p.id === id);
+  const { data: product, isLoading } = useGetProductById(String(id));
 
   const [quantity, setQuantity] = useState(1);
   const [color, setColor] = useState("");
@@ -51,14 +24,13 @@ export default function ProductDetailPage() {
     if (!product) return;
 
     addItem({
-      id: product.id,
+      id: product._id,
       name: product.name,
-      price: product.price,
       quantity,
       color,
       size: customSize,
       notes,
-      image: product.image
+      image: product.imageUrl,
     });
 
     Swal.fire({
@@ -71,18 +43,18 @@ export default function ProductDetailPage() {
     router.push("/client/productos");
   };
 
+  if (isLoading) return <p className="p-10">Cargando producto...</p>;
   if (!product) return <p className="p-10">Producto no encontrado</p>;
 
   return (
     <section className="bg-[#f2f2f2] min-h-screen py-10 px-6">
       <div className="max-w-5xl mx-auto bg-white p-10 rounded-2xl shadow-lg">
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
 
           {/* Imagen */}
           <div className="w-full h-80 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center border">
             <img
-              src={product.image}
+              src={product.imageUrl}
               alt={product.name}
               className="object-contain h-full p-4"
             />
@@ -91,20 +63,13 @@ export default function ProductDetailPage() {
           {/* Información */}
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
-            <p className="text-gray-600 mt-2 leading-relaxed">
-              {product.description}
-            </p>
+            <p className="text-gray-600 mt-2 leading-relaxed">{product.description}</p>
 
             <div className="mt-5">
-              <p className="text-2xl font-semibold text-[#8B5A2B]">
-                {product.priceApprox}
-              </p>
-              <p className="text-sm text-gray-500">Tamaño estándar: {product.size}</p>
             </div>
 
             <hr className="my-6" />
 
-            {/* Inputs */}
             <div className="space-y-4">
 
               <div>

@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
 import UserMenu from '@/components/UserMenu';
 import { useUser } from '@/providers/userContext';
+import { useCart } from '@/providers/CartContext';
+import { useState } from 'react';
+import CartDropdown from '../carrito/CartDropdown';
 
 export default function Navbar() {
   const { items } = useCart();

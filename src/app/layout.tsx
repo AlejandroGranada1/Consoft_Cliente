@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import '@/app/globals.css';
 import { UserProvider } from '@/providers/userContext';
-import { QueryClient, QueryClientProvider } from 'react-query';
 import QueryProvider from '@/providers/QueryProvider';
 
 export const metadata: Metadata = {

@@ -4,9 +4,8 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 interface CartItem {
   uniqueId: string;     // 👈 Identificador único por cada mueble agregado
-  id: string;
+  id: string | undefined;
   name: string;
-  price: number;
   quantity: number;
   color?: string;
   size?: string;

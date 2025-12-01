@@ -74,6 +74,16 @@ export const useGetProducts = () => {
 	});
 };
 
+export const useGetProductById = (id: string) => {
+	return useQuery({
+		queryKey: ['product', id],
+		queryFn: async () => {
+			const { data } = await api.get<Product>(`/api/products/${id}`);
+			return data;
+		},
+	});
+};
+
 export const useAddProduct = () => {
 	const queryClient = useQueryClient();
 
