@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
-import { DefaultModalProps, Order, Service, User } from '@/app/types';
+import { DefaultModalProps, Order, Service, User } from '@/lib/types';
 import EditOrderModal from './EditOrderModal';
 
 
@@ -48,7 +48,7 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 					<div className='flex flex-col'>
 						<label className='font-semibold'>Dirección</label>
 						<p className='border px-3 py-2 rounded-md bg-gray-100'>
-							{extraProps.address}
+							{extraProps.address || extraProps.user && (extraProps.user as User).address || 'No definida'}
 						</p>
 					</div>
 

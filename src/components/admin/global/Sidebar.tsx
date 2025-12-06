@@ -1,12 +1,14 @@
 import SidebarLink from './SidebarLink';
-import { FaChartLine, FaFileInvoiceDollar } from 'react-icons/fa';
+import { FaChartLine, FaElementor, FaFileInvoiceDollar, FaProductHunt } from 'react-icons/fa';
 import { HiUsers } from 'react-icons/hi';
-import { FaCartShopping, FaGear, FaMoneyBillTrendUp } from 'react-icons/fa6';
+import { FaCartShopping, FaGear, FaMessage, FaMoneyBillTrendUp } from 'react-icons/fa6';
 import { GiPayMoney } from 'react-icons/gi';
 import { VscServerEnvironment } from 'react-icons/vsc';
-import { CiLocationOn } from 'react-icons/ci';
+import { CiLocationOn, CiMoneyBill } from 'react-icons/ci';
 import { TbCategoryPlus } from 'react-icons/tb';
 import Link from 'next/link';
+import { ItemIndicator } from '@radix-ui/react-dropdown-menu';
+import ListItemIcon from '@mui/material/ListItemIcon';
 
 function Sidebar() {
     return (
@@ -18,6 +20,12 @@ function Sidebar() {
 
             {/* Links */}
             <nav className='flex-1 flex flex-col justify-evenly overflow-y-auto border-r border-gray'>
+                <SidebarLink
+                groupTitle='Chats'
+                routes={[{value: "Chats", icon: <FaMessage/>, href: "/admin/chats"}]}
+                >
+                    
+                </SidebarLink>
                 <SidebarLink
                     groupTitle='Configuración'
                     routes={[{ value: 'Roles', icon: <FaGear />, href: '/admin/configuracion' }]}
@@ -36,6 +44,7 @@ function Sidebar() {
                         },
                         { value: 'Pagos', icon: <GiPayMoney />, href: '/admin/ventas/pagos' },
                         { value: 'Ventas', icon: <FaMoneyBillTrendUp />, href: '/admin/ventas' },
+                        { value: 'Cotizaciones', icon: <FaCartShopping />, href: '/admin/ventas/cotizaciones' },
                     ]}
                 />
                 <SidebarLink
@@ -63,7 +72,7 @@ function Sidebar() {
                         },
                         {
                             value: 'Productos',
-                            icon: <FaCartShopping />,
+                            icon: <FaElementor />,
                             href: '/admin/compras/productos',
                         },
                     ]}

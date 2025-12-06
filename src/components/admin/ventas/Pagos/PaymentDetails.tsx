@@ -1,6 +1,6 @@
 'use client';
 
-import { DefaultModalProps, Payment, PaymentDetails } from '@/app/types';
+import { DefaultModalProps, Payment, PaymentDetails } from '@/lib/types';
 import api from '@/components/Global/axios';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';

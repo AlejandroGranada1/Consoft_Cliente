@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Heart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useUpdateProduct } from '@/hooks/apiHooks';
 
 export default function ProductCard({
 	id,
@@ -15,12 +16,16 @@ export default function ProductCard({
 }) {
 	const router = useRouter();
 
+
+
+
+
 	return (
 		<div className='bg-white rounded-xl border flex flex-col justify-evenly border-black shadow h-[320px] w-[300px]'>
 			{/* Imagen con altura fija */}
 			<div className='relative w-full h-56 rounded-t-xl overflow-hidden'>
 				<Image
-					src={image?.startsWith('http') ? image : '/test.png'}
+					src={image}
 					alt={name}
 					fill
 					className='object-cover'
@@ -35,7 +40,7 @@ export default function ProductCard({
 					<Heart
 						size={18}
 						className='text-gray-500 peer-checked:text-red-500 transition-colors'
-						fill='none'
+						fill='currentColor'
 					/>
 				</label>
 			</div>

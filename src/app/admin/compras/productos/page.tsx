@@ -1,5 +1,5 @@
 'use client';
-import { Product } from '@/app/types';
+import { Product } from '@/lib/types';
 import ProductDetailsModal from '@/components/admin/compras/productos/ProductDetailsModal';
 import CreateProductModal from '@/components/admin/compras/productos/CreateProductModal';
 import EditProductModal from '@/components/admin/compras/productos/EditProductModal';

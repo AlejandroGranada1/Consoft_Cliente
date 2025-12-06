@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import { IoMdClose } from "react-icons/io";
 import { createElement } from "@/components/admin/global/alerts";
 import api from "@/components/Global/axios";
-import { DefaultModalProps } from "@/app/types";
+import { DefaultModalProps } from "@/lib/types";
 
 function CreateUserModal({
   isOpen,

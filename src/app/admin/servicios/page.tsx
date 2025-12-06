@@ -1,5 +1,5 @@
 'use client';
-import { Service } from '@/app/types';
+import { Service } from '@/lib/types';
 import CreateServiceModal from '@/components/admin/servicios/servicios/CreateService';
 import EditServiceModal from '@/components/admin/servicios/servicios/EditService';
 import ServiceDetailsModal from '@/components/admin/servicios/servicios/ServiceDetails';

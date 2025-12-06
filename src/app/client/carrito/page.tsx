@@ -1,11 +1,49 @@
 "use client";
 
-import { useCart } from "@/providers/CartContext";
 import Swal from "sweetalert2";
+import { useMyCart } from "@/hooks/apiHooks";
+import { usedeleteCartItem, useSubmitQuotation } from "@/hooks/apiHooks";
 
 export default function CartPage() {
-  const { items, removeItem, clearCart } = useCart();
+  const { data, isLoading } = useMyCart();
+  const deleteItem = usedeleteCartItem();
+  const submitQuotation = useSubmitQuotation();
 
+  if (isLoading) return <p>Cargando carrito...</p>;
+
+  // ✔️ Ajustado al formato real de la API
+  const cart = data?.quotations?.[0];
+  const items = cart?.items || [];
+
+  const handleDeleteItem = (itemId: string) => {
+    deleteItem.mutate(
+      { cartId: cart._id, itemId },
+      {
+        onSuccess: () => {
+          Swal.fire("Eliminado", "Producto eliminado del carrito.", "success");
+        },
+      }
+    );
+  };
+
+  const handleClearCart = async () => {
+    const confirm = await Swal.fire({
+      title: "¿Vaciar carrito?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, vaciar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (confirm.isConfirmed) {
+      // Eliminar cada item desde el backend
+      for (const item of items) {
+        await deleteItem.mutateAsync({ cartId: cart._id, itemId: item._id });
+      }
+
+      Swal.fire("Carrito vacío", "El carrito se vació con éxito.", "success");
+    }
+  };
 
   const handleSendQuote = async () => {
     if (items.length === 0) {
@@ -19,7 +57,7 @@ export default function CartPage() {
 
     const result = await Swal.fire({
       title: "¿Enviar cotización?",
-      text: "Se enviará una solicitud con los productos del carrito.",
+      text: "Se enviará una solicitud con tus productos.",
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Enviar",
@@ -27,13 +65,13 @@ export default function CartPage() {
     });
 
     if (result.isConfirmed) {
-      await Swal.fire({
+      await submitQuotation.mutateAsync(cart._id);
+
+      Swal.fire({
         icon: "success",
         title: "Cotización enviada",
         text: "Nos pondremos en contacto contigo pronto.",
       });
-
-      clearCart();
     }
   };
 
@@ -45,69 +83,55 @@ export default function CartPage() {
         <p className="text-gray-600">Tu carrito está vacío.</p>
       ) : (
         <div className="space-y-6">
-          {items.map((p) => (
+          {items.map((item: any) => (
             <div
-              key={p.uniqueId}     // 👈 Usa el ID único
+              key={item._id}
               className="flex gap-4 bg-white p-4 rounded-xl shadow-md"
             >
               <img
-                src={p.image || "/placeholder.png"}
-                alt={p.name}
+                src={item.product.imageUrl && item.product.imageUrl.trim() !== '' ? item.product.imageUrl : '/def_prod.png'}
+                alt={item.product.name}
                 className="w-24 h-24 object-cover rounded-lg border"
               />
 
               <div className="flex-1">
-                <p className="font-semibold text-lg">{p.name}</p>
+                <p className="font-semibold text-lg">{item.product.name}</p>
                 <p className="text-sm text-gray-500">
-                  Cantidad: {p.quantity}
+                  Cantidad: {item.quantity}
                 </p>
-
-                {p.color && (
-                  <p className="text-sm text-gray-700">Color: {p.color}</p>
+                {item.color && (
+                  <p className="text-sm text-gray-700">Color: {item.color}</p>
                 )}
-                {p.size && (
-                  <p className="text-sm text-gray-700">Tamaño: {p.size}</p>
+                {item.size && (
+                  <p className="text-sm text-gray-700">Tamaño: {item.size}</p>
                 )}
-                {p.notes && (
-                  <p className="text-sm text-gray-700">Notas: {p.notes}</p>
+                {item.notes && (
+                  <p className="text-sm text-gray-700">Notas: {item.notes}</p>
                 )}
               </div>
 
-              <div className="text-right">
-
-                <button
-                  onClick={() => removeItem(p.uniqueId)}  // 👈 Elimina solo este ítem
-                  className="text-red-600 text-sm mt-2 hover:underline"
-                >
-                  Eliminar
-                </button>
-              </div>
+              <button
+                onClick={() => handleDeleteItem(item._id)}
+                className="text-red-600 text-sm mt-2 hover:underline"
+              >
+                Eliminar
+              </button>
             </div>
           ))}
 
           <div className="flex gap-4 mt-6">
             <button
-              onClick={() =>
-                Swal.fire({
-                  title: "¿Vaciar carrito?",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonText: "Sí, vaciar",
-                  cancelButtonText: "Cancelar",
-                }).then((res) => {
-                  if (res.isConfirmed) clearCart();
-                })
-              }
-              className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700"
+              onClick={handleClearCart}
+              className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 cursor-pointer"
             >
               Vaciar carrito
             </button>
 
             <button
               onClick={handleSendQuote}
-              className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 ml-auto"
+              className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 ml-auto cursor-pointer"
             >
-              Enviar cotización
+              Solicitar cotización
             </button>
           </div>
         </div>

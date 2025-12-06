@@ -6,7 +6,7 @@ import ReviewCard from '@/components/servicios/ReviewCard';
 import Link from 'next/link';
 import api from '@/components/Global/axios';
 import ServiceCard from '@/components/servicios/ServiceCard';
-import { Service } from '@/app/types';
+import { Service } from '@/lib/types';
 import { useGetServices } from '@/hooks/apiHooks';
 export default function ServiciosPage() {
 	const { data: services, isLoading } = useGetServices();

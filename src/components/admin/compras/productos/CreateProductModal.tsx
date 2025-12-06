@@ -1,5 +1,5 @@
 'use client';
-import { DefaultModalProps, Category, Product } from '@/app/types';
+import { DefaultModalProps, Category, Product } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import api from '@/components/Global/axios';
@@ -10,7 +10,7 @@ function CreateProductModal({
 	onClose,
 	updateList,
 }: DefaultModalProps<Product> & { updateList?: () => void }) {
-	const [formData, setFormData] = useState<Product>({
+	const [formData, setFormData] = useState<any>({
 		_id: undefined,
 		name: '',
 		description: '',
@@ -20,7 +20,8 @@ function CreateProductModal({
 			description: '',
 			products: [],
 		},
-		imageUrl: '',
+		imageUrl: '',   // preview
+		imageFile: null, // file real que se enviará al backend
 		status: true,
 	});
 
@@ -39,19 +40,32 @@ function CreateProductModal({
 		if (isOpen) fetchCategories();
 	}, [isOpen]);
 
-	// 📌 Manejar cambios
+	// 📌 Manejar cambios de texto/select
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = e.target;
 
 		if (name === 'category') {
 			const selected = categories.find((c) => c._id === value);
 			if (selected) {
-				setFormData((prev) => ({ ...prev, category: selected }));
+				setFormData((prev: any) => ({ ...prev, category: selected }));
 			}
-		} else {
-			setFormData((prev) => ({
+			return;
+		}
+
+		setFormData((prev: any) => ({
+			...prev,
+			[name]: value,
+		}));
+	};
+
+	// 📌 Manejar archivo (imagen)
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			setFormData((prev: any) => ({
 				...prev,
-				[name]: value,
+				imageFile: file,
+				imageUrl: URL.createObjectURL(file), // preview
 			}));
 		}
 	};
@@ -59,11 +73,25 @@ function CreateProductModal({
 	// 📌 Guardar producto
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+
 		try {
-			const confirm = await createElement('Producto', '/api/products', formData, updateList);
+			// Construimos el FormData REAL
+			const fd = new FormData();
+			fd.append('name', formData.name);
+			fd.append('description', formData.description);
+			fd.append('category', formData.category._id);
+			fd.append('status', String(formData.status));
+
+			if (formData.imageFile) {
+				fd.append('image', formData.imageFile); // <-- así se envía la imagen real
+			}
+
+			const confirm = await createElement('Producto', '/api/products', fd, updateList);
+
 			if (confirm) {
 				updateList && updateList();
 				onClose();
+
 				// Reset form
 				setFormData({
 					_id: undefined,
@@ -76,6 +104,7 @@ function CreateProductModal({
 						products: [],
 					},
 					imageUrl: '',
+					imageFile: null,
 					status: true,
 				});
 			}
@@ -98,10 +127,9 @@ function CreateProductModal({
 					<h1 className='text-xl font-semibold mb-4'>AGREGAR PRODUCTO</h1>
 				</header>
 
-				<form
-					onSubmit={handleSubmit}
-					className='grid grid-cols-2 gap-6'>
+				<form onSubmit={handleSubmit} className='grid grid-cols-2 gap-6'>
 					<div className='flex flex-col gap-4'>
+						
 						{/* Nombre */}
 						<div className='flex flex-col'>
 							<label htmlFor='name'>Producto</label>
@@ -127,9 +155,7 @@ function CreateProductModal({
 								className='border px-3 py-2 rounded-md'>
 								<option value=''>Seleccione una categoría</option>
 								{categories.map((c) => (
-									<option
-										key={c._id}
-										value={c._id}>
+									<option key={c._id} value={c._id}>
 										{c.name}
 									</option>
 								))}
@@ -152,14 +178,13 @@ function CreateProductModal({
 
 						{/* Imagen */}
 						<div className='flex flex-col'>
-							<label htmlFor='imageUrl'>Imagen (URL)</label>
+							<label htmlFor='image'>Imagen</label>
 							<input
-								id='imageUrl'
-								name='imageUrl'
-								type='text'
-								placeholder='https://...'
-								value={formData.imageUrl}
-								onChange={handleChange}
+								id='image'
+								name='image'
+								type='file'
+								accept='image/*'
+								onChange={handleFileChange}
 								className='border px-3 py-2 rounded-md'
 							/>
 						</div>
@@ -172,7 +197,7 @@ function CreateProductModal({
 								type='checkbox'
 								checked={formData.status}
 								onChange={(e) =>
-									setFormData((prev) => ({
+									setFormData((prev: any) => ({
 										...prev,
 										status: e.target.checked,
 									}))
@@ -185,7 +210,7 @@ function CreateProductModal({
 						</div>
 					</div>
 
-					{/* Preview de imagen */}
+					{/* Preview */}
 					<div className='border rounded-lg flex justify-center items-center'>
 						{formData.imageUrl ? (
 							<img

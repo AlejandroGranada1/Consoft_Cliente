@@ -1,4 +1,4 @@
-import { DefaultModalProps, GroupPermission, Permission, Role } from '@/app/types';
+import { DefaultModalProps, GroupPermission, Permission, Role } from '@/lib/types';
 import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
 import { IoMdClose } from 'react-icons/io';

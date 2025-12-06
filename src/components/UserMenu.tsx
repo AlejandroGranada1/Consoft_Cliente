@@ -45,11 +45,18 @@ export default function UserMenu() {
 			<DropdownMenuContent className='w-52 bg-white border rounded-xl shadow-lg p-1'>
 				{/* Acceso */}
 				{user?.role.name === 'Administrador' && (
-					<DropdownMenuItem
-						onClick={() => router.push('/admin/configuracion')}
-						className='px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer'>
-						Panel administrativo
-					</DropdownMenuItem>
+					<>
+						<DropdownMenuItem
+							onClick={() => router.push('/admin/configuracion')}
+							className='px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer'>
+							Panel administrativo
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={() => router.push('/admin/chats')}
+							className='px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer'>
+							Mensajes
+						</DropdownMenuItem>
+					</>
 				)}
 				{!user ? (
 					<>

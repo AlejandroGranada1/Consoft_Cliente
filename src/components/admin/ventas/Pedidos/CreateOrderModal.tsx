@@ -1,5 +1,5 @@
 'use client';
-import { DefaultModalProps, Order, Service, User } from '@/app/types';
+import { DefaultModalProps, Order, Service, User } from '@/lib/types';
 import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
 import { IoMdClose } from 'react-icons/io';

@@ -1,5 +1,5 @@
 'use client';
-import { DefaultModalProps, Product } from '@/app/types';
+import { DefaultModalProps, Product } from '@/lib/types';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import EditProductModal from './EditProductModal';

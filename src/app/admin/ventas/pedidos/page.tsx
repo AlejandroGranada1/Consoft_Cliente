@@ -1,5 +1,5 @@
 'use client';
-import { Order, User } from '@/app/types';
+import { Order, User } from '@/lib/types';
 import CreateOrderModal from '@/components/admin/ventas/Pedidos/CreateOrderModal';
 import OrderDetailsModal from '@/components/admin/ventas/Pedidos/OrderDetails';
 import { deleteElement } from '@/components/admin/global/alerts';
@@ -199,7 +199,7 @@ function Page() {
 										? 'text-red'
 										: 'text-orange'
 								}`}>
-								{o.status}
+								{o.status == "en_proceso" ? "En Proceso" : o.status}
 							</p>
 							<p
 								className={`hidden md:block ${

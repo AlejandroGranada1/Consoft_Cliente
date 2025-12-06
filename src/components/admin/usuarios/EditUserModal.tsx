@@ -1,4 +1,4 @@
-import { DefaultModalProps, Role, User } from "@/app/types";
+import { DefaultModalProps, Role, User } from "@/lib/types";
 import React, { useState, useEffect } from "react";
 import { IoMdClose } from "react-icons/io";
 import axios from "axios"; // Importa axios para hacer el llamado a la API
