@@ -1,5 +1,5 @@
 "use client";
-import { Sale } from "@/app/types";
+import { Sale } from "@/lib/types";
 import api from "@/components/Global/axios";
 import React, { useEffect, useState } from "react";
 import { FaEye, FaSearch } from "react-icons/fa";

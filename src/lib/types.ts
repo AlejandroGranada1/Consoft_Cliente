@@ -59,7 +59,7 @@ export interface Product {
 	_id: string | undefined;
 	name: string;
 	description?: string;
-	category: Category; // Category ID
+	category: Category | string; // Category ID
 	status: boolean; // e.g. "Available"
 	imageUrl?: string;
 }
@@ -148,3 +148,52 @@ export interface PaymentSummary {
 	restante: number; // lo que falta
 	payments: Payment[]; // lista de pagos
 }
+
+export type CartItem = {
+	_id: string;
+	product: Product;
+	quantity: number;
+	color: string;
+	size: string;
+	notes: string;
+};
+
+export type QuotationsResponse = {
+	ok: boolean;
+	quotations: {
+		_id: string;
+		user: User;
+		status: string;
+		items: Array<{
+			product: {
+				_id: string;
+				name: string;
+				description: string;
+				category: string;
+				status: boolean;
+				imageUrl: string;
+				__v: number;
+			};
+			quantity: number;
+			color: string;
+			size: string;
+			notes: string;
+			_id: string;
+		}>;
+		createdAt: string;
+		updatedAt: string;
+		__v: number;
+		adminNotes?: string;
+		totalEstimate?: number;
+	}[];
+};
+
+export type QuotationItem = QuotationsResponse['quotations'][number]['items'][number];
+
+export type ChatMessage = {
+	_id?: string;
+	quotation: string;
+	sender: User | string;
+	message: string;
+	sentAt: string;
+};

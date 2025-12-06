@@ -1,5 +1,5 @@
 'use client';
-import { DefaultModalProps, Service } from '@/app/types';
+import { DefaultModalProps, Service } from '@/lib/types';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import { createElement } from '../../global/alerts';

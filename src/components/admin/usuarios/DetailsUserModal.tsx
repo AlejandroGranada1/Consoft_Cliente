@@ -1,4 +1,4 @@
-import { DefaultModalProps, Role, User } from '@/app/types';
+import { DefaultModalProps, Role, User } from '@/lib/types';
 import React, { useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import EditUserModal from './EditUserModal';

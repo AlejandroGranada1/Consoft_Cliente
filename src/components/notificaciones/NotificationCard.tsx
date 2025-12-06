@@ -1,18 +1,102 @@
-"use client"
+'use client';
+
+import { useUserDesicion } from '@/hooks/apiHooks';
+import { formatCOP } from '@/lib/formatCOP';
+import { formatDateForInput } from '@/lib/formatDate';
+import { QuotationItem } from '@/lib/types';
+import Swal from 'sweetalert2';
 
 interface Props {
-  id: number
-  title: string
-  message: string
-  date: string
+	_id: string;
+	totalEstimate: number;
+	createdAt: string;
+	items: QuotationItem[];
+	adminNotes?: string;
+  status: string
 }
 
-export default function NotificationCard({ title, message, date }: Props) {
-  return (
-    <div className="bg-white shadow-sm rounded-xl p-4 border border-[#E5E5E5] hover:shadow-md transition">
-      <h2 className="font-semibold text-[#1E293B]">{title}</h2>
-      <p className="text-[#1E293B] mt-1">{message}</p>
-      <span className="text-sm text-[#8B5E3C] mt-2 block">{date}</span>
-    </div>
-  )
+export default function NotificationCard({
+	_id,
+	totalEstimate,
+  status,
+	createdAt,
+	items,
+	adminNotes,
+}: Props) {
+	const setDesicion = useUserDesicion();
+
+	const handleDecision = (decision: 'accept' | 'reject') => {
+		setDesicion.mutateAsync({ quotationId: _id, decision });
+	};
+
+	const rejectAlert = () => {
+		Swal.fire({
+			title: '¿Estás seguro de rechazar la cotización?',
+			text: 'Esta acción no se puede deshacer.',
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonColor: '#d33',
+			cancelButtonColor: '#3085d6',
+		}).then((result) => {
+			if (result.isConfirmed) {
+				handleDecision('reject');
+			}
+		});
+	};
+
+	const acceptAlert = () => {
+		Swal.fire({
+			title: '¿Deseas continuar con el pedido?',
+			showCancelButton: true,
+			confirmButtonColor: '#3085d6',
+			cancelButtonColor: '#d33',
+		}).then((result) => {
+			if (result.isConfirmed) {
+				handleDecision('accept');
+			}
+		});
+	};
+
+	return (
+		<div className='flex flex-col justify-evenly gap-4 bg-white shadow-sm rounded-xl p-4 border border-[#E5E5E5] hover:shadow-md transition'>
+			<h3 className='text-2xl font-semibold text-[#1E293B] mb-2'>
+				Informe del estado de la cotizacion {/*  */}
+			</h3>
+			{items.map((item) => (
+				<div
+					key={item.product._id}
+					className='border-b border-gray-400 py-2'>
+					<details className='cursor-pointer'>
+						<summary>
+							{item.product.name} - Cantidad: {item.quantity}
+						</summary>
+						<p className='text-gray-800 text-sm'>
+							{adminNotes ? adminNotes : 'No hay notas del administrador.'}
+						</p>
+					</details>
+				</div>
+			))}
+
+			<section>
+				<p className='text-lg font-medium text-[#1E293B]'>Total estimado: </p>
+				<p className='text-xl font-semibold text-green'>{formatCOP(totalEstimate)}</p>
+			</section>
+			<p className='text-center'>¿Desea continuar con el pedido?</p>
+			<div className='flex justify-evenly py-4 mt-2'>
+				<button
+					onClick={acceptAlert}
+					className='px-6 py-2 rounded-lg bg-green hover:bg-green-700 text-white transition-colors cursor-pointer'>
+					Continuar
+				</button>
+				<button
+					onClick={rejectAlert}
+					className='px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer'>
+					Rechazar
+				</button>
+			</div>
+			<span className='text-sm text-[#8B5E3C] mt-2 block'>
+				{formatDateForInput(createdAt)}
+			</span>
+		</div>
+	);
 }

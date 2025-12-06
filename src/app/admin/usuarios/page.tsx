@@ -1,5 +1,5 @@
 "use client";
-import { Role, User } from "@/app/types";
+import { Role, User } from "@/lib/types";
 import CreateUserModal from "@/components/admin/usuarios/CreateUserModal";
 import EditUserModal from "@/components/admin/usuarios/EditUserModal";
 import DetailsUserModal from "@/components/admin/usuarios/DetailsUserModal";

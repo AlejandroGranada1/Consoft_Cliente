@@ -4,7 +4,7 @@ import {
   Order,
   OrderWithPartialUser,
   User,
-} from "@/app/types";
+} from "@/lib/types";
 import React, { useEffect, useState } from "react";
 import { IoMdClose, IoMdAdd, IoMdRemove } from "react-icons/io";
 import api from "@/components/Global/axios";

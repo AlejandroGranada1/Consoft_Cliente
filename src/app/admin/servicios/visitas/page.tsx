@@ -1,5 +1,5 @@
 'use client';
-import { Visit } from '@/app/types';
+import { Visit } from '@/lib/types';
 import CreateVisitModal from '@/components/admin/servicios/visitas/CreateVisitModal';
 import VisitDetailsModal from '@/components/admin/servicios/visitas/VisitDetailsModal';
 import PaginatedList from '@/components/Global/Pagination';

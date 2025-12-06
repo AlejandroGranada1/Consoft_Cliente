@@ -1,5 +1,5 @@
 "use client";
-import { Category } from "@/app/types";
+import { Category } from "@/lib/types";
 import CategoryDetailsModal from "@/components/admin/compras/categorias/CategoryDetailsModal";
 import CreateCategoryModal from "@/components/admin/compras/categorias/CreateCategoryModal";
 import Pagination from "@mui/material/Pagination";

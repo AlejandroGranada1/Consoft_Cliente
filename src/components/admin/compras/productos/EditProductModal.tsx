@@ -1,5 +1,5 @@
 'use client';
-import { DefaultModalProps, Category, Product } from '@/app/types';
+import { DefaultModalProps, Category, Product } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import api from '@/components/Global/axios';
