@@ -32,12 +32,20 @@ export interface Role {
 	permissions: Permission[]; // Array of Permission IDs
 }
 
+// Tipo usado SOLO para selects
+export interface RoleOption {
+	_id: string;
+	name: string;
+}
+
 // ✅ Users
 export interface User {
 	_id: string | undefined;
 	name: string;
 	email: string;
 	password?: string;
+	profile_picture: string;
+	document: string;
 	address?: string;
 	phone?: string;
 	role: Role | string; // Role ID
@@ -88,6 +96,7 @@ export interface OrderItem {
 	id_servicio: string | Service; // 👈 puede ser ID o documento populado
 	detalles?: string;
 	valor: number;
+	adminNotes?: string;
 }
 
 //! PENDIENTE POR REVISION
@@ -150,12 +159,14 @@ export interface PaymentSummary {
 }
 
 export type CartItem = {
-	_id: string;
-	product: Product;
+	_id?: string;
+	productId: Product | string;
 	quantity: number;
 	color: string;
 	size: string;
-	notes: string;
+	notes?: string;
+	price?: number;
+	total?: number;
 };
 
 export type QuotationsResponse = {
@@ -177,7 +188,7 @@ export type QuotationsResponse = {
 			quantity: number;
 			color: string;
 			size: string;
-			notes: string;
+			adminNotes: string;
 			_id: string;
 		}>;
 		createdAt: string;
@@ -190,10 +201,16 @@ export type QuotationsResponse = {
 
 export type QuotationItem = QuotationsResponse['quotations'][number]['items'][number];
 
-export type ChatMessage = {
-	_id?: string;
+export interface ChatMessageSender {
+	_id: string;
+	name: string;
+	email: string;
+}
+
+export interface ChatMessage {
+	_id: string;
 	quotation: string;
-	sender: User | string;
+	sender: ChatMessageSender;
 	message: string;
 	sentAt: string;
-};
+}

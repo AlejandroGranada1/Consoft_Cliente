@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import Swal from 'sweetalert2';
 import { createElement } from '../global/alerts';
+import { useGetPermissions } from '@/hooks/apiHooks';
 
 function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role>) {
 	const [roleData, setRoleData] = useState<Role>({
@@ -17,19 +18,8 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 		usersCount: 0,
 	});
 
-	const [permissions, setPermissions] = useState<GroupPermission[]>([]);
-
-	// 📌 Traer permisos de la API
-	useEffect(() => {
-		if (isOpen) {
-			const fetchPermissions = async () => {
-				const response = await api.get('/api/permissions');
-				console.log(response.data);
-				setPermissions(response.data.permisos);
-			};
-			fetchPermissions();
-		}
-	}, [isOpen]);
+	const { data } = useGetPermissions();
+	const permissions = data?.permisos as GroupPermission[] || [];
 
 	// 📌 Helpers
 	const isPermissionSelected = (_id: string) => roleData.permissions.some((p) => p._id === _id);

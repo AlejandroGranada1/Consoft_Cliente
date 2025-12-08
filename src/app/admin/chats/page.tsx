@@ -12,12 +12,12 @@ export default function AdminChatsPage() {
 	const [newMessage, setNewMessage] = useState('');
 
 	const { user } = useUser();
-
-	// ----------------------------
-	// Socket creado solo una vez
-	// ----------------------------
 	const socketRef = useRef<any>(null);
+	const messagesEndRef = useRef<HTMLDivElement>(null);
 
+	// ----------------------------
+	// Crear socket solo una vez
+	// ----------------------------
 	useEffect(() => {
 		socketRef.current = io(process.env.NEXT_PUBLIC_API_URL!, {
 			withCredentials: true,
@@ -31,8 +31,7 @@ export default function AdminChatsPage() {
 	// ----------------------------
 	// Obtener todas las cotizaciones
 	// ----------------------------
-	const { data, isLoading, refetch } = useGetAllCarts();
-
+	const { data, refetch } = useGetAllCarts();
 	const allowedStatuses = ['solicitada', 'en_proceso', 'cotizada'];
 	const chats = (data?.quotations ?? []).filter((q) => allowedStatuses.includes(q.status));
 
@@ -42,34 +41,62 @@ export default function AdminChatsPage() {
 	const { data: messagesData } = useGetMessages(selectedChat?._id || '');
 
 	useEffect(() => {
-		setMessages(messagesData?.messages || []);
+		const normalized =
+			messagesData?.messages.map((msg: any) => ({
+				...msg,
+				sender:
+					typeof msg.sender === 'string'
+						? { _id: msg.sender, name: '', email: '' }
+						: msg.sender,
+			})) || [];
+		setMessages(normalized);
 	}, [messagesData, selectedChat]);
 
 	// ----------------------------
-	// ESCUCHAR MENSAJES EN TIEMPO REAL
+	// Unirse a la sala de la cotización seleccionada
+	// ----------------------------
+	useEffect(() => {
+		if (!selectedChat || !socketRef.current) return;
+		socketRef.current.emit('quotation:join', { quotationId: selectedChat._id });
+	}, [selectedChat]);
+
+	// ----------------------------
+	// Escuchar mensajes en tiempo real
 	// ----------------------------
 	useEffect(() => {
 		if (!socketRef.current) return;
-
 		const socket = socketRef.current;
 
-		socket.on('quotation_message', (msg: ChatMessage) => {
-			// Si el mensaje pertenece al chat que está abierto
+		const handleMessage = (msg: ChatMessage) => {
 			if (selectedChat && msg.quotation === selectedChat._id) {
-				setMessages((prev) => [...prev, msg]);
+				setMessages((prev) => {
+					// Evitar duplicados
+					if (prev.some((m) => m._id === msg._id)) return prev;
+
+					return [
+						...prev,
+						{
+							...msg,
+							sender:
+								typeof msg.sender === 'string'
+									? { _id: msg.sender, name: '', email: '' }
+									: msg.sender,
+						},
+					];
+				});
+
+				refetch();
 			}
+		};
 
-			// Siempre actualizar lista de chats
-			refetch();
-		});
-
+		socket.on('chat:message', handleMessage);
 		return () => {
-			socket.off('quotation_message');
+			socket.off('chat:message', handleMessage);
 		};
 	}, [selectedChat]);
 
 	// ----------------------------
-	// ENVIAR MENSAJE VIA SOCKET
+	// Enviar mensaje
 	// ----------------------------
 	const sendMessage = () => {
 		if (!newMessage.trim() || !selectedChat) return;
@@ -77,34 +104,28 @@ export default function AdminChatsPage() {
 		socketRef.current?.emit('chat:message', {
 			quotationId: selectedChat._id,
 			message: newMessage,
-			sender: user?.id,
 		});
 
-		// Pintar mensaje local instantáneo
-		setMessages((prev) => [
-			...prev,
-			{
-				quotation: selectedChat._id,
-				message: newMessage,
-				sender: user?.id as string,
-				sentAt: new Date().toISOString(),
-			},
-		]);
-
-		setNewMessage('');
+		setNewMessage(''); // Limpiar input
 	};
 
 	// ----------------------------
-	// UI PRINCIPAL
+	// Scroll automático
+	// ----------------------------
+	useEffect(() => {
+		messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+	}, [messages]);
+
+	// ----------------------------
+	// UI
 	// ----------------------------
 	return (
 		<div className='flex h-screen bg-[#FFFFFF]'>
-			{/* SIDEBAR IZQUIERDA */}
+			{/* SIDEBAR */}
 			<div className='w-1/3 border-r border-gray-300 bg-[#F5F5F5]'>
-				<div className='p-4 font-bold bg-[#6F4E37] text-white text-lg'>
+				<div className='p-[14px] font-bold bg-brown text-white text-lg'>
 					Chats de Cotizaciones
 				</div>
-
 				<div className='overflow-y-auto h-[calc(100%-3.5rem)]'>
 					{chats.map((chat) => (
 						<div
@@ -124,12 +145,10 @@ export default function AdminChatsPage() {
 
 			{/* PANEL DERECHO */}
 			<div className='w-2/3 flex flex-col'>
-				{/* Header */}
-				<div className='p-4 bg-[#6EC6FF] text-black font-semibold shadow'>
-					{selectedChat ? `Cotización #${selectedChat.number}` : 'Selecciona un chat'}
+				<div className='p-4 bg-brown text-white font-semibold shadow'>
+					{selectedChat ? `Cotización #${selectedChat._id}` : 'Selecciona un chat'}
 				</div>
 
-				{/* Mensajes */}
 				<div className='flex-1 overflow-y-auto p-4 bg-[#F0F0F0]'>
 					{!selectedChat && (
 						<div className='text-gray-600 text-center mt-10'>
@@ -140,18 +159,18 @@ export default function AdminChatsPage() {
 					{selectedChat &&
 						messages.map((msg, i) => (
 							<div
-								key={i}
+								key={msg._id} // usar _id en lugar de índice
 								className={`mb-3 max-w-[70%] p-3 rounded-xl text-sm ${
-									msg.sender === user?.id
-										? 'bg-[#6EC6FF] text-black ml-auto'
+									msg.sender._id === user?.id
+										? 'bg-brown text-white ml-auto'
 										: 'bg-white text-black'
 								}`}>
 								{msg.message}
 							</div>
 						))}
+					<div ref={messagesEndRef} />
 				</div>
 
-				{/* Input */}
 				{selectedChat && (
 					<div className='p-4 bg-white border-t flex gap-3'>
 						<input
@@ -160,7 +179,6 @@ export default function AdminChatsPage() {
 							className='flex-1 px-4 py-2 border rounded-full'
 							placeholder='Escribe un mensaje...'
 						/>
-
 						<button
 							onClick={sendMessage}
 							className='px-6 py-2 bg-[#6F4E37] text-white rounded-full hover:bg-[#5a3e2d]'>

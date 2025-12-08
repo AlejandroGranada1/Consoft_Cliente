@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { useGetProductById, useQuickQuotation } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import { useAddItemAutoCart } from '@/hooks/apiHooks';
+import Image from 'next/image';
 
 export default function ProductDetailPage() {
 	const { id } = useParams();
@@ -13,7 +14,12 @@ export default function ProductDetailPage() {
 
 	const { user } = useUser();
 
-	const { data: product, isLoading } = useGetProductById(String(id));
+	const { data, isLoading } = useGetProductById(String(id));
+
+	const product = data?.data;
+
+
+	console.log(product)
 
 	const quickQuotationMutation = useQuickQuotation();
 	const addItemMutation = useAddItemAutoCart();
@@ -21,7 +27,6 @@ export default function ProductDetailPage() {
 	const [quantity, setQuantity] = useState(1);
 	const [color, setColor] = useState('');
 	const [customSize, setCustomSize] = useState('');
-	const [notes, setNotes] = useState('');
 
 	const addToCart = async () => {
 		if (!user) {
@@ -38,13 +43,15 @@ export default function ProductDetailPage() {
 		if (!product) return;
 
 		try {
-			await addItemMutation.mutateAsync({
-				productId: product._id!,
+			const payload = {
+				productId: product._id,
 				quantity,
 				color,
 				size: customSize,
-				notes,
-			});
+			};
+
+			console.log(payload);
+			await addItemMutation.mutateAsync(payload);
 
 			Swal.fire({
 				title: 'Añadido al carrito',
@@ -64,7 +71,7 @@ export default function ProductDetailPage() {
 		}
 	};
 
-	const requestQuotation = () => {
+	const requestQuotation = async () => {
 		if (!user) {
 			Swal.fire({
 				title: 'Inicia sesión para solicitar una cotización',
@@ -79,14 +86,22 @@ export default function ProductDetailPage() {
 		if (!product) return;
 
 		try {
-			quickQuotationMutation.mutateAsync({
-				productId: product._id!,
+			const payload = {
+				productId: product._id,
 				quantity,
 				color,
 				size: customSize,
-				notes,
+			};
+			await quickQuotationMutation.mutateAsync(payload);
+
+			Swal.fire({
+				title: 'Cotización solicitada',
+				text: 'Tu solicitud de cotización se ha enviado correctamente',
+				icon: 'success',
+				confirmButtonColor: '#8B5A2B',
 			});
 		} catch (error) {
+			console.log(error);
 			Swal.fire({
 				title: 'Error',
 				text: 'No se pudo solicitar la cotización',
@@ -102,16 +117,22 @@ export default function ProductDetailPage() {
 		<section className='bg-[#f2f2f2] min-h-screen py-10 px-6'>
 			<div className='max-w-5xl mx-auto bg-white p-10 rounded-2xl shadow-lg'>
 				<div className='grid grid-cols-1 md:grid-cols-2 gap-12'>
-					<div className='w-full h-80 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center border'>
-						<img
-							src={
-								product.imageUrl && product.imageUrl.trim() !== ''
-									? product.imageUrl
-									: '/def_prod.png'
-							}
-							alt={product.name}
-							className='object-contain h-full p-4'
-						/>
+					<div className='relative w-full h-80 rounded-xl overflow-hidden bg-gray-100 border flex items-center justify-center'>
+						{product.imageUrl && product.imageUrl.trim() !== '' ? (
+							<Image
+								src={product.imageUrl}
+								alt={product.name}
+								fill
+								className='object-contain'
+							/>
+						) : (
+							<Image
+								src='/def_prod.png'
+								alt='Imagen por defecto'
+								fill
+								className='object-contain'
+							/>
+						)}
 					</div>
 
 					<div>
@@ -153,16 +174,6 @@ export default function ProductDetailPage() {
 									placeholder='Ej: 50x40'
 								/>
 							</div>
-
-							<div>
-								<label className='font-medium'>Notas adicionales</label>
-								<textarea
-									value={notes}
-									onChange={(e) => setNotes(e.target.value)}
-									className='input-style w-full h-24'
-									placeholder='Detalles, aclaraciones o ideas...'
-								/>
-							</div>
 							<div className='mt-3 grid grid-cols-2 gap-4'>
 								<button
 									onClick={addToCart}
@@ -170,8 +181,8 @@ export default function ProductDetailPage() {
 									Agregar al carrito
 								</button>
 								<button
-								onClick={requestQuotation}
-								className='w-full border border-brown  hover:bg-[#70461f] text-brown hover:text-white py-3 rounded-lg font-semibold transition cursor-pointer'>
+									onClick={requestQuotation}
+									className='w-full border border-brown  hover:bg-[#70461f] text-brown hover:text-white py-3 rounded-lg font-semibold transition cursor-pointer'>
 									Solicitar Cotizacion
 								</button>
 							</div>

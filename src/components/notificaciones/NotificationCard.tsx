@@ -12,48 +12,64 @@ interface Props {
 	createdAt: string;
 	items: QuotationItem[];
 	adminNotes?: string;
-  status: string
+	status: string;
+	refetch?: () => void;
 }
 
 export default function NotificationCard({
 	_id,
 	totalEstimate,
-  status,
+	status,
 	createdAt,
 	items,
 	adminNotes,
+	refetch,
 }: Props) {
 	const setDesicion = useUserDesicion();
 
-	const handleDecision = (decision: 'accept' | 'reject') => {
-		setDesicion.mutateAsync({ quotationId: _id, decision });
-	};
+	console.log(items);
 
-	const rejectAlert = () => {
-		Swal.fire({
+	const rejectAlert = async () => {
+		const result = await Swal.fire({
 			title: '¿Estás seguro de rechazar la cotización?',
 			text: 'Esta acción no se puede deshacer.',
 			icon: 'warning',
 			showCancelButton: true,
 			confirmButtonColor: '#d33',
 			cancelButtonColor: '#3085d6',
-		}).then((result) => {
-			if (result.isConfirmed) {
-				handleDecision('reject');
-			}
+		});
+
+		if (result.isConfirmed) {
+			await setDesicion.mutateAsync({ quotationId: _id, decision: 'reject' });
+			refetch?.();
+		}
+
+		Swal.fire({
+			title: 'Cotización rechazada',
+			text: 'Has rechazado la cotización.',
+			icon: 'error',
+			confirmButtonColor: '#8B5A2B',
 		});
 	};
 
-	const acceptAlert = () => {
-		Swal.fire({
+	const acceptAlert = async () => {
+		const result = await Swal.fire({
 			title: '¿Deseas continuar con el pedido?',
 			showCancelButton: true,
 			confirmButtonColor: '#3085d6',
 			cancelButtonColor: '#d33',
-		}).then((result) => {
-			if (result.isConfirmed) {
-				handleDecision('accept');
-			}
+		});
+
+		if (result.isConfirmed) {
+			await setDesicion.mutateAsync({ quotationId: _id, decision: 'accept' });
+			refetch?.();
+		}
+
+		Swal.fire({
+			title: '¡Gracias por tu respuesta!',
+			text: 'Nos pondremos en contacto contigo pronto.',
+			icon: 'success',
+			confirmButtonColor: '#8B5A2B',
 		});
 	};
 
@@ -71,7 +87,7 @@ export default function NotificationCard({
 							{item.product.name} - Cantidad: {item.quantity}
 						</summary>
 						<p className='text-gray-800 text-sm'>
-							{adminNotes ? adminNotes : 'No hay notas del administrador.'}
+							{item.adminNotes ? item.adminNotes : 'No hay notas del administrador para este producto'}
 						</p>
 					</details>
 				</div>

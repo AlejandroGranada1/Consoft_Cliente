@@ -5,17 +5,19 @@ import AuthInput from '@/components/auth/AuthInput';
 import AuthButton from '@/components/auth/AuthButton';
 import { useState } from 'react';
 import api from '@/components/Global/axios';
-import Swal from 'sweetalert2';
-import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/providers/userContext';
-import { fetchCurrentUser } from '@/lib/utils';
 
 export default function LoginPage() {
 	const router = useRouter();
 
-	const [loginData, setLoginData] = useState({ email: '', password: '' });
-	const { setUser } = useUser();
+	const [loginData, setLoginData] = useState({
+		email: '',
+		password: '',
+	});
+
+	const { loadUser } = useUser(); // 👈 Usamos loadUser, NO fetchCurrentUser
+
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setLoginData((prev) => ({ ...prev, [name]: value }));
@@ -23,15 +25,21 @@ export default function LoginPage() {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		console.log(loginData)
-		const response = await api.post('/api/auth/login', loginData);
-		console.log(response)
-		if (response.status == 200) {
-			const userData = await fetchCurrentUser();
-			setUser(userData);
-			router.push("/client")
+
+		try {
+			const response = await api.post('/api/auth/login', loginData);
+
+			if (response.status === 200) {
+				// 👇 AQUÍ CARGAMOS EL USUARIO DESPUÉS DE LOGIN
+				await loadUser();
+
+				router.push('/client');
+			}
+		} catch (error) {
+			console.error(error);
 		}
 	};
+
 	return (
 		<AuthLayout
 			title='Bienvenido a Confort & Estilo'
@@ -48,6 +56,7 @@ export default function LoginPage() {
 					placeholder='ejemplo@email.com'
 					onChange={handleChange}
 				/>
+
 				<AuthInput
 					name='password'
 					label='Contraseña'

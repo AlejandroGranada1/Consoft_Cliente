@@ -100,7 +100,7 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 									${item.valor.toLocaleString('es-CO')}
 								</p>
 								<p className='border px-2 py-1 rounded-md bg-gray-100'>
-									{item.detalles || 'Sin detalles'}
+									{item.detalles ||'Sin detalles'}
 								</p>
 							</div>
 						))}

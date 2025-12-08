@@ -6,7 +6,7 @@ import { useMyCart } from '@/hooks/apiHooks';
 import { QuotationsResponse } from '@/lib/types';
 
 export default function NotificationsPage() {
-	const { data: cart } = useMyCart();
+	const { data: cart, refetch } = useMyCart();
 
 	console.log(cart);
 
@@ -15,9 +15,9 @@ export default function NotificationsPage() {
 			<div className='max-w-2xl mx-auto'>
 				<h1 className='text-2xl font-bold text-[#1E293B] mb-6'>Notificaciones</h1>
 
-				{cart?.quotations.length > 0 && (
+				{cart?.quotations?.length! > 0 && (
 					<div className='space-y-4'>
-						{cart.quotations.map((quote: any) => {
+						{cart?.quotations.map((quote: any) => {
 							return quote.status == 'cotizada' ? (
 								<NotificationCard
 									key={quote._id}
@@ -26,10 +26,11 @@ export default function NotificationsPage() {
 									_id={quote._id}
 									status={quote.status}
 									items={quote.items}
+									refetch={refetch}
 									adminNotes={quote.adminNotes}
 								/>
 							) : (
-								<EmptyState />
+								<EmptyState key={`empty-${quote._id}`}/>
 							);
 						})}
 					</div>

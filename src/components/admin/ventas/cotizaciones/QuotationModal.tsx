@@ -13,11 +13,26 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 	const getImage = (url: string | undefined) =>
 		url && url.trim() !== '' ? url : '/def_prod.png';
 
-	// Estado para precios
-	const [prices, setPrices] = useState<{ [id: string]: number }>({});
+	// Inicializar precios por item
+	const [prices, setPrices] = useState<{ [id: string]: number }>(() => {
+		const initial: { [id: string]: number } = {};
+		items.forEach((item: any) => {
+			initial[item._id] = item.price ?? 0;
+		});
+		return initial;
+	});
 
-	// Estado para adminNotes
-	const [adminNotes, setAdminNotes] = useState('');
+	// Inicializar notas por item
+	const [itemNotes, setItemNotes] = useState<{ [id: string]: string }>(() => {
+		const initial: { [id: string]: string } = {};
+		items.forEach((item: any) => {
+			initial[item._id] = item.adminNotes || '';
+		});
+		return initial;
+	});
+
+	// Notas generales del admin
+	const [adminNotes, setAdminNotes] = useState(quotation.adminNotes || '');
 
 	const setQuote = useSetQuote();
 
@@ -25,13 +40,17 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 		setPrices((prev) => ({ ...prev, [id]: value }));
 	};
 
-	// Calcular subtotal de cada item
+	const handleItemNote = (id: string, value: string) => {
+		setItemNotes((prev) => ({ ...prev, [id]: value }));
+	};
+
+	// Subtotal por item
 	const getSubtotal = (item: any) => {
-		const price = prices[item._id] || 0;
+		const price = prices[item._id] ?? 0;
 		return price * item.quantity;
 	};
 
-	// Total general = totalEstimate
+	// Total general
 	const totalEstimate = items.reduce((sum: number, item: any) => sum + getSubtotal(item), 0);
 
 	// Guardar cotización
@@ -40,15 +59,19 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 			const payload = {
 				totalEstimate,
 				adminNotes,
+				items: items.map((item: any) => ({
+					_id: item._id,
+					price: Number(prices[item._id] ?? 0), // garantiza número
+					adminNotes: itemNotes[item._id] || '',
+				})),
 			};
 
 			console.log('ENVIAR A BACKEND:', payload);
+
 			await setQuote.mutateAsync({
 				id: quotation._id,
 				...payload,
 			});
-			// Aquí deberías llamar a tu ruta:
-			// await axios.put(`/api/quotations/set/${quotation._id}`, payload)
 
 			if (updateList) updateList();
 			onClose();
@@ -74,134 +97,73 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
 				{/* BODY */}
 				<section className='flex flex-col gap-5'>
-					{/* MUCHOS PRODUCTOS */}
-					{items.length > 1 && (
-						<div className='flex flex-col gap-4'>
-							{items.map((item: any) => (
-								<details
-									key={item._id}
-									className='border border-gray-300 rounded-lg p-4 bg-gray-50'>
-									<summary className='cursor-pointer font-semibold'>
-										{item.product?.name} (x{item.quantity})
-									</summary>
+					{items.map((item: any) => (
+						<details
+							key={item._id}
+							className='border border-gray-300 rounded-lg p-4 bg-gray-50'>
+							<summary className='cursor-pointer font-semibold'>
+								{item.product?.name} (x{item.quantity})
+							</summary>
 
-									<div className='mt-4 grid grid-cols-[90px_1fr_140px] gap-6 items-start'>
-										{/* Imagen */}
-										<div className='relative w-24 h-24 border rounded-lg overflow-hidden'>
-											<Image
-												src={getImage(item.product?.imageUrl)}
-												fill
-												alt={item.product?.name}
-												className='object-cover'
-											/>
-										</div>
+							<div className='mt-4 grid grid-cols-[90px_1fr_140px] gap-6 items-start'>
+								{/* Imagen */}
+								<div className='relative w-24 h-24 border rounded-lg overflow-hidden'>
+									<Image
+										src={getImage(item.product?.imageUrl)}
+										fill
+										alt={item.product?.name}
+										className='object-cover'
+									/>
+								</div>
 
-										{/* Información */}
-										<div className='flex flex-col gap-1 text-sm'>
-											<p>
-												<span className='font-semibold'>Tamaño:</span>{' '}
-												{item.size || '—'}
-											</p>
-											<p>
-												<span className='font-semibold'>Color:</span>{' '}
-												{item.color || '—'}
-											</p>
-											<p>
-												<span className='font-semibold'>Cantidad:</span>{' '}
-												{item.quantity}
-											</p>
-											{item.notes && (
-												<p>
-													<span className='font-semibold'>Notas:</span>{' '}
-													{item.notes}
-												</p>
-											)}
-											<p className='mt-1 font-semibold text-brown'>
-												Subtotal: ${getSubtotal(item).toLocaleString()}
-											</p>
-										</div>
-
-										{/* Precio */}
-										<div className='flex flex-col gap-2'>
-											<label className='font-semibold text-sm'>
-												Valor unitario
-											</label>
-											<input
-												type='number'
-												className='border rounded-lg p-2 text-sm'
-												placeholder='0'
-												value={prices[item._id] || ''}
-												onChange={(e) =>
-													handlePrice(item._id, Number(e.target.value))
-												}
-											/>
-										</div>
-									</div>
-								</details>
-							))}
-						</div>
-					)}
-
-					{/* SOLO UN PRODUCTO */}
-					{items.length === 1 && (
-						<div className='border p-5 rounded-lg bg-gray-50 grid grid-cols-[150px_1fr_150px] gap-6'>
-							{/* Imagen */}
-							<div className='relative w-40 h-40 border rounded-lg overflow-hidden'>
-								<Image
-									src={getImage(items[0].product?.imageUrl)}
-									fill
-									alt={items[0].product?.name}
-									className='object-cover'
-								/>
-							</div>
-
-							{/* Info */}
-							<div className='flex flex-col gap-2 text-sm'>
-								<h2 className='font-semibold text-lg'>{items[0].product?.name}</h2>
-
-								<p>
-									<span className='font-semibold'>Cantidad:</span>{' '}
-									{items[0].quantity}
-								</p>
-								<p>
-									<span className='font-semibold'>Tamaño:</span>{' '}
-									{items[0].size || '—'}
-								</p>
-								<p>
-									<span className='font-semibold'>Color:</span>{' '}
-									{items[0].color || '—'}
-								</p>
-								{items[0].notes && (
+								{/* Información */}
+								<div className='flex flex-col gap-1 text-sm'>
 									<p>
-										<span className='font-semibold'>Notas:</span>{' '}
-										{items[0].notes}
+										<span className='font-semibold'>Tamaño:</span> {item.size || '—'}
 									</p>
-								)}
+									<p>
+										<span className='font-semibold'>Color:</span> {item.color || '—'}
+									</p>
+									<p>
+										<span className='font-semibold'>Cantidad:</span> {item.quantity}
+									</p>
+									{item.notes && (
+										<p>
+											<span className='font-semibold'>Notas:</span> {item.notes}
+										</p>
+									)}
+									<p className='mt-1 font-semibold text-brown'>
+										Subtotal: ${getSubtotal(item).toLocaleString()}
+									</p>
+								</div>
 
-								<p className='mt-1 font-semibold'>
-									Subtotal: ${getSubtotal(items[0]).toLocaleString()}
-								</p>
+								{/* Precio y notas por item */}
+								<div className='flex flex-col gap-2'>
+									<label className='font-semibold text-sm'>Valor unitario</label>
+									<input
+										type='number'
+										className='border rounded-lg p-2 text-sm'
+										placeholder='0'
+										value={prices[item._id] ?? 0}
+										onChange={(e) => handlePrice(item._id, Number(e.target.value))}
+									/>
+
+									<label className='font-semibold text-sm mt-2'>Notas admin</label>
+									<textarea
+										className='border p-2 rounded-lg text-sm'
+										rows={2}
+										placeholder='Notas para este producto...'
+										value={itemNotes[item._id] || ''}
+										onChange={(e) => handleItemNote(item._id, e.target.value)}
+									/>
+								</div>
 							</div>
+						</details>
+					))}
 
-							{/* Precio */}
-							<div className='flex flex-col gap-2'>
-								<label className='font-semibold text-sm'>Valor unitario</label>
-								<input
-									type='number'
-									className='border rounded-lg p-2 text-sm'
-									placeholder='0'
-									value={prices[items[0]._id] || ''}
-									onChange={(e) =>
-										handlePrice(items[0]._id, Number(e.target.value))
-									}
-								/>
-							</div>
-						</div>
-					)}
-
-					{/* NOTAS ADMIN */}
+					{/* Notas generales del admin */}
 					<div className='flex flex-col gap-2'>
-						<label className='font-semibold text-sm'>Notas del administrador</label>
+						<label className='font-semibold text-sm'>Notas generales del administrador</label>
 						<textarea
 							className='border p-3 rounded-lg text-sm'
 							rows={3}
@@ -211,17 +173,15 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 						/>
 					</div>
 
-					{/* TOTAL GENERAL */}
+					{/* Total general */}
 					<div className='text-right mt-4'>
 						<p className='text-lg font-semibold'>
 							Total:{' '}
-							<span className='text-brown text-xl'>
-								${totalEstimate.toLocaleString()}
-							</span>
+							<span className='text-brown text-xl'>${totalEstimate.toLocaleString()}</span>
 						</p>
 					</div>
 
-					{/* BOTÓN GUARDAR */}
+					{/* Botón guardar */}
 					<button
 						onClick={handleSave}
 						className='bg-brown text-white py-2 rounded-lg font-semibold hover:opacity-90 mt-3'>

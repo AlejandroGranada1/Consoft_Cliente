@@ -9,30 +9,20 @@ import PaginatedList from '@/components/Global/Pagination';
 import React, { useEffect, useState } from 'react';
 import { FaEdit, FaEye, FaTrash, FaSearch } from 'react-icons/fa';
 import { IoMdAdd } from 'react-icons/io';
+import { useGetServices } from '@/hooks/apiHooks';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [editModal, setEditModal] = useState(false);
 	const [service, setService] = useState<Service>();
-	const [services, setServices] = useState<Service[]>([]);
 	const [filterText, setFilterText] = useState('');
 
-	const fetchServices = async () => {
-		try {
-			const response = await api.get('/api/services');
-			setServices(response.data);
-		} catch (err) {
-			console.error('Error al traer servicios', err);
-		}
-	};
-
-	useEffect(() => {
-		fetchServices();
-	}, []);
+	const { data, refetch } = useGetServices();
+	const services = data?.data || [];
 
 	const filteredServices = services.filter(
-		(s) =>
+		(s: Service) =>
 			s.name.toLowerCase().includes(filterText.toLowerCase()) ||
 			s.description?.toLowerCase().includes(filterText.toLowerCase())
 	);
@@ -131,7 +121,7 @@ function Page() {
 											deleteElement(
 												'Servicio',
 												`/api/services/${s._id}`,
-												fetchServices
+												refetch
 											)
 										}
 										cursor='pointer'
@@ -171,11 +161,7 @@ function Page() {
 									size={19}
 									color='#fa4334'
 									onClick={() =>
-										deleteElement(
-											'Servicio',
-											`/api/services/${s._id}`,
-											fetchServices
-										)
+										deleteElement('Servicio', `/api/services/${s._id}`, refetch)
 									}
 									cursor='pointer'
 								/>
@@ -189,13 +175,13 @@ function Page() {
 			<CreateServiceModal
 				isOpen={createModal}
 				onClose={() => setCreateModal(false)}
-				updateList={fetchServices}
+				updateList={refetch}
 			/>
 			<EditServiceModal
 				isOpen={editModal}
 				onClose={() => setEditModal(false)}
 				extraProps={service}
-				updateList={fetchServices}
+				updateList={refetch}
 			/>
 			<ServiceDetailsModal
 				isOpen={detailsModal}

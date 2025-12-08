@@ -5,10 +5,10 @@ import { IoMdClose } from 'react-icons/io';
 import EditVisitModal from './EditVisitModal';
 import api from '@/components/Global/axios';
 import { updateElement } from '../../global/alerts';
+import { useGetServices } from '@/hooks/apiHooks';
 
 function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Visit>) {
 	const [editModal, setEditModal] = useState(false);
-	const [services, setServices] = useState<Service[]>([]);
 	const [status, setStatus] = useState(extraProps?.status || 'Pendiente');
 	const [visitData, setVisitData] = useState<Visit>({
 		_id: extraProps?._id || undefined,
@@ -20,17 +20,8 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 	});
 
 	// Traer servicios de la API
-	useEffect(() => {
-		const fetchServices = async () => {
-			try {
-				const response = await api.get('/api/services');
-				setServices(response.data);
-			} catch (err) {
-				console.error('Error cargando servicios', err);
-			}
-		};
-		fetchServices();
-	}, []);
+	const { data } = useGetServices();
+	const services = data?.data || [];
 
 	// Cuando cambie el modal, sincronizar el estado inicial
 	useEffect(() => {
@@ -117,7 +108,7 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 					<div className='flex flex-col gap-2 mt-4'>
 						<label className='font-semibold'>Servicios</label>
 						<div className='flex flex-wrap gap-4'>
-							{services.map((service) => (
+							{services.map((service: Service) => (
 								<div
 									key={service._id}
 									className='flex items-center gap-2'>

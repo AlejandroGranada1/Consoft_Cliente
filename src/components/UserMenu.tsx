@@ -12,10 +12,16 @@ import { User } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api from './Global/axios';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function UserMenu() {
 	const router = useRouter();
-	const { user, setUser } = useUser();
+	const { user, setUser, loadUser } = useUser();
+
+	// 🔥 AUTO-CARGA DEL USUARIO SI ESTÁ EN SESIÓN
+	useEffect(() => {
+		if (!user) loadUser();
+	}, []);
 
 	const handleLogout = () => {
 		Swal.fire({
@@ -43,32 +49,26 @@ export default function UserMenu() {
 			</DropdownMenuTrigger>
 
 			<DropdownMenuContent className='w-52 bg-white border rounded-xl shadow-lg p-1'>
-				{/* Acceso */}
-				{user?.role.name === 'Administrador' && (
-					<>
-						<DropdownMenuItem
-							onClick={() => router.push('/admin/configuracion')}
-							className='px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer'>
-							Panel administrativo
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onClick={() => router.push('/admin/chats')}
-							className='px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer'>
-							Mensajes
-						</DropdownMenuItem>
-					</>
-				)}
+				{typeof user?.role !== 'string' &&
+					(user?.role.name === 'Administrador' || user?.role.name === 'Master') && (
+						<>
+							<DropdownMenuItem onClick={() => router.push('/admin/configuracion')}>
+								Panel Administrativo
+							</DropdownMenuItem>
+
+							<DropdownMenuItem onClick={() => router.push('/admin/chats')}>
+								Mensajes
+							</DropdownMenuItem>
+						</>
+					)}
+
 				{!user ? (
 					<>
-						<DropdownMenuItem
-							onClick={() => (window.location.href = '/client/auth/login')}
-							className='px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer'>
+						<DropdownMenuItem onClick={() => router.push('/client/auth/login')}>
 							Iniciar Sesión
 						</DropdownMenuItem>
 
-						<DropdownMenuItem
-							onClick={() => (window.location.href = '/client/auth/register')}
-							className='px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer'>
+						<DropdownMenuItem onClick={() => router.push('/client/auth/register')}>
 							Registrarme
 						</DropdownMenuItem>
 
@@ -76,18 +76,17 @@ export default function UserMenu() {
 					</>
 				) : (
 					<>
-						{/* Funciones extra */}
-						<DropdownMenuItem
-							onClick={() => (window.location.href = '/client/pedidos')}
-							className='px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer'>
-							Mis pedidos
+						<DropdownMenuItem onClick={() => router.push('/client/pedidos')}>
+							Mis Pedidos
 						</DropdownMenuItem>
 
-						<DropdownMenuItem
-							onClick={() => (window.location.href = '/client/notificaciones')}
-							className='px-3 py-2 rounded-md text-[#1E293B] hover:bg-[#5C3A21] hover:text-white cursor-pointer'>
+						<DropdownMenuItem onClick={() => router.push('/client/notificaciones')}>
 							Notificaciones
 						</DropdownMenuItem>
+						<DropdownMenuItem onClick={() => router.push('/client/perfil')}>
+							Mi Perfil
+						</DropdownMenuItem>
+
 						<button
 							onClick={handleLogout}
 							className='hover:bg-red hover:text-white py-1.5 rounded-sm w-full flex justify-start pl-3 text-sm transition-colors cursor-pointer'>

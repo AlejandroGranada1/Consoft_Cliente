@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { FaEdit, FaEye, FaSearch, FaTrash } from 'react-icons/fa';
 import { IoMdAdd } from 'react-icons/io';
 import PaginatedList from '@/components/Global/Pagination';
+import { useGetRoles } from '@/hooks/apiHooks';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
@@ -16,20 +17,13 @@ function Page() {
 	const [editModal, setEditModal] = useState(false);
 	const [role, setRole] = useState<Role>();
 
-	const [roles, setRoles] = useState<Role[]>([]);
 	const [filterText, setFilterText] = useState('');
 
-	const fetchRoles = async () => {
-		const response = await api.get('/api/roles');
-		setRoles(response.data.roles);
-	};
-
-	useEffect(() => {
-		fetchRoles();
-	}, []);
+	const { data, refetch } = useGetRoles();
+	const roles = data?.roles || [];
 
 	// 📌 Filtro
-	const filteredRoles = roles.filter((r) =>
+	const filteredRoles = roles.filter((r: Role) =>
 		r.name.toLowerCase().includes(filterText.toLowerCase())
 	);
 
@@ -45,7 +39,7 @@ function Page() {
 					<div className='relative w-full md:w-64'>
 						<FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
 						<datalist id='roles'>
-							{roles.map((role) => (
+							{roles.map((role: Role) => (
 								<option
 									key={role._id}
 									value={role.name}></option>
@@ -140,7 +134,7 @@ function Page() {
 										color='#fa4334'
 										onClick={() =>
 											deleteElement('Rol', `/api/roles/${role._id}`, () =>
-												fetchRoles()
+												refetch()
 											)
 										}
 										cursor='pointer'
@@ -178,6 +172,7 @@ function Page() {
 									color='#7588f0'
 									onClick={() => {
 										setEditModal(true);
+
 										setRole(role);
 									}}
 									cursor='pointer'
@@ -187,7 +182,7 @@ function Page() {
 									color='#fa4334'
 									onClick={() =>
 										deleteElement('Rol', `/api/roles/${role._id}`, () =>
-											fetchRoles()
+											refetch()
 										)
 									}
 									cursor='pointer'
@@ -202,18 +197,19 @@ function Page() {
 			<CreateRoleModal
 				isOpen={createModal}
 				onClose={() => setCreateModal(false)}
-				updateList={() => fetchRoles()}
+				updateList={() => refetch()}
 			/>
 			<RoleDetailsModal
 				isOpen={detailsModal}
 				onClose={() => setDetailsModal(false)}
 				extraProps={role}
+				updateList={() => refetch()}
 			/>
 			<EditRoleModal
 				isOpen={editModal}
 				onClose={() => setEditModal(false)}
 				extraProps={role}
-				updateList={() => fetchRoles()}
+				updateList={() => refetch()}
 			/>
 		</div>
 	);
