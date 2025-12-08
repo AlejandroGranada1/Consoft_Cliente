@@ -8,6 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export async function fetchCurrentUser() {
   const res = await api.get("/api/auth/me", {withCredentials: true});
+  console.log(res)
   if (res.status !== 200) {
     return null;
   }

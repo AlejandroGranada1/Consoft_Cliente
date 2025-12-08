@@ -1,42 +1,40 @@
-// context/UserContext.tsx
 'use client';
-
+import { User as Usertype } from '@/lib/types';
 import { fetchCurrentUser } from '@/lib/utils';
-import { createContext, useContext, useEffect, useState } from 'react';
-
-interface User {
-	id: string;
-	email: string;
-	role: {
-		_id: string;
-		name: string;
-	};
-}
+import { createContext, useContext, useState, useEffect } from 'react';
 
 interface UserContextType {
-	user: User | null;
+	user: Usertype | null;
 	loading: boolean;
-	setUser: (user: User | null) => void;
+	setUser: (user: Usertype | null) => void;
+	loadUser: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-	const [user, setUser] = useState<User | null>(null);
+	const [user, setUser] = useState<Usertype | null>(null);
 	const [loading, setLoading] = useState(true);
 
+	// 🔥 CARGA AUTOMÁTICA AL MONTAR LA APP
 	useEffect(() => {
-		async function loadUser() {
-			const userData = await fetchCurrentUser();
-			setUser(userData);
-			setLoading(false);
-		}
-
 		loadUser();
 	}, []);
 
+	const loadUser = async () => {
+		try {
+			setLoading(true);
+			const userData = await fetchCurrentUser();
+			setUser(userData);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	return (
-		<UserContext.Provider value={{ user, loading, setUser }}>{children}</UserContext.Provider>
+		<UserContext.Provider value={{ user, loading, setUser, loadUser }}>
+			{children}
+		</UserContext.Provider>
 	);
 }
 

@@ -1,13 +1,121 @@
-import { CartItem, Product, QuotationsResponse, Service } from '@/lib/types';
+import {
+	CartItem,
+	Permission,
+	Product,
+	QuotationsResponse,
+	Role,
+	Service,
+	User,
+} from '@/lib/types';
 import api from '@/components/Global/axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+//* Roles
+
+export const useGetRoles = () => {
+	return useQuery({
+		queryKey: ['roles'],
+		queryFn: async () => {
+			const { data } = await api.get('/api/roles');
+			return data;
+		},
+		staleTime: 1000 * 60 * 5,
+	});
+};
+
+export const useCreateRole = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (newRole: {
+			_id: string;
+			name: string;
+			description: string;
+			status: boolean;
+			permissions: Permission[];
+			createdAt: Date;
+			usersCount: number;
+		}) => {
+			const { data } = await api.post('/api/roles', newRole);
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['roles'] });
+		},
+	});
+};
+
+export const useUpdateRole = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async (updatedRole: {
+			_id: string;
+			name: string;
+			description: string;
+			status: boolean;
+			permissions: string[];
+		}) => {
+			const { data } = await api.put(`/api/roles/${updatedRole._id}`, updatedRole);
+			return data;
+		},
+
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['roles'] });
+		},
+	});
+};
+
+//* Permisos
+
+export const useGetPermissions = () => {
+	return useQuery({
+		queryKey: ['permissions'],
+		queryFn: async () => {
+			const { data } = await api.get('/api/permissions');
+			return data;
+		},
+		staleTime: 1000 * 60 * 5,
+	});
+};
+
+//* Visitas
+
+export const useGetVisits = () => {
+	return useQuery({
+		queryKey: ['visits'],
+		queryFn: async () => {
+			const { data } = await api.get('/api/visits');
+			return data;
+		},
+		staleTime: 1000 * 60 * 5,
+	});
+};
+
+export const useAddVisit = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (newVisit: {
+			user: string;
+			visitDate: Date;
+			address: string;
+			status: string;
+			services: string;
+		}) => {
+			const { data } = await api.post('/api/visits', newVisit);
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['visits'] });
+		},
+	});
+};
 
 //* Servicios
 export const useGetServices = () => {
 	return useQuery({
 		queryKey: ['services'],
 		queryFn: async () => {
-			const { data } = await api.get<Service[]>('/api/services');
+			const { data } = await api.get('/api/services');
 			return data;
 		},
 		staleTime: 1000 * 60 * 5,
@@ -78,7 +186,7 @@ export const useGetProductById = (id: string) => {
 	return useQuery({
 		queryKey: ['product', id],
 		queryFn: async () => {
-			const { data } = await api.get<Product>(`/api/products/${id}`);
+			const { data } = await api.get(`/api/products/${id}`);
 			return data;
 		},
 	});
@@ -143,7 +251,6 @@ export const useQuickQuotation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async (items: CartItem) => {
-			console.log(items);
 			const { data } = await api.post('/api/quotations/quick', items);
 			return data;
 		},
@@ -161,14 +268,17 @@ export const useSetQuote = () => {
 			id,
 			totalEstimate,
 			adminNotes,
+			items, // <-- agregamos items
 		}: {
 			id: string;
 			totalEstimate: number;
 			adminNotes: string;
+			items: { _id: string; price: number; adminNotes?: string }[]; // cada item con price
 		}) => {
 			const { data } = await api.post(`/api/quotations/${id}/quote`, {
 				totalEstimate,
 				adminNotes,
+				items, // enviamos los items
 			});
 			return data;
 		},
@@ -182,7 +292,7 @@ export const useAddItemAutoCart = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async ({ product, quantity = 1, color, size, notes }: CartItem) => {
+		mutationFn: async (item: CartItem) => {
 			let cart: any = null;
 
 			// 1. Verificar si ya existe carrito
@@ -201,13 +311,7 @@ export const useAddItemAutoCart = () => {
 			const quotationId = cart._id;
 
 			// 2. Agregar item al carrito
-			const { data } = await api.post(`/api/quotations/${quotationId}/items`, {
-				product,
-				quantity,
-				color,
-				size,
-				notes,
-			});
+			const { data } = await api.post(`/api/quotations/${quotationId}/items`, item);
 
 			return data;
 		},
@@ -320,7 +424,7 @@ export const useGetMessages = (quotationId: string) => {
 		queryKey: ['messages', quotationId],
 		queryFn: async () => {
 			const { data } = await api.get(`/api/quotations/${quotationId}/messages`);
-			console.log(data)
+			console.log(data);
 			return data;
 		},
 	});
@@ -334,6 +438,42 @@ export const useGetUsers = () => {
 		queryFn: async () => {
 			const { data } = await api.get('/api/users');
 			return data;
+		},
+	});
+};
+
+export const useUpdateUser = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({ _id, formData }: any) => {
+			const { data } = await api.put(`/api/users/${_id}`, formData);
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['users'] });
+		},
+	});
+};
+
+export const useGetProfile = () => {
+	return useQuery({
+		queryKey: ['profile'],
+		queryFn: async () => {
+			const { data } = await api.post('/api/auth/profile');
+			return data;
+		},
+	});
+};
+
+export const useCreateUser = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (userData) => {
+			const { data } = await api.post('/api/users', userData);
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['users'] });
 		},
 	});
 };

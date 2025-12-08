@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
 import { useGetMessages } from '@/hooks/apiHooks';
+import { useUser } from '@/providers/userContext';
 
 interface FloatingChatProps {
 	quotationId?: string;
@@ -12,13 +13,13 @@ interface FloatingChatProps {
 let socket: Socket | null = null;
 
 export default function FloatingChat({ quotationId }: FloatingChatProps) {
+	const { user } = useUser();
 	const [open, setOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [messages, setMessages] = useState<any[]>([]);
 	const [input, setInput] = useState('');
 	const bottomRef = useRef<HTMLDivElement | null>(null);
 
-	// 👉 Hook corregido: solo se ejecuta cuando existe quotationId
 	const { data } = useGetMessages(quotationId!);
 
 	// Cargar mensajes iniciales al abrir chat
@@ -26,7 +27,15 @@ export default function FloatingChat({ quotationId }: FloatingChatProps) {
 		if (!open || !data) return;
 
 		setLoading(true);
-		setMessages(data?.messages || []);
+		const normalized =
+			data?.messages.map((msg: any) => ({
+				...msg,
+				sender:
+					typeof msg.sender === 'string'
+						? { _id: msg.sender, name: '', email: '' }
+						: msg.sender,
+			})) || [];
+		setMessages(normalized);
 		setLoading(false);
 	}, [open, data]);
 
@@ -48,7 +57,14 @@ export default function FloatingChat({ quotationId }: FloatingChatProps) {
 		socket.emit('quotation:join', { quotationId });
 
 		const handler = (newMsg: any) => {
-			setMessages((prev) => [...prev, newMsg]);
+			const msgNormalized = {
+				...newMsg,
+				sender:
+					typeof newMsg.sender === 'string'
+						? { _id: newMsg.sender, name: '', email: '' }
+						: newMsg.sender,
+			};
+			setMessages((prev) => [...prev, msgNormalized]);
 		};
 
 		socket.on('chat:message', handler);
@@ -92,20 +108,23 @@ export default function FloatingChat({ quotationId }: FloatingChatProps) {
 								No hay mensajes aún.
 							</p>
 						) : (
-							messages.map((msg: any) => (
-								<div
-									key={msg._id}
-									className={`p-2 rounded-lg max-w-[80%] ${
-										msg.sender === 'admin'
-											? 'bg-gray-200 text-gray-800 mr-auto' // mensaje recibido
-											: 'bg-blue-600 text-white ml-auto' // mensaje enviado por ti
-									}`}>
-									<p className='text-sm'>{msg.message}</p>
-									<span className='block text-[10px] opacity-70 mt-1'>
-										{new Date(msg.sentAt).toLocaleString()}
-									</span>
-								</div>
-							))
+							messages.map((msg: any) => {
+								const isSentByMe = msg.sender._id === user?.id;
+								return (
+									<div
+										key={msg._id}
+										className={`p-2 rounded-lg max-w-[80%] ${
+											isSentByMe
+												? 'bg-blue-600 text-white ml-auto'
+												: 'bg-gray-200 text-gray-800 mr-auto'
+										}`}>
+										<p className='text-sm'>{msg.message}</p>
+										<span className='block text-[10px] opacity-70 mt-1'>
+											{new Date(msg.sentAt).toLocaleString()}
+										</span>
+									</div>
+								);
+							})
 						)}
 
 						<div ref={bottomRef} />

@@ -9,7 +9,8 @@ import ServiceCard from '@/components/servicios/ServiceCard';
 import { Service } from '@/lib/types';
 import { useGetServices } from '@/hooks/apiHooks';
 export default function ServiciosPage() {
-	const { data: services, isLoading } = useGetServices();
+	const { data, isLoading } = useGetServices();
+	const services = data?.data
 
 	if (isLoading) return <p>Cargando servicios...</p>;
 	return (
@@ -18,11 +19,11 @@ export default function ServiciosPage() {
 				{/* --- Sección 1: Tarjetas de servicios --- */}
 				<h1 className='text-3xl font-bold text-center text-[#4b2e1a] mb-10'>Servicios</h1>
 				<div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-20'>
-					{services?.map((service) => (
+					{services?.map((service: Service) => (
 						<ServiceCard
 							description={service.description!}
-							image={service.imageUrl!}
-							title={service.name}
+							image={service?.imageUrl!}
+							title={service?.name}
 							key={service._id}
 						/>
 					))}

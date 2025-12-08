@@ -4,22 +4,29 @@ import React, { useEffect, useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 import Swal from 'sweetalert2';
 import { updateElement } from '../global/alerts';
+import { useGetPermissions, useUpdateRole } from '@/hooks/apiHooks';
 
 function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Role>) {
 	const [roleData, setRoleData] = useState<Role | null>(null);
-	const [permissions, setPermissions] = useState<GroupPermission[]>([]);
 
+	const { data } = useGetPermissions();
+	const permissions = (data?.permisos as GroupPermission[]) || [];
+	const updateRole = useUpdateRole();
 	// 📌 Cargar datos iniciales cuando se abre
+
 	useEffect(() => {
-		if (isOpen && extraProps) {
-			setRoleData({ ...extraProps }); // prellenar con el rol que viene
-			const fetchPermissions = async () => {
-				const response = await api.get('/api/permissions');
-				setPermissions(response.data.permisos);
-			};
-			fetchPermissions();
+		if (extraProps) {
+			setRoleData({
+				_id: extraProps._id!,
+				name: extraProps.name || '',
+				description: extraProps.description || '',
+				usersCount: extraProps.usersCount || 0,
+				status: extraProps.status ?? true,
+				createdAt: extraProps.createdAt || new Date(),
+				permissions: extraProps.permissions || [],
+			});
 		}
-	}, [isOpen, extraProps]);
+	}, [extraProps, isOpen]);
 
 	if (!isOpen || !roleData) return null;
 
@@ -92,14 +99,15 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 		if (!roleData) return;
 
 		const sentData = {
+			_id: roleData._id,
 			name: roleData.name,
-			description: roleData.description,
+			description: roleData.description ?? '',
 			status: roleData.status,
 			permissions: roleData.permissions.map((p) => p._id),
 		};
 
-		await updateElement('Rol', `/api/roles/${roleData._id}`, sentData);
-		updateList!();
+		await updateRole.mutateAsync(sentData);
+		updateList?.();
 		onClose();
 	};
 

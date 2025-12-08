@@ -22,8 +22,8 @@ export default function CartDropdown({
 	const items = cart?.items || [];
 
 	const handleDeleteItem = async (itemId: string) => {
-		await deleteItem.mutateAsync({ cartId: cart._id, itemId });
-
+		console.log("carrito: ", cart, "item: ", itemId )
+		await deleteItem.mutateAsync({ cartId: cart?._id!, itemId });
 		Swal.fire({
 			title: 'Eliminado',
 			text: 'Producto eliminado del carrito.',
