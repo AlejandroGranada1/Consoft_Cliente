@@ -477,3 +477,44 @@ export const useCreateUser = () => {
 		},
 	});
 };
+
+//* Forgot Password
+export const useForgotPassword = () => {
+	const mutation = useMutation({
+		mutationFn: async (email: string) => {
+			const { data } = await api.post('/api/auth/forgot-password', { email });
+			return data;
+		},
+	});
+
+	return mutation;
+};
+
+//* Reset Password
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: async ({
+      token,
+      password,
+    }: {
+      token: string;
+      password: string;
+    }) => {
+      const { data } = await api.post("/api/auth/reset-password", {
+        token,
+        password,
+      });
+      return data;
+    },
+  });
+};
+
+export const useGetOrders = () => {
+	return useQuery({
+		queryKey: ["orders"],
+		queryFn: async () => {
+			const { data } = await api.get("/api/orders");
+			return data;
+		},
+	});
+};

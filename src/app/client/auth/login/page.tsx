@@ -67,7 +67,7 @@ export default function LoginPage() {
 				/>
 
 				<a
-					href='/auth/forgot-password'
+					href='../auth/forgot-password'
 					className='text-sm text-[#1E293B] hover:text-[#70492F]'>
 					¿Olvidaste tu contraseña?
 				</a>
