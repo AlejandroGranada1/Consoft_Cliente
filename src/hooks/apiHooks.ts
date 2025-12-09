@@ -468,7 +468,7 @@ export const useGetProfile = () => {
 export const useCreateUser = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (userData) => {
+		mutationFn: async (userData: { name: string; email: string; password: string }) => {
 			const { data } = await api.post('/api/users', userData);
 			return data;
 		},
