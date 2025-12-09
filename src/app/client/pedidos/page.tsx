@@ -1,24 +1,41 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-
-const pedidos = [
-  { id: "1", nombre: "Pedido 1", estado: "Pendiente", valor: "$350.000 COP", dias: "7 Días" },
-  { id: "2", nombre: "Pedido 2", estado: "Listo", valor: "$350.000 COP", dias: "0 Días" },
-]
+import Link from "next/link";
+import { useMyOrders } from "@/hooks/apiHooks";
+import { Order, PedidoUI, User } from "@/lib/types";
 
 export default function PedidosPage() {
+  const { data: pedidos, isLoading, error } = useMyOrders();
+
   return (
     <main className="p-6 bg-[#fff9f4] min-h-screen">
       <h1 className="text-2xl font-bold text-center text-[#8B5E3C] mb-8">
         Mis pedidos
       </h1>
 
-      {pedidos.length === 0 ? (
+      {/* Loading */}
+      {isLoading && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-10 text-center text-[#8B5E3C] text-lg shadow-sm">
+          Cargando pedidos...
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-10 text-center text-red-700 text-lg shadow-sm">
+          Error cargando pedidos
+        </div>
+      )}
+
+      {/* Sin pedidos */}
+      {!isLoading && !error && pedidos && pedidos.length === 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-10 text-center text-[#8B5E3C] text-lg shadow-sm">
           Aún no tienes pedidos
         </div>
-      ) : (
+      )}
+
+      {/* Tabla */}
+      {pedidos && pedidos.length > 0 && (
         <div className="overflow-x-auto shadow-lg rounded-xl border border-gray-200">
           <table className="min-w-full text-sm text-center bg-white rounded-lg">
             <thead className="bg-[#8B5E3C] text-white">
@@ -30,8 +47,9 @@ export default function PedidosPage() {
                 <th className="py-3 px-4">Acción</th>
               </tr>
             </thead>
+
             <tbody>
-              {pedidos.map((p) => (
+              {pedidos.map((p:PedidoUI) => (
                 <tr
                   key={p.id}
                   className="border-b hover:bg-yellow-50 transition-colors"
@@ -39,6 +57,7 @@ export default function PedidosPage() {
                   <td className="py-3 px-4 font-medium text-[#1E293B]">
                     {p.nombre}
                   </td>
+
                   <td className="py-3 px-4">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -50,8 +69,10 @@ export default function PedidosPage() {
                       {p.estado}
                     </span>
                   </td>
+
                   <td className="py-3 px-4">{p.valor}</td>
                   <td className="py-3 px-4">{p.dias}</td>
+
                   <td className="py-3 px-4">
                     <Link
                       href={`/pedidos/${p.id}`}
@@ -67,5 +88,5 @@ export default function PedidosPage() {
         </div>
       )}
     </main>
-  )
+  );
 }

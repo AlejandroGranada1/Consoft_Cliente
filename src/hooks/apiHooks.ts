@@ -492,22 +492,34 @@ export const useForgotPassword = () => {
 
 //* Reset Password
 export const useResetPassword = () => {
-  return useMutation({
-    mutationFn: async ({
-      token,
-      password,
-    }: {
-      token: string;
-      password: string;
-    }) => {
-      const { data } = await api.post("/api/auth/reset-password", {
-        token,
-        password,
-      });
-      return data;
-    },
-  });
+	return useMutation({
+		mutationFn: async ({
+			token,
+			password,
+		}: {
+			token: string;
+			password: string;
+		}) => {
+			const { data } = await api.post("/api/auth/reset-password", {
+				token,
+				password,
+			});
+			return data;
+		},
+	});
 };
+
+export const useGoogleLogin = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async (id) => {
+			const { data } = await api.post("/api/auth/google", id)
+			return data
+		}
+	})
+
+}
 
 export const useGetOrders = () => {
 	return useQuery({
@@ -517,4 +529,42 @@ export const useGetOrders = () => {
 			return data;
 		},
 	});
+};
+
+//* My Orders (usuario autenticado)
+export const useMyOrders = () => {
+	return useQuery({
+		queryKey: ["myOrders"],
+		queryFn: async () => {
+			const { data } = await api.get("/api/orders/mine");
+
+			// Transformamos los datos como tu frontend los necesita
+			return data.orders.map((o: any) => ({
+				id: o._id,
+				nombre: o.items?.[0]?.id_servicio?.name || "Pedido",
+				estado: o.paymentStatus === "Pagado" ? "Listo" : "Pendiente",
+				valor: `$${o.total.toLocaleString()} COP`,
+				dias: calcDiasRestantes(o.startedAt),
+				raw: o, // si quieres usar info completa en detalles
+			}));
+		},
+	});
+};
+
+// Utilidad usada por el hook
+const calcDiasRestantes = (start?: string) => {
+	if (!start) return "–";
+
+	const hoy = new Date();
+	const inicio = new Date(start);
+
+	// Sumar 15 días
+	const fin = new Date(inicio);
+	fin.setDate(fin.getDate() + 15);
+
+	const diff = Math.ceil(
+		(fin.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24)
+	);
+
+	return diff <= 0 ? "0 Días" : `${diff} Días`;
 };

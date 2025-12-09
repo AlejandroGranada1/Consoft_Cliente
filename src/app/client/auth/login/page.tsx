@@ -7,10 +7,11 @@ import { useState } from 'react';
 import api from '@/components/Global/axios';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/providers/userContext';
+import { useGoogleLogin } from '@/hooks/apiHooks';
 
 export default function LoginPage() {
 	const router = useRouter();
-
+	const googleLogin = useGoogleLogin()
 	const [loginData, setLoginData] = useState({
 		email: '',
 		password: '',
@@ -39,6 +40,33 @@ export default function LoginPage() {
 			console.error(error);
 		}
 	};
+
+
+
+	const handleGoogleLogin = () => {
+		if (typeof window === "undefined") return;
+		if (!window.google) {
+			console.error("Google script not loaded yet");
+			return;
+		}
+
+		window.google.accounts.id.initialize({
+			client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+			callback: async (response: any) => {
+				const idToken = response.credential;
+				const res = await googleLogin.mutateAsync(idToken);
+
+				if (res?.message === "Login successful") {
+					window.location.reload();
+				}
+			},
+		});
+
+		window.google.accounts.id.prompt();
+	};
+
+
+
 
 	return (
 		<AuthLayout
@@ -78,15 +106,14 @@ export default function LoginPage() {
 				/>
 
 				<button
-					type='button'
-					className='w-full mt-3 flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100'>
-					<img
-						src='/auth/Google.webp'
-						alt='Google'
-						className='w-5 h-5'
-					/>
+					type="button"
+					onClick={handleGoogleLogin}
+					className="w-full mt-3 flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100"
+				>
+					<img src="/auth/Google.webp" alt="Google" className="w-5 h-5" />
 					Ingresa con Google
 				</button>
+
 
 				<p className='text-center text-sm mt-4'>
 					¿No tienes cuenta?{' '}

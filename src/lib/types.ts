@@ -121,6 +121,15 @@ export interface Order {
 	paymentStatus: string;
 }
 
+export interface PedidoUI {
+  id: string;
+  nombre: string;
+  estado: string;
+  valor: string;
+  dias: string;
+  raw: Order;
+}
+
 export type OrderWithPartialUser = Omit<Order, 'user'> & { user: string | Partial<User> };
 
 export interface Sale {
@@ -214,3 +223,13 @@ export interface ChatMessage {
 	message: string;
 	sentAt: string;
 }
+
+
+declare global {
+  interface Window {
+    google: any;
+  }
+
+  const google: any;
+}
+
