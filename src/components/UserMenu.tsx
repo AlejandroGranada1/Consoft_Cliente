@@ -20,8 +20,10 @@ export default function UserMenu() {
 
 	// 🔥 AUTO-CARGA DEL USUARIO SI ESTÁ EN SESIÓN
 	useEffect(() => {
-		if (!user) loadUser();
+		loadUser();
 	}, []);
+
+	if (user === undefined) return null
 
 	const handleLogout = () => {
 		Swal.fire({
