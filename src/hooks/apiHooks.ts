@@ -442,18 +442,33 @@ export const useGetUsers = () => {
 	});
 };
 
+export const useGetUserById = (id: string) => {
+	return useQuery({
+		queryKey: ["users", id],
+		queryFn: async () => {
+			const { data } = await api.get(`/api/users/${id}`)
+			console.log(data)
+			return data
+		}
+	})
+}
+
 export const useUpdateUser = () => {
 	const queryClient = useQueryClient();
+
 	return useMutation({
 		mutationFn: async ({ _id, formData }: any) => {
+			console.log(_id, formData)
 			const { data } = await api.put(`/api/users/${_id}`, formData);
 			return data;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['users'] });
+			queryClient.invalidateQueries({ queryKey: ['user'] }); // importante si traes el usuario individual
 		},
 	});
 };
+
 
 export const useGetProfile = () => {
 	return useQuery({

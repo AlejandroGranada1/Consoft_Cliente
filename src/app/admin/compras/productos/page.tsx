@@ -1,5 +1,5 @@
 'use client';
-import { Product } from '@/lib/types';
+import { Category, Product } from '@/lib/types';
 import ProductDetailsModal from '@/components/admin/compras/productos/ProductDetailsModal';
 import CreateProductModal from '@/components/admin/compras/productos/CreateProductModal';
 import EditProductModal from '@/components/admin/compras/productos/EditProductModal';
@@ -107,7 +107,7 @@ function Page() {
 								</p>
 								<p>
 									<span className='font-semibold'>Categoría:</span>{' '}
-									{p.category?.name}
+									{(p.category as Category)?.name}
 								</p>
 								<p>
 									<span className='font-semibold'>Descripción:</span>{' '}
@@ -156,7 +156,7 @@ function Page() {
 
 							{/* 💻 Vista desktop */}
 							<p className='hidden md:block'>{p.name}</p>
-							<p className='hidden md:block'>{p.category?.name}</p>
+							<p className='hidden md:block'>{(p.category as Category)?.name}</p>
 							<p className='hidden md:block truncate w-40 text-center'>{p.description}</p>
 							<p
 								className={`hidden md:block ${

@@ -88,6 +88,9 @@ export default function UserMenu() {
 						<DropdownMenuItem onClick={() => router.push('/client/perfil')}>
 							Mi Perfil
 						</DropdownMenuItem>
+						<DropdownMenuItem onClick={()=> router.push("/client/favoritos")}>
+							Favoritos
+						</DropdownMenuItem>
 
 						<button
 							onClick={handleLogout}
