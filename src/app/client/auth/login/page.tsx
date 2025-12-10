@@ -3,7 +3,7 @@
 import AuthLayout from '@/components/auth/AuthLayout';
 import AuthInput from '@/components/auth/AuthInput';
 import AuthButton from '@/components/auth/AuthButton';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '@/components/Global/axios';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/providers/userContext';
@@ -11,13 +11,17 @@ import { useGoogleLogin } from '@/hooks/apiHooks';
 
 export default function LoginPage() {
 	const router = useRouter();
-	const googleLogin = useGoogleLogin()
+	const googleLogin = useGoogleLogin();
+	const { loadUser } = useUser();
+
 	const [loginData, setLoginData] = useState({
 		email: '',
 		password: '',
 	});
 
-	const { loadUser } = useUser(); // 👈 Usamos loadUser, NO fetchCurrentUser
+	// ------------------------
+	// Formularios normales
+	// ------------------------
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -26,14 +30,11 @@ export default function LoginPage() {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-
 		try {
 			const response = await api.post('/api/auth/login', loginData);
 
 			if (response.status === 200) {
-				// 👇 AQUÍ CARGAMOS EL USUARIO DESPUÉS DE LOGIN
 				await loadUser();
-
 				router.push('/client');
 			}
 		} catch (error) {
@@ -41,32 +42,54 @@ export default function LoginPage() {
 		}
 	};
 
+	// ------------------------
+	// GOOGLE LOGIN
+	// ------------------------
 
+	// ------------------------
+	// GOOGLE LOGIN CORRECTO
+	// ------------------------
 
-	const handleGoogleLogin = () => {
-		if (typeof window === "undefined") return;
-		if (!window.google) {
-			console.error("Google script not loaded yet");
+	useEffect(() => {
+		if (typeof window === 'undefined') return;
+
+		// Verificar que Google cargó
+		if (!window.google?.accounts?.id) {
+			console.error('Google script not loaded.');
 			return;
 		}
 
+		// Inicializar Google Identity
 		window.google.accounts.id.initialize({
 			client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
 			callback: async (response: any) => {
-				const idToken = response.credential;
-				const res = await googleLogin.mutateAsync(idToken);
+				try {
+					const idToken = response.credential;
+					console.log(idToken)
+					const res = await googleLogin.mutateAsync(idToken);
 
-				if (res?.message === "Login successful") {
-					window.location.reload();
+					if (res?.message === 'Login successful') {
+						await loadUser();
+						router.push('/client');
+					}
+				} catch (err) {
+					console.error('Google login error:', err);
 				}
 			},
+			ux_mode: 'popup',
 		});
 
-		window.google.accounts.id.prompt();
-	};
+		// Renderizar el botón
+		const container = document.getElementById('google-button-container');
+		if (container) {
+			window.google.accounts.id.renderButton(container, {
+				theme: 'filled_blue',
+				size: 'large',
+			});
+		}
+	}, []); // 👈 se ejecuta solo una vez cuando carga el componente
 
-
-
+	// ------------------------
 
 	return (
 		<AuthLayout
@@ -105,15 +128,10 @@ export default function LoginPage() {
 					type='submit'
 				/>
 
-				<button
-					type="button"
-					onClick={handleGoogleLogin}
-					className="w-full mt-3 flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100"
-				>
-					<img src="/auth/Google.webp" alt="Google" className="w-5 h-5" />
-					Ingresa con Google
-				</button>
-
+				{/* GOOGLE LOGIN BUTTON */}
+				<div
+					id='google-button-container'
+					className='w-full mt-3'></div>
 
 				<p className='text-center text-sm mt-4'>
 					¿No tienes cuenta?{' '}
