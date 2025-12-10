@@ -4,11 +4,14 @@ import { useGetAllCarts, useGetMessages } from '@/hooks/apiHooks';
 import { ChatMessage } from '@/lib/types';
 import { useUser } from '@/providers/userContext';
 import { useEffect, useRef, useState } from 'react';
+import { FaCaretDown } from 'react-icons/fa';
 import io from 'socket.io-client';
 
 export default function AdminChatsPage() {
 	const [selectedChat, setSelectedChat] = useState<any>(null);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
+	const [showProducts, setShowProducts] = useState(false);
+
 	const [newMessage, setNewMessage] = useState('');
 
 	const { user } = useUser();
@@ -32,6 +35,7 @@ export default function AdminChatsPage() {
 	// Obtener todas las cotizaciones
 	// ----------------------------
 	const { data, refetch } = useGetAllCarts();
+	console.log(data);
 	const allowedStatuses = ['solicitada', 'en_proceso', 'cotizada'];
 	const chats = (data?.quotations ?? []).filter((q) => allowedStatuses.includes(q.status));
 
@@ -50,6 +54,8 @@ export default function AdminChatsPage() {
 						: msg.sender,
 			})) || [];
 		setMessages(normalized);
+
+		console.log(selectedChat);
 	}, [messagesData, selectedChat]);
 
 	// ----------------------------
@@ -135,7 +141,7 @@ export default function AdminChatsPage() {
 								selectedChat?._id === chat._id ? 'bg-[#6EC6FF33]' : 'bg-white'
 							}`}>
 							<div className='font-semibold text-[#000000]'>
-								Cotización #{chat._id || chat._id.slice(-6)}
+								Cotización para {chat.user.name || chat._id.slice(-6)}
 							</div>
 							<div className='text-sm text-gray-600'>Estado: {chat.status}</div>
 						</div>
@@ -145,8 +151,72 @@ export default function AdminChatsPage() {
 
 			{/* PANEL DERECHO */}
 			<div className='w-2/3 flex flex-col'>
-				<div className='p-4 bg-brown text-white font-semibold shadow'>
-					{selectedChat ? `Cotización #${selectedChat._id}` : 'Selecciona un chat'}
+				<div className='p-4 bg-brown text-white font-semibold shadow flex items-center justify-between relative'>
+					{selectedChat ? (
+						<>
+							<span>Cotización para {selectedChat.user.name}</span>
+
+							{/* Botón dropdown */}
+							<button
+								onClick={() => setShowProducts(!showProducts)}
+								className='flex items-center gap-2 bg-white/20 px-3 py-1 rounded hover:bg-white/30 transition'>
+								Productos <FaCaretDown />
+							</button>
+
+							{/* Dropdown */}
+							{showProducts && (
+								<div className='absolute top-14 right-4 w-72 bg-white text-black rounded shadow-lg border z-20'>
+									<div className='p-3 font-semibold border-b'>
+										Productos cotizados
+									</div>
+
+									<div className='max-h-64 overflow-y-auto'>
+										{selectedChat.items?.length > 0 ? (
+											selectedChat.items.map((item: any) => (
+												<div
+													key={item._id}
+													className='p-3 border-b last:border-b-0 hover:bg-gray-100'>
+													<div className='font-medium'>
+														{item.product.name}
+													</div>
+
+													<div className='text-sm text-gray-600'>
+														Cantidad: {item.quantity}
+													</div>
+
+													{item.product.price && (
+														<div className='text-sm text-gray-700 font-semibold'>
+															Precio: $
+															{item.product.price.toLocaleString()}
+														</div>
+													)}
+
+													{/* Campos adicionales de tu API */}
+													{item.color && (
+														<div className='text-sm text-gray-600'>
+															Color: {item.color}
+														</div>
+													)}
+
+													{item.size && (
+														<div className='text-sm text-gray-600'>
+															Tamaño: {item.size}
+														</div>
+													)}
+												</div>
+											))
+										) : (
+											<div className='p-3 text-gray-500 text-sm'>
+												No hay productos en esta cotización
+											</div>
+										)}
+									</div>
+								</div>
+							)}
+						</>
+					) : (
+						'Selecciona un chat'
+					)}
 				</div>
 
 				<div className='flex-1 overflow-y-auto p-4 bg-[#F0F0F0]'>
