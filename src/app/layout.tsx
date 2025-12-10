@@ -9,20 +9,18 @@ export const metadata: Metadata = {
 	description: 'Aplicación Web desarrollada para Confort & Estilo',
 };
 
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-	console.log(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!)
 	return (
 		<html lang='es'>
 			<QueryProvider>
 				<UserProvider>
-					<body>{children}
-
-						<Script
-							src="https://accounts.google.com/gsi/client"
-							strategy="afterInteractive"
-						/>
-					</body>
+					<head>
+							<Script
+								src='https://accounts.google.com/gsi/client'
+								strategy='beforeInteractive'
+							/>
+					</head>
+					<body>{children}</body>
 				</UserProvider>
 			</QueryProvider>
 		</html>
