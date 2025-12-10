@@ -41,6 +41,7 @@ export interface RoleOption {
 // ✅ Users
 export interface User {
 	_id: string | undefined;
+	id: string;
 	name: string;
 	email: string;
 	password?: string;
