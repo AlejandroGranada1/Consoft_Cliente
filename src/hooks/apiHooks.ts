@@ -447,7 +447,6 @@ export const useGetUserById = (id: string) => {
 		queryKey: ["users", id],
 		queryFn: async () => {
 			const { data } = await api.get(`/api/users/${id}`)
-			console.log(data)
 			return data
 		}
 	})
