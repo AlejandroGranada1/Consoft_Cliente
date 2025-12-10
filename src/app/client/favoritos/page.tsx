@@ -11,7 +11,6 @@ export default function FavoritesPage() {
 
 	// Obtener datos del usuario con populate de favorites
 	const { data, isLoading } = useGetUserById(userId!);
-	console.log(data)
 	if (isLoading) return <p className="p-6">Cargando favoritos...</p>;
 
 	const favorites = data?.data?.favorites || [];
