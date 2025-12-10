@@ -493,14 +493,8 @@ export const useForgotPassword = () => {
 //* Reset Password
 export const useResetPassword = () => {
 	return useMutation({
-		mutationFn: async ({
-			token,
-			password,
-		}: {
-			token: string;
-			password: string;
-		}) => {
-			const { data } = await api.post("/api/auth/reset-password", {
+		mutationFn: async ({ token, password }: { token: string; password: string }) => {
+			const { data } = await api.post('/api/auth/reset-password', {
 				token,
 				password,
 			});
@@ -513,19 +507,19 @@ export const useGoogleLogin = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async (id) => {
-			const { data } = await api.post("/api/auth/google", id)
-			return data
-		}
-	})
-
-}
+		mutationFn: async (idToken) => {
+			console.log(idToken);
+			const { data } = await api.post('/api/auth/google', { idToken });
+			return data;
+		},
+	});
+};
 
 export const useGetOrders = () => {
 	return useQuery({
-		queryKey: ["orders"],
+		queryKey: ['orders'],
 		queryFn: async () => {
-			const { data } = await api.get("/api/orders");
+			const { data } = await api.get('/api/orders');
 			return data;
 		},
 	});
@@ -534,15 +528,15 @@ export const useGetOrders = () => {
 //* My Orders (usuario autenticado)
 export const useMyOrders = () => {
 	return useQuery({
-		queryKey: ["myOrders"],
+		queryKey: ['myOrders'],
 		queryFn: async () => {
-			const { data } = await api.get("/api/orders/mine");
+			const { data } = await api.get('/api/orders/mine');
 
 			// Transformamos los datos como tu frontend los necesita
 			return data.orders.map((o: any) => ({
 				id: o._id,
-				nombre: o.items?.[0]?.id_servicio?.name || "Pedido",
-				estado: o.paymentStatus === "Pagado" ? "Listo" : "Pendiente",
+				nombre: o.items?.[0]?.id_servicio?.name || 'Pedido',
+				estado: o.paymentStatus === 'Pagado' ? 'Listo' : 'Pendiente',
 				valor: `$${o.total.toLocaleString()} COP`,
 				dias: calcDiasRestantes(o.startedAt),
 				raw: o, // si quieres usar info completa en detalles
@@ -553,7 +547,7 @@ export const useMyOrders = () => {
 
 // Utilidad usada por el hook
 const calcDiasRestantes = (start?: string) => {
-	if (!start) return "–";
+	if (!start) return '–';
 
 	const hoy = new Date();
 	const inicio = new Date(start);
@@ -562,9 +556,7 @@ const calcDiasRestantes = (start?: string) => {
 	const fin = new Date(inicio);
 	fin.setDate(fin.getDate() + 15);
 
-	const diff = Math.ceil(
-		(fin.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24)
-	);
+	const diff = Math.ceil((fin.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
 
-	return diff <= 0 ? "0 Días" : `${diff} Días`;
+	return diff <= 0 ? '0 Días' : `${diff} Días`;
 };
