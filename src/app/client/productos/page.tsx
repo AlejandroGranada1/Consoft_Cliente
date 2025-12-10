@@ -5,7 +5,7 @@ import { useGetProducts } from '@/hooks/apiHooks';
 import { Category } from '@/lib/types';
 
 export default function ProductsPage() {
-	const { data: products, isLoading } = useGetProducts();
+	const { data: products, isLoading, refetch } = useGetProducts();
 
 	if (isLoading) return <p>Cargando...</p>;
 
@@ -38,6 +38,7 @@ export default function ProductsPage() {
 										key={product._id}
 										id={product._id!}
 										name={product.name}
+										refetch={refetch}
 										image={
 											product.imageUrl && product.imageUrl.trim() !== ''
 												? product.imageUrl
