@@ -544,9 +544,78 @@ export const useMyOrders = () => {
 		queryKey: ['myOrders'],
 		queryFn: async () => {
 			const { data } = await api.get('/api/orders/mine');
-			return data;
+
+			// Transformamos los datos como tu frontend los necesita
+			return data.orders.map((o: any) => ({
+				id: o._id,
+				nombre: o.items?.[0]?.id_servicio?.name || 'Pedido',
+				estado: o.paymentStatus === 'Pagado' ? 'Listo' : 'Pendiente',
+				valor: `$${o.total.toLocaleString()} COP`,
+				dias: calcDiasRestantes(o.startedAt),
+				raw: o, // si quieres usar info completa en detalles
+			}));
 		},
 	});
 };
 
 // Utilidad usada por el hook
+const calcDiasRestantes = (start?: string) => {
+	if (!start) return '–';
+
+	const hoy = new Date();
+	const inicio = new Date(start);
+
+	// Sumar 15 días
+	const fin = new Date(inicio);
+	fin.setDate(fin.getDate() + 15);
+
+	const diff = Math.ceil((fin.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+
+	return diff <= 0 ? '0 Días' : `${diff} Días`;
+};
+
+export const useMyOrder = (id: string) => {
+	return useQuery({
+		queryKey: ['pedidoDetalle', id],
+		queryFn: async () => {
+			const { data } = await api.get(`/api/orders/${id}`);
+
+			// Transformamos para UI (igual que useMyOrders)
+			const pedidoUI = {
+				id: data._id,
+				nombre: data.items?.[0]?.id_servicio?.name || 'Pedido',
+				estado: data.paymentStatus === 'Pagado' ? 'Listo' : 'Pendiente',
+				valor: `$${data.total.toLocaleString()} COP`,
+				dias: calcDiasRestantes(data.startedAt),
+				raw: data,
+			};
+
+			return pedidoUI;
+		},
+	});
+};
+
+// Payments Send
+export const useSendPayment = () => {
+	return useMutation({
+		mutationFn: async (data: {
+			orderId: string;
+			payment_image: File;
+			tipoPago: 'abono' | 'final';
+		}) => {
+			const formData = new FormData();
+			formData.append('payment_image', data.payment_image);
+			formData.append('status', 'pendiente');
+			formData.append('method', data.tipoPago);
+
+			// FALTA ESTO PARA QUE EL BACKEND LO ACEPTE
+			formData.append('orderId', data.orderId);
+
+			const res = await api.post(`/api/orders/${data.orderId}/payments/ocr`, formData, {
+				headers: { 'Content-Type': 'multipart/form-data' },
+			});
+
+			return res.data;
+		},
+	});
+};
