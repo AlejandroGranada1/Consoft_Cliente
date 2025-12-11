@@ -545,15 +545,25 @@ export const useMyOrders = () => {
 		queryFn: async () => {
 			const { data } = await api.get('/api/orders/mine');
 
-			// Transformamos los datos como tu frontend los necesita
-			return data.orders.map((o: any) => ({
-				id: o._id,
-				nombre: o.items?.[0]?.id_servicio?.name || 'Pedido',
-				estado: o.paymentStatus === 'Pagado' ? 'Listo' : 'Pendiente',
-				valor: `$${o.total.toLocaleString()} COP`,
-				dias: calcDiasRestantes(o.startedAt),
-				raw: o, // si quieres usar info completa en detalles
-			}));
+			return data.orders.map((o: any) => {
+				// Calcular total pagado
+				const pagado = o.payments?.reduce((acc: number, p: any) => {
+					return acc + (p.amount || 0);
+				}, 0) || 0;
+
+				// Restante
+				const restante = (o.total || 0) - pagado;
+
+				return {
+					id: o._id,
+					nombre: o.items?.[0]?.id_servicio?.name || 'Pedido',
+					estado: o.paymentStatus === 'Pagado' ? 'Listo' : 'Pendiente',
+					valor: `$${o.total.toLocaleString()} COP`,
+					restante: `${restante.toLocaleString()} COP`,
+					dias: calcDiasRestantes(o.startedAt),
+					raw: o,
+				};
+			});
 		},
 	});
 };
@@ -580,12 +590,19 @@ export const useMyOrder = (id: string) => {
 		queryFn: async () => {
 			const { data } = await api.get(`/api/orders/${id}`);
 
-			// Transformamos para UI (igual que useMyOrders)
+			// Calcular pagado
+			const pagado = data.payments?.reduce((acc: number, p: any) => {
+				return acc + (p.amount || 0);
+			}, 0) || 0;
+
+			const restante = (data.total || 0) - pagado;
+
 			const pedidoUI = {
 				id: data._id,
 				nombre: data.items?.[0]?.id_servicio?.name || 'Pedido',
 				estado: data.paymentStatus === 'Pagado' ? 'Listo' : 'Pendiente',
 				valor: `$${data.total.toLocaleString()} COP`,
+				restante: `$${restante.toLocaleString()} COP`, 
 				dias: calcDiasRestantes(data.startedAt),
 				raw: data,
 			};
