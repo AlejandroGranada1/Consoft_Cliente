@@ -1,144 +1,166 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
+import { useParams, useRouter } from "next/navigation"
+import { useSendPayment } from "@/hooks/apiHooks"
 import Swal from "sweetalert2"
-import { Button } from "@/components/ui/button"
 
 export default function PagoPage() {
-  const [comprobante, setComprobante] = useState<string | null>(null)
+  const router = useRouter()
+  const { id: pedidoId } = useParams()
+
+  const [metodo, setMetodo] = useState<"nequi" | "bancolombia" | null>(null)
+  const [comprobantePreview, setComprobantePreview] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null)
   const [tipoPago, setTipoPago] = useState<"abono" | "final" | null>(null)
+
+  const sendPayment = useSendPayment()
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      const url = URL.createObjectURL(file)
-      setComprobante(url)
+      const f = e.target.files[0]
+      setFile(f)
+      setComprobantePreview(URL.createObjectURL(f))
     }
   }
 
   const confirmarPago = () => {
+    if (!file) {
+      Swal.fire({ icon: "warning", title: "Falta comprobante" })
+      return
+    }
     if (!tipoPago) {
-      Swal.fire({
-        icon: "warning",
-        title: "Selecciona el tipo de pago",
-        text: "Debes indicar si es un abono parcial o un pago final.",
-        confirmButtonText: "Entendido",
-        confirmButtonColor: "#6B4226",
-        background: "#FAF4EF",
-        color: "#5C3A21",
-      })
+      Swal.fire({ icon: "warning", title: "Selecciona tipo de pago" })
       return
     }
 
-    Swal.fire({
-      icon: "success",
-      title: "¡Pago enviado!",
-      text: `Tu comprobante fue cargado como ${tipoPago === "abono" ? "Abono parcial" : "Pago final"}. El pago está en verificación.`,
-      confirmButtonText: "Ok",
-      confirmButtonColor: "#6B4226",
-      background: "#FAF4EF",
-      color: "#5C3A21",
-    }).then(() => {
-      window.location.href = "/pedidos"
-    })
+    sendPayment.mutate(
+      {
+        orderId: pedidoId as string,
+        file,
+        tipoPago,
+      },
+      {
+        onSuccess: () => {
+          Swal.fire({
+            icon: "success",
+            title: "Pago enviado",
+            text: "Tu comprobante está en verificación",
+          }).then(() => router.push("/pedidos"))
+        },
+        onError: () => {
+          Swal.fire({
+            icon: "error",
+            title: "Error al enviar el pago",
+            text: "Intenta nuevamente",
+          })
+        },
+      }
+    )
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-[#FAF4EF] p-6">
-      <div className="w-full max-w-6xl">
-        {/* Botón volver */}
-        <Link
-          href="/pedidos"
-          className="inline-flex items-center px-4 py-2 rounded-full bg-[#6B4226] text-white text-sm hover:bg-[#4e2f1b] transition"
+    <main className="p-6 min-h-screen bg-[#FAF4EF] flex flex-col justify-between">
+      <div>
+        {/* Volver */}
+        <button
+          onClick={() => router.back()}
+          className="mb-6 flex items-center gap-2 px-4 py-2 bg-[#6B4226] text-white rounded-full shadow hover:bg-[#4e2f1b]"
         >
-          Atrás
-        </Link>
+          Volver
+        </button>
 
-        <h1 className="text-center text-2xl font-semibold text-[#5C3A21] my-6">
-          Continua con el pago
+        <h1 className="text-2xl font-bold text-center text-[#5C3A21] mb-8">
+          Realizar Pago
         </h1>
 
-        <div className="grid grid-cols-3 gap-6 items-start">
-          {/* Columna QR */}
-          <div className="col-span-2 grid grid-cols-2 gap-6">
-            <div className="flex flex-col items-center">
-              <Image src="/pagos/qrbanco.png" alt="Bancolombia" width={180} height={180} />
-              <p className="mt-2 text-sm text-[#5C3A21]">Pagos a Bancolombia</p>
-              <label className="mt-3 cursor-pointer inline-flex items-center px-4 py-2 rounded-full bg-[#6B4226] text-white text-sm hover:bg-[#4e2f1b] transition">
-                Adjuntar comprobante
-                <input type="file" accept="image/*" onChange={handleFile} className="hidden" />
-              </label>
+        {/* Selección método */}
+        <div className="grid grid-cols-2 gap-6 mb-10">
+          <button
+            onClick={() => setMetodo("nequi")}
+            className={`p-4 rounded-xl border shadow text-center ${
+              metodo === "nequi" ? "bg-[#FFD9E6] border-pink-400" : "bg-white"
+            }`}
+          >
+            <p className="font-bold text-[#8B5E3C]">Nequi</p>
+          </button>
+
+          <button
+            onClick={() => setMetodo("bancolombia")}
+            className={`p-4 rounded-xl border shadow text-center ${
+              metodo === "bancolombia"
+                ? "bg-[#FFF1C4] border-yellow-400"
+                : "bg-white"
+            }`}
+          >
+            <p className="font-bold text-[#8B5E3C]">Bancolombia</p>
+          </button>
+        </div>
+
+        {/* Comprobante */}
+        <div className="mb-10">
+          <p className="font-semibold text-[#8B5E3C] mb-2">Comprobante</p>
+
+          {comprobantePreview ? (
+            <img
+              src={comprobantePreview}
+              alt="Comprobante"
+              className="w-full h-64 object-contain border rounded-lg shadow mb-4"
+            />
+          ) : (
+            <div className="w-full h-64 border rounded-lg flex items-center justify-center text-gray-500 mb-4">
+              Sin archivo seleccionado
             </div>
+          )}
 
-            <div className="flex flex-col items-center">
-              <Image src="/pagos/qrnequi.png" alt="Nequi" width={180} height={180} />
-              <p className="mt-2 text-sm text-[#5C3A21]">Pagos a Nequi</p>
-              <label className="mt-3 cursor-pointer inline-flex items-center px-4 py-2 rounded-full bg-[#6B4226] text-white text-sm hover:bg-[#4e2f1b] transition">
-                Adjuntar comprobante
-                <input type="file" accept="image/*" onChange={handleFile} className="hidden" />
-              </label>
-            </div>
-          </div>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFile}
+            className="w-full bg-white p-2 border rounded shadow"
+          />
+        </div>
 
-          {/* Columna comprobante */}
-          <div className="flex flex-col items-center gap-4">
-            {!comprobante ? (
-              <div className="w-full h-64 flex items-center justify-center border-2 border-dashed border-[#6B4226]/40 rounded-2xl bg-white shadow">
-                <label className="cursor-pointer flex flex-col items-center gap-2 text-[#6B4226]">
-                  <span className="px-4 py-2 rounded-full bg-[#6B4226] text-white text-sm hover:bg-[#4e2f1b] transition">
-                    Cargar imagen
-                  </span>
-                  <span className="text-xs text-gray-500">o arrastra aquí tu comprobante</span>
-                  <input type="file" accept="image/*" onChange={handleFile} className="hidden" />
-                </label>
-              </div>
-            ) : (
-              <>
-                <Image
-                  src={comprobante}
-                  alt="Comprobante"
-                  width={220}
-                  height={220}
-                  className="rounded-lg shadow"
-                />
+        {/* Tipo de pago */}
+        <div className="mb-6">
+          <p className="font-semibold text-[#8B5E3C] mb-2">Tipo de pago</p>
 
-                {/* Radios para tipo de pago */}
-                <div className="flex flex-col gap-2 text-[#5C3A21] text-sm">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="tipoPago"
-                      value="abono"
-                      checked={tipoPago === "abono"}
-                      onChange={() => setTipoPago("abono")}
-                    />
-                    Abono parcial
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="tipoPago"
-                      value="final"
-                      checked={tipoPago === "final"}
-                      onChange={() => setTipoPago("final")}
-                    />
-                    Pago final
-                  </label>
-                </div>
+          <div className="grid grid-cols-2 gap-6">
+            <button
+              onClick={() => setTipoPago("abono")}
+              className={`p-3 rounded-xl border shadow ${
+                tipoPago === "abono"
+                  ? "bg-[#F3E8D5] border-[#D1B08C]"
+                  : "bg-white"
+              }`}
+            >
+              Abono
+            </button>
 
-                <Button
-                  onClick={confirmarPago}
-                  className="bg-[#6B4226] hover:bg-[#4e2f1b] rounded-full px-6 mt-2"
-                >
-                  Siguiente
-                </Button>
-              </>
-            )}
+            <button
+              onClick={() => setTipoPago("final")}
+              className={`p-3 rounded-xl border shadow ${
+                tipoPago === "final"
+                  ? "bg-[#F3E8D5] border-[#D1B08C]"
+                  : "bg-white"
+              }`}
+            >
+              Pago Final
+            </button>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Botón Final */}
+      <div className="mt-10 flex justify-end">
+        <button
+          onClick={confirmarPago}
+          className="px-6 py-3 bg-[#8B5E3C] text-white rounded-full shadow hover:bg-[#5C3A21] transition-colors"
+          disabled={sendPayment.isPending}
+        >
+          {sendPayment.isPending ? "Enviando..." : "Confirmar Pago"}
+        </button>
+      </div>
+    </main>
   )
 }
