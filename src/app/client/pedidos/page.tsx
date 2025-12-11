@@ -75,7 +75,7 @@ export default function PedidosPage() {
 
                   <td className="py-3 px-4">
                     <Link
-                      href={`/pedidos/${p.id}`}
+                      href={`./pedidos/${p.id}`}
                       className="inline-block px-4 py-1 bg-[#8B5E3C] text-white rounded-full text-xs font-medium shadow hover:bg-[#5C3A21] transition-colors"
                     >
                       Ver más

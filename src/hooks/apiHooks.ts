@@ -574,3 +574,50 @@ const calcDiasRestantes = (start?: string) => {
 
 	return diff <= 0 ? '0 Días' : `${diff} Días`;
 };
+
+export const useMyOrder = (id: string) => {
+	return useQuery({
+		queryKey: ['pedidoDetalle', id],
+		queryFn: async () => {
+			const { data } = await api.get(`/api/orders/${id}`);
+
+			// Transformamos para UI (igual que useMyOrders)
+			const pedidoUI = {
+				id: data._id,
+				nombre: data.items?.[0]?.id_servicio?.name || 'Pedido',
+				estado: data.paymentStatus === 'Pagado' ? 'Listo' : 'Pendiente',
+				valor: `$${data.total.toLocaleString()} COP`,
+				dias: calcDiasRestantes(data.startedAt),
+				raw: data,
+			};
+
+			return pedidoUI;
+		},
+	});
+};
+
+// Payments Send
+export const useSendPayment = () => {
+  return useMutation({
+    mutationFn: async (data: {
+      orderId: string
+      file: File
+      tipoPago: "abono" | "final"
+    }) => {
+      const formData = new FormData()
+      formData.append("payment_image", data.file)
+      formData.append("status", "pendiente")
+      formData.append("method", data.tipoPago)
+
+      const res = await api.post(
+        `/api/orders/${data.orderId}/payments/ocr`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      )
+
+      return res.data
+    },
+  })
+}
