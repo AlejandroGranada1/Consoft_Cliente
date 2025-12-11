@@ -6,7 +6,9 @@ import { PedidoUI } from '@/lib/types';
 
 export default function PedidosPage() {
 	const { data, isLoading, error } = useMyOrders();
-	const pedidos: PedidoUI[] = data?.orders ?? [];
+	const pedidos: PedidoUI[] = data ?? [];
+
+	console.log(pedidos)
 
 	return (
 		<main className='p-6 bg-[#fff9f4] min-h-screen'>
@@ -68,7 +70,7 @@ export default function PedidosPage() {
 									<td className='py-3 px-4'>{p.dias}</td>
 									<td className='py-3 px-4'>
 										<Link
-											href={`/pedidos/${p.id}`}
+											href={`/client/pedidos/${p.id}`}
 											className='inline-block px-4 py-1 bg-[#8B5E3C] text-white rounded-full text-xs font-medium shadow hover:bg-[#5C3A21] transition-colors'>
 											Ver más
 										</Link>
