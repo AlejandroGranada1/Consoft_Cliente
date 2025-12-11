@@ -444,20 +444,20 @@ export const useGetUsers = () => {
 
 export const useGetUserById = (id: string) => {
 	return useQuery({
-		queryKey: ["users", id],
+		queryKey: ['users', id],
 		queryFn: async () => {
-			const { data } = await api.get(`/api/users/${id}`)
-			return data
-		}
-	})
-}
+			const { data } = await api.get(`/api/users/${id}`);
+			return data;
+		},
+	});
+};
 
 export const useUpdateUser = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: async ({ _id, formData }: any) => {
-			console.log(_id, formData)
+			console.log(_id, formData);
 			const { data } = await api.put(`/api/users/${_id}`, formData);
 			return data;
 		},
@@ -467,7 +467,6 @@ export const useUpdateUser = () => {
 		},
 	});
 };
-
 
 export const useGetProfile = () => {
 	return useQuery({
@@ -545,32 +544,9 @@ export const useMyOrders = () => {
 		queryKey: ['myOrders'],
 		queryFn: async () => {
 			const { data } = await api.get('/api/orders/mine');
-
-			// Transformamos los datos como tu frontend los necesita
-			return data.orders.map((o: any) => ({
-				id: o._id,
-				nombre: o.items?.[0]?.id_servicio?.name || 'Pedido',
-				estado: o.paymentStatus === 'Pagado' ? 'Listo' : 'Pendiente',
-				valor: `$${o.total.toLocaleString()} COP`,
-				dias: calcDiasRestantes(o.startedAt),
-				raw: o, // si quieres usar info completa en detalles
-			}));
+			return data;
 		},
 	});
 };
 
 // Utilidad usada por el hook
-const calcDiasRestantes = (start?: string) => {
-	if (!start) return '–';
-
-	const hoy = new Date();
-	const inicio = new Date(start);
-
-	// Sumar 15 días
-	const fin = new Date(inicio);
-	fin.setDate(fin.getDate() + 15);
-
-	const diff = Math.ceil((fin.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-
-	return diff <= 0 ? '0 Días' : `${diff} Días`;
-};
