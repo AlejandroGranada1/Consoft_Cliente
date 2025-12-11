@@ -8,11 +8,13 @@ export default function PedidosPage() {
 	const { data, isLoading, error } = useMyOrders();
 	const pedidos: PedidoUI[] = data ?? [];
 
-	console.log(pedidos)
+	console.log(pedidos);
 
 	return (
 		<main className='p-6 bg-[#fff9f4] min-h-screen'>
-			<h1 className='text-2xl font-bold text-center text-[#8B5E3C] mb-8'>Mis pedidos</h1>
+			<h1 className='text-2xl font-bold text-center text-[#8B5E3C] mb-8'>
+				Mis pedidos
+			</h1>
 
 			{/* Loading */}
 			{isLoading && (
@@ -45,6 +47,7 @@ export default function PedidosPage() {
 								<th className='py-3 px-4'>Estado</th>
 								<th className='py-3 px-4'>Valor Acordado</th>
 								<th className='py-3 px-4'>Días Restantes</th>
+								<th className='py-3 px-4'>Restante</th>
 								<th className='py-3 px-4'>Acción</th>
 							</tr>
 						</thead>
@@ -52,26 +55,34 @@ export default function PedidosPage() {
 							{pedidos.map((p: PedidoUI) => (
 								<tr
 									key={p.id}
-									className='border-b hover:bg-yellow-50 transition-colors'>
+									className='border-b hover:bg-yellow-50 transition-colors'
+								>
 									<td className='py-3 px-4 font-medium text-[#1E293B]'>
 										{p.nombre}
 									</td>
+
 									<td className='py-3 px-4'>
 										<span
 											className={`px-3 py-1 rounded-full text-xs font-semibold ${
 												p.estado === 'Listo'
 													? 'bg-green-100 text-green-700'
 													: 'bg-yellow-100 text-yellow-700'
-											}`}>
+											}`}
+										>
 											{p.estado}
 										</span>
 									</td>
+
 									<td className='py-3 px-4'>{p.valor}</td>
 									<td className='py-3 px-4'>{p.dias}</td>
+											
+									<td className='py-3 px-4'>${p.restante}</td>
+
 									<td className='py-3 px-4'>
 										<Link
 											href={`/client/pedidos/${p.id}`}
-											className='inline-block px-4 py-1 bg-[#8B5E3C] text-white rounded-full text-xs font-medium shadow hover:bg-[#5C3A21] transition-colors'>
+											className='inline-block px-4 py-1 bg-[#8B5E3C] text-white rounded-full text-xs font-medium shadow hover:bg-[#5C3A21] transition-colors'
+										>
 											Ver más
 										</Link>
 									</td>
