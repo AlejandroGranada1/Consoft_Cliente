@@ -37,7 +37,7 @@ export default function PagoPage() {
     sendPayment.mutate(
       {
         orderId: pedidoId as string,
-        file,
+        payment_image: file,
         tipoPago,
       },
       {
@@ -46,7 +46,7 @@ export default function PagoPage() {
             icon: "success",
             title: "Pago enviado",
             text: "Tu comprobante está en verificación",
-          }).then(() => router.push("/pedidos"))
+          }).then(() => router.push("/client/pedidos"))
         },
         onError: () => {
           Swal.fire({
