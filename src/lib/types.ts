@@ -128,6 +128,7 @@ export interface PedidoUI {
   estado: string;
   valor: string;
   dias: string;
+  restante: number;
   raw: Order;
 }
 
