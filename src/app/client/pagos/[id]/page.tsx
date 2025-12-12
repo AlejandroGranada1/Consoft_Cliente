@@ -1,13 +1,29 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSendPayment } from "@/hooks/apiHooks"
+import { useUser } from "@/providers/userContext"
 import Swal from "sweetalert2"
 
 export default function PagoPage() {
   const router = useRouter()
   const { id: pedidoId } = useParams()
+  const { user } = useUser()
+
+  useEffect(() => {
+    if (user === null) {
+      router.push("/client/auth/login")
+    }
+  }, [user, router])
+
+  if (user === undefined) {
+    return <p className="p-6">Validando sesión...</p>
+  }
+
+  if (user === null) {
+    return null
+  }
 
   const [metodo, setMetodo] = useState<"nequi" | "bancolombia" | null>(null)
   const [comprobantePreview, setComprobantePreview] = useState<string | null>(null)
@@ -62,7 +78,6 @@ export default function PagoPage() {
   return (
     <main className="p-6 min-h-screen bg-[#FAF4EF] flex flex-col justify-between">
       <div>
-        {/* Volver */}
         <button
           onClick={() => router.back()}
           className="mb-6 flex items-center gap-2 px-4 py-2 bg-[#6B4226] text-white rounded-full shadow hover:bg-[#4e2f1b]"
@@ -74,7 +89,6 @@ export default function PagoPage() {
           Realizar Pago
         </h1>
 
-        {/* Selección método */}
         <div className="grid grid-cols-2 gap-6 mb-10">
           <button
             onClick={() => setMetodo("nequi")}
@@ -97,7 +111,6 @@ export default function PagoPage() {
           </button>
         </div>
 
-        {/* Comprobante */}
         <div className="mb-10">
           <p className="font-semibold text-[#8B5E3C] mb-2">Comprobante</p>
 
@@ -121,7 +134,6 @@ export default function PagoPage() {
           />
         </div>
 
-        {/* Tipo de pago */}
         <div className="mb-6">
           <p className="font-semibold text-[#8B5E3C] mb-2">Tipo de pago</p>
 
@@ -151,7 +163,6 @@ export default function PagoPage() {
         </div>
       </div>
 
-      {/* Botón Final */}
       <div className="mt-10 flex justify-end">
         <button
           onClick={confirmarPago}
