@@ -1,14 +1,31 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import NotificationCard from '@/components/notificaciones/NotificationCard';
 import EmptyState from '@/components/notificaciones/EmptyState';
 import { useMyCart } from '@/hooks/apiHooks';
-import { QuotationsResponse } from '@/lib/types';
+import { useUser } from '@/providers/userContext';
 
 export default function NotificationsPage() {
-	const { data: cart, refetch } = useMyCart();
+	const router = useRouter();
+	const { user } = useUser();
 
-	console.log(cart);
+	useEffect(() => {
+		if (user === null) {
+			router.push('/client/auth/login');
+		}
+	}, [user, router]);
+
+	if (user === undefined) {
+		return <p className="p-6">Validando sesión...</p>;
+	}
+
+	if (user === null) {
+		return null;
+	}
+
+	const { data: cart, refetch } = useMyCart();
 
 	return (
 		<section className='bg-[#f9f9f9] min-h-screen py-10 px-6'>
@@ -18,7 +35,7 @@ export default function NotificationsPage() {
 				{cart?.quotations?.length! > 0 && (
 					<div className='space-y-4'>
 						{cart?.quotations.map((quote: any) => {
-							return quote.status == 'cotizada' ? (
+							return quote.status === 'cotizada' ? (
 								<NotificationCard
 									key={quote._id}
 									createdAt={quote.createdAt}
@@ -30,7 +47,7 @@ export default function NotificationsPage() {
 									adminNotes={quote.adminNotes}
 								/>
 							) : (
-								<EmptyState key={`empty-${quote._id}`}/>
+								<EmptyState key={`empty-${quote._id}`} />
 							);
 						})}
 					</div>
