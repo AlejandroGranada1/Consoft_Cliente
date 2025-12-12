@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Calendar, TimePicker, FormField, ServiceSelector } from '@/components/agenda';
 import { useAddVisit } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
@@ -13,8 +14,23 @@ export default function ScheduleSection() {
 	const [service, setService] = useState<string>('');
 
 	const { user } = useUser();
-
+	const router = useRouter();
 	const addVisit = useAddVisit();
+
+	useEffect(() => {
+		if (user === null) {
+			Swal.fire({
+				icon: 'warning',
+				title: 'Inicia sesión',
+				text: 'Debes registrarte o iniciar sesión para agendar una cita.',
+			}).then(() => {
+				router.push('/client/auth/login');
+			});
+		}
+	}, [user, router]);
+
+	if (user === undefined) return null;
+	if (user === null) return null;
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -36,7 +52,6 @@ export default function ScheduleSection() {
 			services: service,
 		};
 
-		// Confirmación con SweetAlert2
 		const result = await Swal.fire({
 			title: '¿Confirmar visita?',
 			icon: 'question',
@@ -47,9 +62,8 @@ export default function ScheduleSection() {
 			cancelButtonColor: '#d33',
 		});
 
-		if (!result.isConfirmed) return; // ❌ Cancelado por el usuario
+		if (!result.isConfirmed) return;
 
-		// Si el usuario confirmó → enviar
 		try {
 			await addVisit.mutateAsync(payload);
 
@@ -81,29 +95,19 @@ export default function ScheduleSection() {
 			<form
 				onSubmit={handleSubmit}
 				className='bg-white shadow-lg rounded-2xl p-5 md:p-8 grid grid-cols-1 gap-6 max-w-4xl mx-auto'>
-				{/* Selector de servicio */}
 				<div>
 					<h3 className='text-base font-semibold text-gray-800 mb-2'>
 						Selecciona el servicio
 					</h3>
-					<ServiceSelector
-						value={service}
-						onSelect={setService}
-					/>
+					<ServiceSelector value={service} onSelect={setService} />
 				</div>
 
-				{/* Calendario y horas */}
 				<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 					<div>
 						<h3 className='text-base font-semibold text-gray-800 mb-2'>
 							Selecciona la fecha
 						</h3>
-						<Calendar
-							mode='single'
-							selected={date}
-							onSelect={setDate}
-							className='mx-auto'
-						/>
+						<Calendar mode='single' selected={date} onSelect={setDate} className='mx-auto' />
 					</div>
 
 					<div className='flex flex-col items-center'>
@@ -111,10 +115,7 @@ export default function ScheduleSection() {
 							<h3 className='text-base font-semibold text-gray-800 mb-2'>
 								Selecciona la hora
 							</h3>
-							<TimePicker
-								selectedTime={time}
-								onSelect={setTime}
-							/>
+							<TimePicker selectedTime={time} onSelect={setTime} />
 						</div>
 
 						<img
@@ -125,7 +126,6 @@ export default function ScheduleSection() {
 					</div>
 				</div>
 
-				{/* Descripción */}
 				<div>
 					<h3 className='text-base font-semibold text-gray-800 mb-2'>
 						Añade una descripción
@@ -138,7 +138,6 @@ export default function ScheduleSection() {
 					/>
 				</div>
 
-				{/* Botón */}
 				<div className='flex justify-center'>
 					<button
 						type='submit'
