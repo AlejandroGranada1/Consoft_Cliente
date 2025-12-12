@@ -1,17 +1,41 @@
 'use client';
 
 import Swal from 'sweetalert2';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useMyCart } from '@/hooks/apiHooks';
 import { usedeleteCartItem, useSubmitQuotation } from '@/hooks/apiHooks';
+import { useUser } from '@/providers/userContext';
 
 export default function CartPage() {
+	const router = useRouter();
+	const { user } = useUser();
+
+	// 🚨 PROTEGER RUTA 🚨
+	useEffect(() => {
+		if (user === null) {
+			router.push('/client/auth/login');
+		}
+	}, [user, router]);
+
+	// Si aún no sabemos si está logeado, evitar que se renderice la página
+	if (user === undefined) {
+		return <p className="p-6">Validando sesión...</p>;
+	}
+
+	// Si ya sabemos que no está logeado → no mostrar nada (porque ya está redirigiendo)
+	if (user === null) {
+		return null;
+	}
+
+	// --- SI LLEGÓ AQUÍ → ESTÁ LOGEADO ---
+
 	const { data, isLoading } = useMyCart();
 	const deleteItem = usedeleteCartItem();
 	const submitQuotation = useSubmitQuotation();
 
 	if (isLoading) return <p>Cargando carrito...</p>;
 
-	// ✔️ Ajustado al formato real de la API
 	const cart = data?.quotations?.[0];
 	const items = cart?.items || [];
 
@@ -36,7 +60,6 @@ export default function CartPage() {
 		});
 
 		if (confirm.isConfirmed) {
-			// Eliminar cada item desde el backend
 			for (const item of items) {
 				await deleteItem.mutateAsync({ cartId: cart?._id!, itemId: item._id });
 			}
