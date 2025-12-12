@@ -93,11 +93,12 @@ export interface Visit {
 }
 
 export interface OrderItem {
-	_id?: string; // lo pones opcional para nuevos items
-	id_servicio: string | Service; // 👈 puede ser ID o documento populado
+	_id?: string;
+	id_servicio?: string | Service; // 🔥 AHORA OPCIONAL
 	detalles?: string;
 	valor: number;
 	adminNotes?: string;
+	imageUrl?: string; // 👈 SI SE USA, AGREGA ESTO TAMBIÉN
 }
 
 //! PENDIENTE POR REVISION
