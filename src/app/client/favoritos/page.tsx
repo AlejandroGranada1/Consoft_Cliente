@@ -4,13 +4,35 @@ import ProductCard from '@/components/productos/ProductCard';
 import { useGetUserById } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import { User } from '@/lib/types';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function FavoritesPage() {
-	const { user: Usuario } = useUser();
-	const userId = (Usuario as User)?.id;
+	const router = useRouter();
+	const { user } = useUser();
 
-	// Obtener datos del usuario con populate de favorites
+	// 🚨 PROTEGER RUTA
+	useEffect(() => {
+		if (user === null) {
+			router.push('/client/auth/login');
+		}
+	}, [user, router]);
+
+	// 🟡 user === undefined → cargando sesión
+	if (user === undefined) {
+		return <p className="p-6">Validando sesión...</p>;
+	}
+
+	// 🔴 user === null → redirigiendo al login, evitar mostrar algo
+	if (user === null) {
+		return null;
+	}
+
+	// 🟢 SI LLEGÓ AQUÍ → ESTÁ LOGEADO
+	const userId = (user as User)?.id;
+
 	const { data, isLoading } = useGetUserById(userId!);
+
 	if (isLoading) return <p className="p-6">Cargando favoritos...</p>;
 
 	const favorites = data?.data?.favorites || [];
