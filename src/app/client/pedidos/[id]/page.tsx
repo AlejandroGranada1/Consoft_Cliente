@@ -3,10 +3,23 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useMyOrder } from '@/hooks/apiHooks';
 import ItemCard from '@/components/pedidos/ItemCard';
+import { useUser } from '@/providers/userContext';
+import { useEffect } from 'react';
+
 export default function PedidoDetallePage() {
-	const { id } = useParams();
+	const { user } = useUser();
 	const router = useRouter();
 
+	useEffect(() => {
+		if (user === null) {
+			router.push('/client/auth/login');
+		}
+	}, [user, router]);
+
+	if (user === undefined) return null;
+	if (user === null) return null;
+
+	const { id } = useParams();
 	const { data: pedido, isLoading, error } = useMyOrder(id as string);
 
 	if (isLoading) return <p className='p-6 text-center'>Cargando pedido...</p>;
@@ -14,8 +27,6 @@ export default function PedidoDetallePage() {
 
 	const productos = pedido.raw?.items ?? [];
 	const attachments = pedido.raw?.attachments ?? [];
-
-	console.log(attachments);
 
 	return (
 		<main className='p-6 bg-[#FAF4EF] min-h-screen flex flex-col justify-between'>
@@ -30,29 +41,19 @@ export default function PedidoDetallePage() {
 					Productos de {pedido.nombre}
 				</h1>
 
-				{/* Productos */}
 				<div className='grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10'>
 					{productos.map((prod: any) => {
 						const imagenes = attachments.filter((att: any) => att.item_id === prod._id);
-
-						return (
-							<ItemCard
-								key={prod._id}
-								prod={prod}
-								imagenes={imagenes}
-							/>
-						);
+						return <ItemCard key={prod._id} prod={prod} imagenes={imagenes} />;
 					})}
 				</div>
 
-				{/* Divider */}
 				<div className='flex items-center my-6'>
 					<div className='flex-grow border-t border-gray-400'></div>
 					<span className='px-4 text-[#8B5E3C] font-semibold'>Detalles</span>
 					<div className='flex-grow border-t border-gray-400'></div>
 				</div>
 
-				{/* Info extra */}
 				<div className='grid grid-cols-2 gap-6 text-lg'>
 					<div>
 						<p className='font-semibold text-[#8B5E3C]'>Fecha de entrega</p>
@@ -71,7 +72,6 @@ export default function PedidoDetallePage() {
 				</div>
 			</div>
 
-			{/* Acción final */}
 			<div className='mt-10 flex justify-end'>
 				<button
 					onClick={() => router.push(`../pagos/${pedido.id}`)}
