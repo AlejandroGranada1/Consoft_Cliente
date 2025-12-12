@@ -3,12 +3,25 @@
 import Link from 'next/link';
 import { useMyOrders } from '@/hooks/apiHooks';
 import { PedidoUI } from '@/lib/types';
+import { useUser } from '@/providers/userContext';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function PedidosPage() {
+	const { user } = useUser();
+	const router = useRouter();
+
+	useEffect(() => {
+		if (user === null) {
+			router.push('/client/auth/login');
+		}
+	}, [user, router]);
+
+	if (user === undefined) return null;
+	if (user === null) return null;
+
 	const { data, isLoading, error } = useMyOrders();
 	const pedidos: PedidoUI[] = data ?? [];
-
-	console.log(pedidos);
 
 	return (
 		<main className='p-6 bg-[#fff9f4] min-h-screen'>
@@ -16,28 +29,24 @@ export default function PedidosPage() {
 				Mis pedidos
 			</h1>
 
-			{/* Loading */}
 			{isLoading && (
 				<div className='bg-yellow-50 border border-yellow-200 rounded-xl p-10 text-center text-[#8B5E3C] text-lg shadow-sm'>
 					Cargando pedidos...
 				</div>
 			)}
 
-			{/* Error */}
 			{error && (
 				<div className='bg-red-50 border border-red-200 rounded-xl p-10 text-center text-red-700 text-lg shadow-sm'>
 					Error cargando pedidos
 				</div>
 			)}
 
-			{/* Sin pedidos */}
 			{!isLoading && !error && pedidos.length === 0 && (
 				<div className='bg-yellow-50 border border-yellow-200 rounded-xl p-10 text-center text-[#8B5E3C] text-lg shadow-sm'>
 					Aún no tienes pedidos
 				</div>
 			)}
 
-			{/* Tabla de pedidos */}
 			{pedidos.length > 0 && (
 				<div className='overflow-x-auto shadow-lg rounded-xl border border-gray-200'>
 					<table className='min-w-full text-sm text-center bg-white rounded-lg'>
@@ -75,7 +84,6 @@ export default function PedidosPage() {
 
 									<td className='py-3 px-4'>{p.valor}</td>
 									<td className='py-3 px-4'>{p.dias}</td>
-											
 									<td className='py-3 px-4'>${p.restante}</td>
 
 									<td className='py-3 px-4'>
