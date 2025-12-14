@@ -3,17 +3,28 @@
 import { useUser } from '@/providers/userContext';
 import { useMyCart } from '@/hooks/apiHooks';
 import FloatingChat from './FloatingChat';
+import { useEffect, useState } from 'react';
+import { Socket } from 'socket.io-client';
 
 export default function ChatWrapper() {
-  const { user, loading } = useUser();
+	const [socket, setSocket] = useState<Socket | null>(null);
 
-  // 👇 Hook SIEMPRE debe ejecutarse
-  const { data, isLoading } = useMyCart();
+	useEffect(() => {
+		// Lazy load socket.io solo cuando se necesite
+		import('socket.io-client').then((io) => {
+			const socketInstance = io.default(process.env.NEXT_PUBLIC_API_URL);
+			setSocket(socketInstance);
+		});
+	}, []);
+	const { user, loading } = useUser();
 
-  // 👇 Después sí puedes retornar basándote en estados
-  if (loading || !user || isLoading) return null;
+	// 👇 Hook SIEMPRE debe ejecutarse
+	const { data, isLoading } = useMyCart();
 
-  const quotationId = data?.quotations?.[0]?._id;
+	// 👇 Después sí puedes retornar basándote en estados
+	if (loading || !user || isLoading) return null;
 
-  return quotationId ? <FloatingChat quotationId={quotationId} /> : null;
+	const quotationId = data?.quotations?.[0]?._id;
+
+	return quotationId ? <FloatingChat quotationId={quotationId} /> : null;
 }

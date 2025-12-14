@@ -1,7 +1,8 @@
 'use client';
+import { X } from 'lucide-react';
 import { DefaultModalProps, Category, Product } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
-import { IoMdClose } from 'react-icons/io';
+
 import api from '@/components/Global/axios';
 import { createElement } from '../../global/alerts';
 
@@ -122,7 +123,7 @@ function CreateProductModal({
 					<button
 						onClick={onClose}
 						className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold mb-4'>AGREGAR PRODUCTO</h1>
 				</header>

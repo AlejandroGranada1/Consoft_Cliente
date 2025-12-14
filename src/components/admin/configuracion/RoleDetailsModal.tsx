@@ -1,9 +1,8 @@
-import { DefaultModalProps, Permission, Role } from '@/lib/types';
+import { X } from 'lucide-react';
+import { DefaultModalProps,  Role } from '@/lib/types';
 import React, { useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
+
 import EditRoleModal from './EditRoleModal';
-import { deleteElement } from '../global/alerts';
-import Swal from 'sweetalert2';
 
 function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Role>) {
 	const [editModal, setEditModal] = useState(false);
@@ -20,7 +19,7 @@ function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 					<button
 						onClick={onClose}
 						className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold mb-4'>DETALLES DEL ROL</h1>
 				</header>

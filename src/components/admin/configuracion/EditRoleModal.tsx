@@ -1,9 +1,7 @@
+import { X } from 'lucide-react';
 import { DefaultModalProps, GroupPermission, Permission, Role } from '@/lib/types';
-import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
-import Swal from 'sweetalert2';
-import { updateElement } from '../global/alerts';
+
 import { useGetPermissions, useUpdateRole } from '@/hooks/apiHooks';
 
 function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Role>) {
@@ -118,7 +116,7 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 					<button
 						onClick={onClose}
 						className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold mb-4'>EDITAR ROL</h1>
 				</header>

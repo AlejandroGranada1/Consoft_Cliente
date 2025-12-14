@@ -1,12 +1,18 @@
 'use client';
 
+import { X } from 'lucide-react';
 import { DefaultModalProps, Payment, PaymentDetails } from '@/lib/types';
 import api from '@/components/Global/axios';
 import React, { useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
+
 import { updateElement } from '../../global/alerts';
 
-function PaymentDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<PaymentDetails>) {
+function PaymentDetailsModal({
+	isOpen,
+	onClose,
+	extraProps,
+	updateList,
+}: DefaultModalProps<PaymentDetails>) {
 	if (!isOpen) return null;
 
 	const payment = extraProps?.payment;
@@ -16,7 +22,7 @@ function PaymentDetailsModal({ isOpen, onClose, extraProps, updateList }: Defaul
 		_id: payment?._id || '',
 		amount: payment?.amount || 0,
 		method: payment?.method || '',
-		paidAt: payment?.paidAt || new Date,
+		paidAt: payment?.paidAt || new Date(),
 		restante: order ? order.total - (payment?.amount || 0) : 0,
 		status: payment?.status || '',
 	});
@@ -33,8 +39,8 @@ function PaymentDetailsModal({ isOpen, onClose, extraProps, updateList }: Defaul
 		const payload = { ...paymentData, status: newStatus, paymentId: paymentData._id };
 
 		try {
-			await updateElement('Pago', `/api/payments/${order?._id}`, payload, updateList );
-			onClose()
+			await updateElement('Pago', `/api/payments/${order?._id}`, payload, updateList);
+			onClose();
 		} catch (err) {
 			console.error('Error al actualizar el pago', err);
 		}
@@ -47,7 +53,7 @@ function PaymentDetailsModal({ isOpen, onClose, extraProps, updateList }: Defaul
 					<button
 						onClick={onClose}
 						className='absolute top-0 left-0 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold text-center'>DETALLES DEL PAGO</h1>
 				</header>
@@ -110,7 +116,8 @@ function PaymentDetailsModal({ isOpen, onClose, extraProps, updateList }: Defaul
 							className='border px-3 py-2 rounded-md bg-gray-100 focus:outline-none focus:ring focus:ring-brown'
 							value={payment?.status} // valor actual
 							onChange={handleChange}>
-							<option value='aprobado'>Aprobado</option>
+							<option defaultValue={payment?.status}>{payment?.status}</option>
+							<option value='Aprobado'>Aprobado</option>
 							<option value='En revision'>En revisión</option>
 						</select>
 					</div>

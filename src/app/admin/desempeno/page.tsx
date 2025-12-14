@@ -1,10 +1,11 @@
 'use client';
+import { BarChart3, DollarSign, Star, Users } from 'lucide-react';
 import Resumen from '@/components/admin/medicion/Resumen';
 import Satisfaccion from '@/components/admin/medicion/Satisfaccion';
 import Servicios from '@/components/admin/medicion/Servicios';
 import Tendencias from '@/components/admin/medicion/Tendencias';
 import React, { useState } from 'react';
-import { FaChartBar, FaMoneyBill, FaRegStar, FaUsers } from 'react-icons/fa';
+
 
 function page() {
 	const [tab, setTab] = useState('resumen');
@@ -15,7 +16,7 @@ function page() {
 				<div className='grid grid-cols-4 place-items-center'>
 					<div className='border rounded-lg size-48 flex flex-col justify-between p-4'>
 						<h3 className='flex items-center gap-2'>
-							Usuarios totales <FaUsers />
+							Usuarios totales <Users />
 						</h3>
 						<p>12,847</p>
 						<p className='text-xs text-gray'>Vs 8,234 registrados este mes</p>
@@ -24,7 +25,7 @@ function page() {
 
 					<div className='border rounded-lg size-48 flex flex-col justify-between p-4'>
 						<h3 className='flex items-center gap-2'>
-							Ingresos totales <FaMoneyBill />
+							Ingresos totales <DollarSign />
 						</h3>
 						<p>$12,847,035</p>
 					</div>
@@ -32,7 +33,7 @@ function page() {
 					<div className='border rounded-lg size-48 flex flex-col justify-between p-4'>
 						<h3 className='flex items-center gap-2'>
 							Calificacion Promedio{' '}
-							<FaRegStar
+							<Star
 								color={'#CACC62'}
 								size={50}
 							/>
@@ -47,7 +48,7 @@ function page() {
 					<div className='border rounded-lg size-48 flex flex-col justify-between p-4'>
 						<h3 className='flex items-center gap-2'>
 							Tasa de conversión{' '}
-							<FaChartBar
+							<BarChart3
 								color='blue'
 								size={50}
 							/>

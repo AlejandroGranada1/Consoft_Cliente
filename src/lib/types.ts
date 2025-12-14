@@ -211,7 +211,9 @@ export type QuotationsResponse = {
 	}[];
 };
 
-export type QuotationItem = QuotationsResponse['quotations'][number]['items'][number];
+export type Quotation = QuotationsResponse["quotations"][number];
+
+export type QuotationItem = QuotationsResponse['quotations'][number]['items'][number]
 
 export interface ChatMessageSender {
 	_id: string;

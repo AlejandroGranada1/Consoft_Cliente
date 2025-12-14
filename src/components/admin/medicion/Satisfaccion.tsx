@@ -1,6 +1,7 @@
 'use client';
+import { Star } from 'lucide-react';
 import React from 'react';
-import { FaStar } from 'react-icons/fa';
+
 
 function Satisfaccion() {
 	const distribucion = [
@@ -31,7 +32,7 @@ function Satisfaccion() {
 							{/* Estrellas */}
 							<div className='flex items-center space-x-1 w-1/4'>
 								{Array.from({ length: 5 }).map((_, i) => (
-									<FaStar
+									<Star
 										key={i}
 										className={
 											i < d.estrellas ? 'text-yellow-400' : 'text-gray-300'
@@ -66,7 +67,7 @@ function Satisfaccion() {
 					<p className='text-4xl font-bold'>{promedio}</p>
 					<div className='flex justify-center my-2'>
 						{Array.from({ length: 5 }).map((_, i) => (
-							<FaStar
+							<Star
 								key={i}
 								className={
 									i < Math.round(promedio) ? 'text-yellow-400' : 'text-gray-300'

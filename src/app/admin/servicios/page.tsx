@@ -1,4 +1,5 @@
 'use client';
+import { Pencil, Eye, Trash2, Search, Plus } from 'lucide-react';
 import { Service } from '@/lib/types';
 import CreateServiceModal from '@/components/admin/servicios/servicios/CreateService';
 import EditServiceModal from '@/components/admin/servicios/servicios/EditService';
@@ -7,9 +8,10 @@ import { deleteElement } from '@/components/admin/global/alerts';
 import api from '@/components/Global/axios';
 import PaginatedList from '@/components/Global/Pagination';
 import React, { useEffect, useState } from 'react';
-import { FaEdit, FaEye, FaTrash, FaSearch } from 'react-icons/fa';
-import { IoMdAdd } from 'react-icons/io';
+
 import { useGetServices } from '@/hooks/apiHooks';
+import ServiceRow from '@/components/admin/servicios/servicios/ServiceRow';
+import Pagination from '@/components/Global/Pagination';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
@@ -17,6 +19,9 @@ function Page() {
 	const [editModal, setEditModal] = useState(false);
 	const [service, setService] = useState<Service>();
 	const [filterText, setFilterText] = useState('');
+
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
 
 	const { data, refetch } = useGetServices();
 	const services = data?.data || [];
@@ -27,6 +32,16 @@ function Page() {
 			s.description?.toLowerCase().includes(filterText.toLowerCase())
 	);
 
+	const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const currentServices = filteredServices.slice(startIndex, endIndex);
+
+	// Resetear a página 1 cuando cambia el filtro
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [filterText]);
+
 	return (
 		<div className='px-4 md:px-20'>
 			<header className='flex flex-col gap-4 md:h-40 justify-around'>
@@ -36,7 +51,7 @@ function Page() {
 
 				<div className='flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center'>
 					<div className='relative w-full md:w-64'>
-						<FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+						<Search className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
 						<input
 							type='text'
 							placeholder='Buscar Servicio'
@@ -49,7 +64,7 @@ function Page() {
 					<button
 						onClick={() => setCreateModal(true)}
 						className='flex items-center justify-center py-2 px-6 md:px-10 border border-brown rounded-lg cursor-pointer text-brown w-full md:w-fit'>
-						<IoMdAdd
+						<Plus
 							size={25}
 							className='mr-2'
 						/>{' '}
@@ -68,107 +83,35 @@ function Page() {
 				</div>
 
 				{/* Listado con paginación */}
-				<PaginatedList
-					data={filteredServices}
-					itemsPerPage={5}>
-					{(s: Service) => (
-						<div
-							key={s._id}
-							className='grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown/10 rounded-lg p-4 md:py-2 hover:shadow-md transition-shadow cursor-pointer'>
-							{/* Mobile */}
-							<div className='w-full md:hidden text-center space-y-2 border-b pb-4'>
-								<p>
-									<span className='font-semibold'>Servicio:</span> {s.name}
-								</p>
-								<p>
-									<span className='font-semibold'>Descripción:</span>{' '}
-									{s.description}
-								</p>
-								<p>
-									<span className='font-semibold'>Estado:</span>{' '}
-									<span
-										className={`px-2 py-1 rounded-xl ${
-											s.status
-												? 'bg-green/30 text-green'
-												: 'bg-red/30 text-red'
-										}`}>
-										{s.status ? 'Activo' : 'Inactivo'}
-									</span>
-								</p>
-								<div className='flex gap-4 mt-2 justify-center'>
-									<FaEye
-										size={20}
-										color='#d9b13b'
-										onClick={() => {
-											setDetailsModal(true);
-											setService(s);
-										}}
-										cursor='pointer'
-									/>
-									<FaEdit
-										size={20}
-										color='#7588f0'
-										onClick={() => {
-											setEditModal(true);
-											setService(s);
-										}}
-										cursor='pointer'
-									/>
-									<FaTrash
-										size={19}
-										color='#fa4334'
-										onClick={() =>
-											deleteElement(
-												'Servicio',
-												`/api/services/${s._id}`,
-												refetch
-											)
-										}
-										cursor='pointer'
-									/>
-								</div>
-							</div>
-
-							{/* Desktop */}
-							<p className='hidden md:block'>{s.name}</p>
-							<p className='hidden md:block truncate'>{s.description}</p>
-							<p
-								className={`hidden md:block px-2 py-1 rounded-xl text-center font-semibold ${
-									s.status ? 'bg-green/30 text-green' : 'bg-red/30 text-red'
-								}`}>
-								{s.status ? 'Activo' : 'Inactivo'}
-							</p>
-							<div className='flex gap-4 mt-2 justify-center'>
-								<FaEye
-									size={20}
-									color='#d9b13b'
-									onClick={() => {
-										setDetailsModal(true);
-										setService(s);
-									}}
-									cursor='pointer'
-								/>
-								<FaEdit
-									size={20}
-									color='#7588f0'
-									onClick={() => {
-										setEditModal(true);
-										setService(s);
-									}}
-									cursor='pointer'
-								/>
-								<FaTrash
-									size={19}
-									color='#fa4334'
-									onClick={() =>
-										deleteElement('Servicio', `/api/services/${s._id}`, refetch)
-									}
-									cursor='pointer'
-								/>
-							</div>
-						</div>
-					)}
-				</PaginatedList>
+				{currentServices.length > 0 ? (
+					currentServices.map((service: Service) => (
+						<ServiceRow
+							key={service._id}
+							service={service}
+							onDelete={() => {}}
+							onView={() => {
+								setDetailsModal(true);
+								setService(service);
+							}}
+							onEdit={() => {
+								setEditModal(true);
+								setService(service);
+							}}
+						/>
+					))
+				) : (
+					<div className='text-center py-8 text-gray-500'>
+						No hay servicios para mostrar
+					</div>
+				)}
+				{totalPages > 1 && (
+					<Pagination
+						count={totalPages}
+						page={currentPage}
+						onChange={(_, newPage) => setCurrentPage(newPage)}
+						className='mt-6'
+					/>
+				)}
 			</section>
 
 			{/* Modales */}

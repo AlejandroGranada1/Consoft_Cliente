@@ -1,7 +1,8 @@
 'use client';
+import { X } from 'lucide-react';
 import { DefaultModalProps, Service } from '@/lib/types';
 import React, { useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
+
 import { createElement } from '../../global/alerts';
 
 function CreateServiceModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Service>) {
@@ -41,7 +42,7 @@ function CreateServiceModal({ isOpen, onClose, extraProps, updateList }: Default
           <button
             onClick={onClose}
             className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-            <IoMdClose />
+            <X />
           </button>
           <h1 className='text-xl font-semibold mb-4'>Agregar Servicio</h1>
         </header>

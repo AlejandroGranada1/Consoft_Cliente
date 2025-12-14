@@ -1,45 +1,53 @@
 'use client';
 
-import Swal from 'sweetalert2';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMyCart } from '@/hooks/apiHooks';
-import { usedeleteCartItem, useSubmitQuotation } from '@/hooks/apiHooks';
+import { useDeleteCartItem, useSubmitQuotation } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 
 export default function CartPage() {
 	const router = useRouter();
-	const { user } = useUser();
-
+	const { user, loading } = useUser();
+	const { data, isLoading } = useMyCart();
+	const deleteItem = useDeleteCartItem();
+	const submitQuotation = useSubmitQuotation();
 	// 🚨 PROTEGER RUTA 🚨
 	useEffect(() => {
+		if (loading) return;
+
 		if (user === null) {
-			router.push('/client/auth/login');
+			(async () => {
+				const Swal = (await import('sweetalert2')).default;
+
+				await Swal.fire({
+					icon: 'warning',
+					title: 'Inicia sesión',
+					text: 'Debes registrarte o iniciar sesión para agendar una cita.',
+				});
+
+				router.push('/client/auth/login');
+			})();
 		}
 	}, [user, router]);
 
-	// Si aún no sabemos si está logeado, evitar que se renderice la página
 	if (user === undefined) {
-		return <p className="p-6">Validando sesión...</p>;
+		return <p className='p-6'>Validando sesión...</p>;
 	}
 
-	// Si ya sabemos que no está logeado → no mostrar nada (porque ya está redirigiendo)
 	if (user === null) {
 		return null;
 	}
-
-	// --- SI LLEGÓ AQUÍ → ESTÁ LOGEADO ---
-
-	const { data, isLoading } = useMyCart();
-	const deleteItem = usedeleteCartItem();
-	const submitQuotation = useSubmitQuotation();
 
 	if (isLoading) return <p>Cargando carrito...</p>;
 
 	const cart = data?.quotations?.[0];
 	const items = cart?.items || [];
+	const isCartActive = cart?.status == 'Carrito';
 
-	const handleDeleteItem = (itemId: string) => {
+	const handleDeleteItem = async (itemId: string) => {
+		const Swal = (await import('sweetalert2')).default;
+
 		deleteItem.mutate(
 			{ cartId: cart?._id!, itemId },
 			{
@@ -51,6 +59,8 @@ export default function CartPage() {
 	};
 
 	const handleClearCart = async () => {
+		const Swal = (await import('sweetalert2')).default;
+
 		const confirm = await Swal.fire({
 			title: '¿Vaciar carrito?',
 			icon: 'warning',
@@ -69,34 +79,73 @@ export default function CartPage() {
 	};
 
 	const handleSendQuote = async () => {
-		if (items.length === 0) {
-			Swal.fire({
-				icon: 'warning',
-				title: 'El carrito está vacío',
-				text: 'Agrega productos antes de enviar una cotización.',
+		const Swal = (await import('sweetalert2')).default;
+		try {
+			if (items.length === 0) {
+				Swal.fire({
+					icon: 'warning',
+					title: 'El carrito está vacío',
+					text: 'Agrega productos antes de enviar una cotización.',
+				});
+				return;
+			}
+
+			const result = await Swal.fire({
+				title: '¿Enviar cotización?',
+				text: 'Se enviará una solicitud con tus productos.',
+				icon: 'question',
+				showCancelButton: true,
+				confirmButtonText: 'Enviar',
+				cancelButtonText: 'Cancelar',
 			});
-			return;
-		}
 
-		const result = await Swal.fire({
-			title: '¿Enviar cotización?',
-			text: 'Se enviará una solicitud con tus productos.',
-			icon: 'question',
-			showCancelButton: true,
-			confirmButtonText: 'Enviar',
-			cancelButtonText: 'Cancelar',
-		});
+			if (result.isConfirmed) {
+				const response = await submitQuotation.mutateAsync(cart?._id!);
 
-		if (result.isConfirmed) {
-			await submitQuotation.mutateAsync(cart?._id!);
-
+				if (response.status == 200) {
+					Swal.fire({
+						icon: 'success',
+						title: 'Cotización enviada',
+						text: 'Nos pondremos en contacto contigo pronto.',
+					});
+				}
+			}
+		} catch (error: any) {
+			const message =
+				error.response.data.message == 'The Quotation has already been requested'
+					? 'La cotizacion ya fue solicitada'
+					: `Error al solicitar la cotizacion: ${error.response.data.message}`;
 			Swal.fire({
-				icon: 'success',
-				title: 'Cotización enviada',
-				text: 'Nos pondremos en contacto contigo pronto.',
+				title: 'Error',
+				icon: 'error',
+				text: message,
 			});
 		}
 	};
+
+	if (!cart) {
+		return (
+			<section className='p-10 max-w-3xl mx-auto'>
+				<h1 className='text-3xl font-bold mb-6'>Carrito</h1>
+				<p className='text-gray-600'>No tienes un carrito activo.</p>
+			</section>
+		);
+	}
+
+	if (!isCartActive) {
+		return (
+			<section className='p-10 max-w-3xl mx-auto'>
+				<h1 className='text-3xl font-bold mb-6'>Carrito</h1>
+
+				<div className='bg-yellow-50 border border-yellow-300 text-yellow-800 p-5 rounded-xl'>
+					<p className='font-medium'>Ya se ha solicitado una cotizacion para este carrito.</p>
+					<p className='text-sm mt-1'>
+						Si deseas solicitar una nueva cotizacion, espera a terminar la anterior
+					</p>
+				</div>
+			</section>
+		);
+	}
 
 	return (
 		<section className='p-10 max-w-3xl mx-auto'>

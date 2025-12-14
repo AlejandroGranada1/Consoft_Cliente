@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useGetUserById, useUpdateUser } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import { User } from '@/lib/types';
-import Swal from 'sweetalert2';
 
 export default function ProductCard({
 	id,
@@ -36,6 +35,8 @@ export default function ProductCard({
 	const isFavorite = favorites.includes(id);
 
 	const toggleFavorite = async () => {
+		const Swal = (await import('sweetalert2')).default;
+
 		if (!user?._id) return console.warn('Usuario no cargado todavía.');
 
 		const updatedFavorites = isFavorite

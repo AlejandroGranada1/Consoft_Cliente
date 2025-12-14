@@ -1,13 +1,13 @@
 'use client';
+import { Search, Plus } from 'lucide-react';
 import { Visit } from '@/lib/types';
 import CreateVisitModal from '@/components/admin/servicios/visitas/CreateVisitModal';
 import VisitDetailsModal from '@/components/admin/servicios/visitas/VisitDetailsModal';
-import PaginatedList from '@/components/Global/Pagination';
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaEye, FaTrash } from 'react-icons/fa';
-import { IoMdAdd } from 'react-icons/io';
 import api from '@/components/Global/axios';
 import { deleteElement } from '@/components/admin/global/alerts';
+import VisitRow from '@/components/admin/servicios/visitas/VisitRow';
+import Pagination from '@/components/Global/Pagination';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
@@ -15,6 +15,10 @@ function Page() {
 	const [visits, setVisits] = useState<Visit[]>([]);
 	const [visit, setVisit] = useState<Visit>();
 	const [filterText, setFilterText] = useState('');
+
+	// Estados para paginación
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
 
 	// 🔹 Traer visitas desde API
 	const fetchVisits = async () => {
@@ -30,7 +34,6 @@ function Page() {
 		fetchVisits();
 	}, []);
 
-	console.log(visits);
 	// Filtrar visitas
 	const filteredVisits = visits.filter(
 		(v) =>
@@ -38,6 +41,22 @@ function Page() {
 			v.user.name.toLowerCase().includes(filterText.toLowerCase()) ||
 			v.status.toLowerCase().includes(filterText.toLowerCase())
 	);
+
+	// Cálculos de paginación
+	const totalPages = Math.ceil(filteredVisits.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const currentVisits = filteredVisits.slice(startIndex, endIndex);
+
+	// Resetear a página 1 cuando cambia el filtro
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [filterText]);
+
+	// Función para eliminar visita
+	const handleDeleteVisit = (visitId: string) => {
+		deleteElement('Visita', `/api/visits/${visitId}`, fetchVisits);
+	};
 
 	return (
 		<div className='px-4 md:px-20'>
@@ -48,7 +67,7 @@ function Page() {
 
 				<div className='flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center'>
 					<div className='relative w-full md:w-64'>
-						<FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+						<Search className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
 						<input
 							type='text'
 							placeholder='Buscar Visita'
@@ -61,7 +80,7 @@ function Page() {
 					<button
 						onClick={() => setCreateModal(true)}
 						className='flex items-center justify-center py-2 px-6 md:px-10 border border-brown rounded-lg cursor-pointer text-brown w-full md:w-fit'>
-						<IoMdAdd
+						<Plus
 							size={25}
 							className='mr-2'
 						/>{' '}
@@ -71,7 +90,7 @@ function Page() {
 			</header>
 
 			<section className='w-full mx-auto mt-6 flex flex-col justify-between border-t border-gray'>
-				{/* Encabezado tabla desktop */}
+				{/* Encabezado desktop */}
 				<div className='hidden md:grid grid-cols-5 place-items-center py-6 font-semibold'>
 					<p>ID de Visita</p>
 					<p>Fecha</p>
@@ -81,101 +100,33 @@ function Page() {
 				</div>
 
 				{/* Listado con paginación */}
-				<PaginatedList
-					data={filteredVisits}
-					itemsPerPage={5}>
-					{(v: Visit) => (
-						<div
-							key={v._id}
-							className='grid grid-cols-1 md:grid-cols-5 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown/10 rounded-lg p-4 md:py-2'>
-							{/* Vista mobile */}
-							<div className='w-full md:hidden text-center space-y-2 border-b pb-4'>
-								<p>
-									<span className='font-semibold'>ID:</span> {v._id}
-								</p>
-								<p>
-									<span className='font-semibold'>Fecha:</span>{' '}
-									{new Date(v.visitDate).toLocaleDateString()}
-								</p>
-								<p>
-									<span className='font-semibold'>Cliente:</span> {v.user.name}
-								</p>
-								<p>
-									<span className='font-semibold'>Estado:</span>{' '}
-									<span
-										className={`${
-											v.status === 'Terminada'
-												? 'text-green-500'
-												: v.status === 'Cancelada'
-												? 'text-red-500'
-												: 'text-orange-500'
-										}`}>
-										{v.status}
-									</span>
-								</p>
-								<div className='flex gap-4 mt-2 justify-center'>
-									<FaEye
-										size={20}
-										color='#d9b13b'
-										onClick={() => {
-											setDetailsModal(true);
-											setVisit(v);
-										}}
-										cursor='pointer'
-									/>
-									<FaTrash
-										size={19}
-										color='#fa4334'
-										onClick={() =>
-											deleteElement(
-												'Visita',
-												`/api/visits/${v._id}`,
-												fetchVisits
-											)
-										}
-										cursor='pointer'
-									/>
-								</div>
-							</div>
+				{currentVisits.length > 0 ? (
+					currentVisits.map((visitItem: Visit) => (
+						<VisitRow
+							key={visitItem._id}
+							visit={visitItem}
+							onView={() => {
+								setDetailsModal(true);
+								setVisit(visitItem);
+							}}
+							onDelete={() => handleDeleteVisit(visitItem._id!)}
+						/>
+					))
+				) : (
+					<div className='text-center py-8 text-gray-500'>
+						No hay visitas para mostrar
+					</div>
+				)}
 
-							{/* Vista desktop */}
-							<p className='truncate w-40 hidden md:block'>{v._id}</p>
-							<p className='hidden md:block'>
-								{new Date(v.visitDate).toLocaleDateString()}
-							</p>
-							<p className='hidden md:block'>{v.user.name}</p>
-							<p
-								className={`hidden md:block px-2 py-1 rounded-xl ${
-									v.status === 'Terminada'
-										? 'bg-green/30 text-green'
-										: v.status === 'Cancelada'
-										? 'bg-red/30 text-red'
-										: 'bg-orange/30 text-orange'
-								}`}>
-								{v.status}
-							</p>
-							<div className='flex gap-4 mt-2 justify-center'>
-								<FaEye
-									size={20}
-									color='#d9b13b'
-									onClick={() => {
-										setDetailsModal(true);
-										setVisit(v);
-									}}
-									cursor='pointer'
-								/>
-								<FaTrash
-									size={19}
-									color='#fa4334'
-									onClick={() =>
-										deleteElement('Visita', `/api/visits/${v._id}`, fetchVisits)
-									}
-									cursor='pointer'
-								/>
-							</div>
-						</div>
-					)}
-				</PaginatedList>
+				{/* Paginación */}
+				{totalPages > 1 && (
+					<Pagination
+						count={totalPages}
+						page={currentPage}
+						onChange={(_, newPage) => setCurrentPage(newPage)}
+						className='mt-6'
+					/>
+				)}
 			</section>
 
 			{/* Modales */}

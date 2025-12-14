@@ -9,23 +9,29 @@ import { useUser } from '@/providers/userContext';
 
 export default function NotificationsPage() {
 	const router = useRouter();
-	const { user } = useUser();
-
+	const { user, loading } = useUser();
+	const { data: cart, refetch } = useMyCart();
+	
 	useEffect(() => {
+		if (loading) return; // ⛔ aún validando sesión
+
 		if (user === null) {
-			router.push('/client/auth/login');
+			(async () => {
+				const Swal = (await import('sweetalert2')).default;
+
+				await Swal.fire({
+					icon: 'warning',
+					title: 'Inicia sesión',
+					text: 'Debes registrarte o iniciar sesión para agendar una cita.',
+				});
+
+				router.push('/client/auth/login');
+			})();
 		}
 	}, [user, router]);
 
-	if (user === undefined) {
-		return <p className="p-6">Validando sesión...</p>;
-	}
+	if (user === undefined || user === null) return null;
 
-	if (user === null) {
-		return null;
-	}
-
-	const { data: cart, refetch } = useMyCart();
 
 	return (
 		<section className='bg-[#f9f9f9] min-h-screen py-10 px-6'>

@@ -1,9 +1,10 @@
 'use client';
+import { X, Plus, Minus } from 'lucide-react';
 import { DefaultModalProps, Order, Service, User } from '@/lib/types';
 import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
-import { IoMdAdd, IoMdRemove } from 'react-icons/io';
+
+
 import { createElement } from '../../global/alerts';
 
 function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Order>) {
@@ -153,7 +154,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 					<button
 						onClick={onClose}
 						className='absolute top-0 left-0 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold text-center'>Agregar Pedido</h1>
 				</header>
@@ -216,7 +217,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 								type='button'
 								onClick={addItem}
 								className='flex items-center justify-center border border-brown text-brown rounded-md px-2 py-1 hover:bg-brown hover:text-white transition'>
-								<IoMdAdd />
+								<Plus />
 							</button>
 						</div>
 
@@ -258,7 +259,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 									type='button'
 									onClick={() => removeItem(idx)}
 									className='flex items-center justify-center border border-red-400 text-red-500 rounded-md px-2 py-1 hover:bg-red-500 hover:text-white transition'>
-									<IoMdRemove />
+									<Minus />
 								</button>
 							</div>
 						))}

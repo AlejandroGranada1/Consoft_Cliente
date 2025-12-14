@@ -4,7 +4,6 @@ import { useUserDesicion } from '@/hooks/apiHooks';
 import { formatCOP } from '@/lib/formatCOP';
 import { formatDateForInput } from '@/lib/formatDate';
 import { QuotationItem } from '@/lib/types';
-import Swal from 'sweetalert2';
 
 interface Props {
 	_id: string;
@@ -30,6 +29,8 @@ export default function NotificationCard({
 	console.log(items);
 
 	const rejectAlert = async () => {
+		const Swal = (await import('sweetalert2')).default;
+
 		const result = await Swal.fire({
 			title: '¿Estás seguro de rechazar la cotización?',
 			text: 'Esta acción no se puede deshacer.',
@@ -53,6 +54,8 @@ export default function NotificationCard({
 	};
 
 	const acceptAlert = async () => {
+		const Swal = (await import('sweetalert2')).default;
+
 		const result = await Swal.fire({
 			title: '¿Deseas continuar con el pedido?',
 			showCancelButton: true,
@@ -87,7 +90,9 @@ export default function NotificationCard({
 							{item.product.name} - Cantidad: {item.quantity}
 						</summary>
 						<p className='text-gray-800 text-sm'>
-							{item.adminNotes ? item.adminNotes : 'No hay notas del administrador para este producto'}
+							{item.adminNotes
+								? item.adminNotes
+								: 'No hay notas del administrador para este producto'}
 						</p>
 					</details>
 				</div>

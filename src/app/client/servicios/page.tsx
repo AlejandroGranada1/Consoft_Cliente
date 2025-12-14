@@ -14,7 +14,7 @@ export default function ServiciosPage() {
 
 	if (isLoading) return <p>Cargando servicios...</p>;
 	return (
-		<section className='px-6 py-12 bg-[#fff9f6]'>
+		<section className='px-6 py-12 bg-[#fff9f4]'>
 			<div className='max-w-6xl mx-auto'>
 				{/* --- Sección 1: Tarjetas de servicios --- */}
 				<h1 className='text-3xl font-bold text-center text-[#4b2e1a] mb-10'>Servicios</h1>

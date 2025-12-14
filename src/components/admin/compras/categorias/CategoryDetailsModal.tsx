@@ -1,7 +1,8 @@
 'use client';
+import { X } from 'lucide-react';
 import { DefaultModalProps, Category } from '@/lib/types';
 import React, { useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
+
 import EditCategoryModal from './EditCategoryModal';
 
 function CategoryDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Category>) {
@@ -16,7 +17,7 @@ function CategoryDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps
 					<button
 						onClick={onClose}
 						className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold mb-4'>DETALLES DE LA CATEGORÍA</h1>
 				</header>

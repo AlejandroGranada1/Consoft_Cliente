@@ -1,105 +1,109 @@
+// UserMenu.tsx - Versión horizontal visible
 'use client';
 
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
+import { LogOut, User, Settings, Package, FileText, ShoppingCart, Mail } from 'lucide-react';
 import { useUser } from '@/providers/userContext';
-import { User } from 'lucide-react';
-import Swal from 'sweetalert2';
-import api from './Global/axios';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { Role } from '@/lib/types';
+import { useLogin, useLogout } from '@/hooks/useAuth';
+import CartDropdown from './carrito/CartDropdown';
+import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function UserMenu() {
+	const [openCart, setOpenCart] = useState(false);
 	const router = useRouter();
-	const { user, setUser, loadUser } = useUser();
+	const { user } = useUser();
+	const logout = useLogout();
+	const pathname = usePathname(); // Obtiene la ruta actual
 
-	// 🔥 AUTO-CARGA DEL USUARIO SI ESTÁ EN SESIÓN
-	useEffect(() => {
-		loadUser();
-	}, []);
+	if (!user) {
+		return (
+			<Link
+				href='/client/auth/login'
+				className='px-4 py-2 bg-[#5C3A21] text-white rounded-lg hover:bg-[#4A2F1A] transition-colors'>
+				Iniciar Sesión
+			</Link>
+		);
+	}
 
-	if (user === undefined) return null
-
-	const handleLogout = () => {
-		Swal.fire({
-			title: '¿Cerrar sesión?',
-			html: 'Estas apunto de cerrar sesion',
-			confirmButtonColor: 'brown',
-			confirmButtonText: 'Cerrar sesión',
-			showCancelButton: true,
-			cancelButtonText: 'Cancelar',
-		}).then(async (result) => {
-			if (result.isConfirmed) {
-				const response = await api.post('/api/auth/logout');
-				if (response.status == 200) {
-					setUser(null);
-					router.push('/client');
-				}
-			}
-		});
+	// Función para verificar si un enlace está activo
+	const isActive = (path: string) => {
+		return pathname === path;
 	};
 
+	console.log(user);
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<User className='h-6 w-6 cursor-pointer text-[#1E293B] hover:text-[#5C3A21]' />
-			</DropdownMenuTrigger>
-
-			<DropdownMenuContent className='w-52 bg-white border rounded-xl shadow-lg p-1'>
-				{typeof user?.role !== 'string' &&
-					(user?.role.name === 'Administrador' || user?.role.name === 'Master') && (
-						<>
-							<DropdownMenuItem onClick={() => router.push('/admin/configuracion')}>
-								Panel Administrativo
-							</DropdownMenuItem>
-
-							<DropdownMenuItem onClick={() => router.push('/admin/chats')}>
-								Mensajes
-							</DropdownMenuItem>
-						</>
+		<div className='flex items-center gap-4'>
+			{/* Menú horizontal de opciones */}
+			<div className='flex gap-2 border-l border-gray-200 pl-4'>
+				<Link
+					href='/client/perfil'
+					className='relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors'
+					title='Mi Perfil'>
+					<User size={18} />
+					<span className='hidden md:inline text-sm'>Perfil</span>
+					{isActive('/client/perfil') && (
+						<span className='absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]'></span>
 					)}
+				</Link>
+				<div className='flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors'>
+					<ShoppingCart
+						onClick={() => setOpenCart(!openCart)}
+						className='h-6 w-6 cursor-pointer text-[#1E293B] hover:text-[#5C3A21]'
+					/>
 
-				{!user ? (
-					<>
-						<DropdownMenuItem onClick={() => router.push('/client/auth/login')}>
-							Iniciar Sesión
-						</DropdownMenuItem>
+					{openCart && (
+						<CartDropdown
+							isOpen={openCart}
+							setIsOpen={setOpenCart}
+						/>
+					)}
+				</div>
 
-						<DropdownMenuItem onClick={() => router.push('/client/auth/register')}>
-							Registrarme
-						</DropdownMenuItem>
+				<Link
+					href='/client/pedidos'
+					className='relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors'
+					title='Mis Pedidos'>
+					<Package size={18} />
+					<span className='hidden md:inline text-sm'>Pedidos</span>
+					{isActive('/client/pedidos') && (
+						<span className='absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]'></span>
+					)}
+				</Link>
 
-						<DropdownMenuSeparator />
-					</>
-				) : (
-					<>
-						<DropdownMenuItem onClick={() => router.push('/client/pedidos')}>
-							Mis Pedidos
-						</DropdownMenuItem>
+				<Link
+					href='/client/notificaciones'
+					className='relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors'
+					title='Mis Cotizaciones'>
+					<Mail size={18} />
+					<span className='hidden md:inline text-sm'>Notificaciones</span>
+					{isActive('/client/notificaciones') && (
+						<span className='absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]'></span>
+					)}
+				</Link>
 
-						<DropdownMenuItem onClick={() => router.push('/client/notificaciones')}>
-							Notificaciones
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => router.push('/client/perfil')}>
-							Mi Perfil
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={()=> router.push("/client/favoritos")}>
-							Favoritos
-						</DropdownMenuItem>
-
-						<button
-							onClick={handleLogout}
-							className='hover:bg-red hover:text-white py-1.5 rounded-sm w-full flex justify-start pl-3 text-sm transition-colors cursor-pointer'>
-							Cerrar Sesion
-						</button>
-					</>
+				{(user.role as Role)?.name === 'Administrador' && (
+					<Link
+						href='/admin/configuracion'
+						className='flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors bg-amber-50 text-amber-700'
+						title='Panel Admin'>
+						<Settings size={18} />
+						<span className='hidden md:inline text-sm'>Admin</span>
+					</Link>
 				)}
-			</DropdownMenuContent>
-		</DropdownMenu>
+
+				<button
+					onClick={() => {
+						logout.mutateAsync();
+						window.location.href = '/client/auth/login';
+					}}
+					className='flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-red-600'
+					title='Cerrar Sesión'>
+					<LogOut size={18} />
+					<span className='hidden md:inline text-sm'>Salir</span>
+				</button>
+			</div>
+		</div>
 	);
 }

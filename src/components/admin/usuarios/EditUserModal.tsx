@@ -1,6 +1,7 @@
+import { X } from 'lucide-react';
 import { DefaultModalProps, Role, User } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
-import { IoMdClose } from 'react-icons/io';
+
 import axios from 'axios'; // Importa axios para hacer el llamado a la API
 import api from '@/components/Global/axios';
 import { updateElement } from '../global/alerts';
@@ -11,12 +12,14 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 		name: extraProps?.name || '',
 		address: extraProps?.address || '',
 		email: extraProps?.email || '',
-		password: extraProps?.password || '',
 		phone: extraProps?.phone || '',
 		registeredAt: extraProps?.registeredAt || new Date().toISOString(),
 		role: extraProps?.role || '',
 		status: extraProps?.status || false,
 		featuredProducts: extraProps?.featuredProducts || [],
+		document: '',
+		id: '',
+		profile_picture: '',
 	});
 
 	const [roles, setRoles] = useState<Role[]>([]); // Estado para los roles disponibles
@@ -36,16 +39,18 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 	useEffect(() => {
 		if (extraProps) {
 			setUserData({
-				_id: extraProps._id,
-				name: extraProps.name ?? '',
-				address: extraProps.address ?? '',
-				email: extraProps.email ?? '',
-				password: extraProps.password ?? '',
-				phone: extraProps.phone ?? '',
-				registeredAt: extraProps.registeredAt ?? new Date().toISOString(),
-				status: extraProps.status ?? false,
-				featuredProducts: extraProps.featuredProducts ?? [],
-				role: extraProps.role ?? '',
+				_id: extraProps?._id,
+				name: extraProps?.name || '',
+				address: extraProps?.address || '',
+				email: extraProps?.email || '',
+				phone: extraProps?.phone || '',
+				registeredAt: extraProps?.registeredAt || new Date().toISOString(),
+				role: extraProps?.role || '',
+				status: extraProps?.status || false,
+				featuredProducts: extraProps?.featuredProducts || [],
+				document: '',
+				id: '',
+				profile_picture: '',
 			});
 		}
 	}, [extraProps, isOpen]);
@@ -79,7 +84,7 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 					<button
 						onClick={onClose}
 						className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold mb-4'>EDITAR USUARIO</h1>
 				</header>

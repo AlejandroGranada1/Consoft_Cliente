@@ -1,9 +1,7 @@
+import { X } from 'lucide-react';
 import { DefaultModalProps, GroupPermission, Permission, Role } from '@/lib/types';
-import api from '@/components/Global/axios';
-import axios from 'axios';
-import React, { useEffect, useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
-import Swal from 'sweetalert2';
+import React, { useState } from 'react';
+
 import { createElement } from '../global/alerts';
 import { useGetPermissions } from '@/hooks/apiHooks';
 
@@ -112,7 +110,7 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 					<button
 						onClick={onClose}
 						className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold mb-4'>AGREGAR ROL</h1>
 				</header>
@@ -187,15 +185,15 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 					{/* Botones */}
 					<div className='w-full flex justify-between mt-10'>
 						<button
-							type='submit'
-							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-							Guardar
-						</button>
-						<button
 							onClick={onClose}
 							type='button'
 							className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
 							Cancelar
+						</button>
+						<button
+							type='submit'
+							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
+							Guardar
 						</button>
 					</div>
 				</form>

@@ -1,7 +1,8 @@
 'use client';
+import { X } from 'lucide-react';
 import { DefaultModalProps, Service, Visit } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
+
 import EditVisitModal from './EditVisitModal';
 import api from '@/components/Global/axios';
 import { updateElement } from '../../global/alerts';
@@ -58,7 +59,7 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 					<button
 						onClick={onClose}
 						className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold mb-4'>DETALLES DE LA VISITA</h1>
 				</header>

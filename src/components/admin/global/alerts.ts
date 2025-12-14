@@ -1,7 +1,7 @@
 import api from '@/components/Global/axios';
-import Swal from 'sweetalert2';
 
 export async function deleteElement(title: string, endpoint: string, updateList: () => void) {
+	const Swal = (await import('sweetalert2')).default;
 	const result = await Swal.fire({
 		title: `Estas a punto de eliminar este ${title}`,
 		html: 'Esta accion es irreversible',
@@ -49,6 +49,7 @@ export async function createElement(
 	data: object,
 	updateList?: () => void
 ) {
+	const Swal = (await import('sweetalert2')).default;
 	const result = await Swal.fire({
 		title: `Agregar un nuevo ${title}`,
 		icon: 'info',
@@ -95,6 +96,7 @@ export async function updateElement(
 	data: object,
 	updateList?: () => void
 ) {
+	const Swal = (await import('sweetalert2')).default;
 	const result = await Swal.fire({
 		title: `Actualizarás la información de este ${title}`,
 		icon: 'warning',

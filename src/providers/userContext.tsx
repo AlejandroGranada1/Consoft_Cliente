@@ -2,7 +2,7 @@
 
 import { User as Usertype } from '@/lib/types';
 import { fetchCurrentUser } from '@/lib/utils';
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
 interface UserContextType {
 	user: Usertype | null;
@@ -13,34 +13,24 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+const PUBLIC_ROUTES = [
+	'/auth/login',
+	'/auth/register',
+	'/auth/forgot-password',
+	'/auth/reset-password',
+];
+
+// Función helper fuera del componente
+const isPublicRoute = (path: string) => {
+	return PUBLIC_ROUTES.some((route) => path.startsWith(route));
+};
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
 	const [user, setUser] = useState<Usertype | null>(null);
 	const [loading, setLoading] = useState(true);
+	const hasLoadedRef = useRef(false); // 👈 Evita cargas múltiples
 
-	const PUBLIC_ROUTES = [
-		'/auth/login',
-		'/auth/register',
-		'/auth/forgot-password',
-		'/auth/reset-password',
-	];
-
-	// 🚀 CONTROLAR CARGA AUTOMÁTICA DEL USUARIO
-	useEffect(() => {
-		if (typeof window !== 'undefined') {
-			const path = window.location.pathname;
-
-			// ❌ Si la ruta es pública, NO intentamos cargar el usuario
-			if (PUBLIC_ROUTES.some((route) => path.startsWith(route))) {
-				setLoading(false);
-				return;
-			}
-		}
-
-		// ✔ Si no es pública, verificamos el usuario
-		loadUser();
-	}, []);
-
-	const loadUser = async () => {
+	const loadUser = useCallback(async () => {
 		try {
 			setLoading(true);
 			const userData = await fetchCurrentUser();
@@ -50,7 +40,29 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []); // 👈 Sin dependencias - la función nunca cambia
+
+	useEffect(() => {
+		// Solo ejecutar una vez
+		if (hasLoadedRef.current) return;
+		hasLoadedRef.current = true;
+
+		// Verificar si estamos en una ruta pública
+		const path = window.location.pathname;
+
+		if (isPublicRoute(path)) {
+			setLoading(false);
+			return;
+		}
+
+		// Solo cargar usuario en rutas privadas
+		loadUser();
+	}, []); // 👈 Array vacío - solo se ejecuta al montar
+
+	// Solo en desarrollo - REMOVIDO para evitar re-renders
+	// if (process.env.NODE_ENV === 'development') {
+	// 	console.log('Current user:', user);
+	// }
 
 	return (
 		<UserContext.Provider value={{ user, loading, setUser, loadUser }}>

@@ -18,7 +18,7 @@ export default function ProductsPage() {
 	}, {} as Record<string, typeof products>);
 
 	return (
-		<section className='bg-[#f9f9f9] min-h-screen py-10 px-6'>
+		<section className='bg-[#FFF9F4] min-h-screen py-10 px-6'>
 			<div className='max-w-7xl mx-auto space-y-12'>
 
 				{/* Secciones por categoría */}

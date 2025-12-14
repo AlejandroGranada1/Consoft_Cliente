@@ -8,64 +8,70 @@
 	--color-orange: #ff852f;
 }
 
-.modal-bg {
-	@apply fixed inset-0 bg-black/60 flex justify-center items-center z-50;
+/* Mueve tus clases custom a una capa específica */
+@layer components {
+	.modal-bg {
+		@apply fixed inset-0 bg-black/60 flex justify-center items-center z-50;
+	}
 
+	.modal-frame {
+		@apply bg-white p-6 rounded-xl relative shadow-lg max-h-[90vh] overflow-auto;
+	}
+
+	.input {
+		@apply w-full border px-3 py-2 rounded-lg bg-white outline-none focus:ring-2;
+	}
+
+	.table-preset {
+		@apply grid grid-cols-1  gap-3 md:gap-0 place-items-center py-4 md:py-2 border-b border-brown/10 px-4 md:px-0;
+	}
+
+	.table-item {
+		@apply w-full md:w-40 text-center truncate;
+	}
+
+	.input-style {
+		@apply border rounded-lg px-3 py-2 shadow-sm focus:ring-2 focus:ring-[#8B5A2B] focus:outline-none;
+	}
 }
 
-.modal-frame {
-	@apply bg-white p-6 rounded-xl relative shadow-lg max-h-[90vh] overflow-auto;
-}
-
-.modal-frame::-webkit-scrollbar{
+/* El resto de tu CSS... */
+.modal-frame::-webkit-scrollbar {
 	width: 0px;
 }
 
-.input {
-	@apply w-full border px-3 py-2 rounded-lg bg-white outline-none focus:ring-2;
-}
-
-
 meter {
 	width: 100%;
-	height: 20px; /* 👈 Cambias la altura */
+	height: 20px;
 	border-radius: 8px;
 }
 
-/* Barra base */
 meter::-webkit-meter-bar {
-	background: #e5e7eb; /* gris claro */
+	background: #e5e7eb;
 	border-radius: 8px;
 	height: 10px;
 }
 
-/* Valor (óptimo = dentro del rango bueno) */
 meter::-webkit-meter-optimum-value {
-    background: black;
+	background: black;
 	border-radius: 8px;
 }
 
-/* Subóptimo (cuando está en rango medio) */
 meter::-webkit-meter-suboptimum-value {
 	background: orange;
 	border-radius: 8px;
 }
 
-/* Crítico (valor bajo o muy alto) */
 meter::-webkit-meter-even-less-good-value {
 	background: red;
 	border-radius: 8px;
 }
 
-html::-webkit-scrollbar{
-    display: none;
-	appearance: nonne;
+html::-webkit-scrollbar {
+	display: none;
+	appearance: none;
 }
 
 .swal2-progress-bar {
-  background-color: var(--color-green) !important;  /* Asegúrate de usar la variable que deseas */
-}
-
-.input-style {
-  @apply border rounded-lg px-3 py-2 shadow-sm focus:ring-2 focus:ring-[#8B5A2B] focus:outline-none;
+	background-color: var(--color-green) !important;
 }

@@ -5,8 +5,7 @@ import { useState } from 'react';
 import AuthLayout from '@/components/auth/AuthLayout';
 import AuthInput from '@/components/auth/AuthInput';
 import AuthButton from '@/components/auth/AuthButton';
-import Swal from 'sweetalert2';
-import api from '@/components/Global/axios';
+
 import { useCreateUser } from '@/hooks/apiHooks';
 
 export default function RegisterPage() {
@@ -26,6 +25,7 @@ export default function RegisterPage() {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		const Swal = (await import('sweetalert2')).default;
 
 		if (form.password !== form.confirmPassword) {
 			return Swal.fire('Error', 'Las contraseñas no coinciden', 'error');
@@ -41,6 +41,7 @@ export default function RegisterPage() {
 			// 1️⃣ Registrar usuario
 			await registerUser.mutateAsync(payload);
 			// 2️⃣ Redirigir al login
+
 			Swal.fire({
 				title: 'Registro exitoso',
 				html: 'Por favor completa tu informacion de usuario para una mejor experiencia',

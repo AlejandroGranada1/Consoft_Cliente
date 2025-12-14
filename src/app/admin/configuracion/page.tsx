@@ -1,31 +1,80 @@
 'use client';
+import { Search, Plus } from 'lucide-react';
 import { Role } from '@/lib/types';
 import CreateRoleModal from '@/components/admin/configuracion/CreateRoleModal';
 import EditRoleModal from '@/components/admin/configuracion/EditRoleModal';
 import RoleDetailsModal from '@/components/admin/configuracion/RoleDetailsModal';
 import { deleteElement } from '@/components/admin/global/alerts';
-import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
-import { FaEdit, FaEye, FaSearch, FaTrash } from 'react-icons/fa';
-import { IoMdAdd } from 'react-icons/io';
-import PaginatedList from '@/components/Global/Pagination';
-import { useGetRoles } from '@/hooks/apiHooks';
+import Pagination from '@/components/Global/Pagination';
+import { useDeleteRole, useGetRoles } from '@/hooks/apiHooks';
+import RoleRow from '@/components/admin/configuracion/RoleRow'; // 👈 Importa el componente
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [editModal, setEditModal] = useState(false);
 	const [role, setRole] = useState<Role>();
-
+	const [currentPage, setCurrentPage] = useState(1);
 	const [filterText, setFilterText] = useState('');
 
+	const itemsPerPage = 5;
+
+	const deleteRole = useDeleteRole();
 	const { data, refetch } = useGetRoles();
 	const roles = data?.roles || [];
 
-	// 📌 Filtro
 	const filteredRoles = roles.filter((r: Role) =>
 		r.name.toLowerCase().includes(filterText.toLowerCase())
 	);
+
+	const totalPages = Math.ceil(filteredRoles.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const currentRoles = filteredRoles.slice(startIndex, endIndex);
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [filterText]);
+
+	const handleDeleteRole = async (id: string) => {
+		const Swal = (await import('sweetalert2')).default;
+		try {
+			Swal.fire({
+				title: '¿Estas seguro de eliminar este rol?',
+				text: 'Esta accion es irreversible',
+				icon: 'warning',
+				showCancelButton: true,
+				showConfirmButton: true,
+				confirmButtonText: 'Aceptar',
+				confirmButtonColor: 'lightgreen',
+				cancelButtonText: 'Cancelar',
+			}).then(async (response) => {
+				if (response.isConfirmed) {
+					await deleteRole.mutateAsync(id);
+					Swal.fire({
+						toast: true,
+						animation: false,
+						timerProgressBar: true,
+						showConfirmButton: false,
+						title: 'Rol eliminado exitosamente',
+						icon: 'success',
+						position: 'top-right',
+						timer: 1500,
+						customClass: {
+							timerProgressBar: 'swal2-progress-bar',
+						},
+					});
+					refetch();
+				}
+			});
+		} catch (error: any) {
+			Swal.fire({
+				title: 'Error',
+				text: error.message,
+			});
+		}
+	};
 
 	return (
 		<div className='px-4 md:px-20'>
@@ -34,10 +83,9 @@ function Page() {
 					CONFIGURACIÓN DE ROLES
 				</h1>
 
-				{/* acciones */}
 				<div className='flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center'>
 					<div className='relative w-full md:w-64'>
-						<FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+						<Search className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
 						<datalist id='roles'>
 							{roles.map((role: Role) => (
 								<option
@@ -58,7 +106,7 @@ function Page() {
 					<button
 						onClick={() => setCreateModal(true)}
 						className='flex items-center justify-center py-2 px-6 md:px-10 border border-brown rounded-lg cursor-pointer text-brown w-full md:w-fit'>
-						<IoMdAdd
+						<Plus
 							size={25}
 							className='mr-2'
 						/>{' '}
@@ -68,7 +116,7 @@ function Page() {
 			</header>
 
 			<section className='w-full mx-auto mt-6 flex flex-col justify-between border-t border-gray'>
-				{/* encabezado tabla */}
+				{/* Encabezado tabla - solo desktop */}
 				<div className='hidden md:grid grid-cols-6 place-items-center py-6 font-semibold'>
 					<p>Nombre del rol</p>
 					<p>Descripción</p>
@@ -78,119 +126,36 @@ function Page() {
 					<p>Acciones</p>
 				</div>
 
-				{/* listado con paginación */}
-				<PaginatedList
-					data={filteredRoles}
-					itemsPerPage={5}>
-					{(role: Role) => (
-						<div
+				{/* Lista de roles - USA EL COMPONENTE AQUÍ 👇 */}
+				{currentRoles.length > 0 ? (
+					currentRoles.map((role: Role) => (
+						<RoleRow
 							key={role._id}
-							className='grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown/10 rounded-lg p-4 md:py-2'>
-							{/* 📱 Mobile */}
-							<div className='w-full md:hidden text-center space-y-2 border-b pb-4'>
-								<p>
-									<span className='font-semibold'>Nombre:</span> {role.name}
-								</p>
-								<p>
-									<span className='font-semibold'>Descripción:</span>{' '}
-									{role.description}
-								</p>
-								<p>
-									<span className='font-semibold'>Usuarios:</span>{' '}
-									{role.usersCount}
-								</p>
-								<p>
-									<span className='font-semibold'>Fecha de creación:</span>{' '}
-									{new Date(role.createdAt).toLocaleDateString()}
-								</p>
-								<p>
-									<span className='font-semibold'>Estado:</span>{' '}
-									<span
-										className={role.status ? 'text-green-500' : 'text-red-500'}>
-										{role.status ? 'Activo' : 'Inactivo'}
-									</span>
-								</p>
-								<div className='flex gap-4 mt-2 justify-center'>
-									<FaEye
-										size={20}
-										color='#d9b13b'
-										onClick={() => {
-											setDetailsModal(true);
-											setRole(role);
-										}}
-										cursor='pointer'
-									/>
-									<FaEdit
-										size={20}
-										color='#7588f0'
-										onClick={() => {
-											setEditModal(true);
-											setRole(role);
-										}}
-										cursor='pointer'
-									/>
-									<FaTrash
-										size={19}
-										color='#fa4334'
-										onClick={() =>
-											deleteElement('Rol', `/api/roles/${role._id}`, () =>
-												refetch()
-											)
-										}
-										cursor='pointer'
-									/>
-								</div>
-							</div>
+							role={role}
+							onView={() => {
+								setDetailsModal(true);
+								setRole(role);
+							}}
+							onEdit={() => {
+								setEditModal(true);
+								setRole(role);
+							}}
+							onDelete={() => handleDeleteRole(role._id)}
+						/>
+					))
+				) : (
+					<div className='text-center py-8 text-gray-500'>No hay roles para mostrar</div>
+				)}
 
-							{/* 💻 Desktop */}
-							<p className='hidden md:block'>{role.name}</p>
-							<p className='hidden md:block truncate w-40 text-center'>
-								{role.description}
-							</p>
-							<p className='hidden md:block'>{role.usersCount}</p>
-							<p className='hidden md:block'>
-								{new Date(role.createdAt).toLocaleDateString()}
-							</p>
-							<p
-								className={`hidden md:block ${
-									role.status ? 'text-green-500' : 'text-red-500'
-								}`}>
-								{role.status ? 'Activo' : 'Inactivo'}
-							</p>
-							<div className='hidden md:flex justify-evenly place-items-center w-full'>
-								<FaEye
-									size={20}
-									color='#d9b13b'
-									onClick={() => {
-										setDetailsModal(true);
-										setRole(role);
-									}}
-									cursor='pointer'
-								/>
-								<FaEdit
-									size={20}
-									color='#7588f0'
-									onClick={() => {
-										setEditModal(true);
-
-										setRole(role);
-									}}
-									cursor='pointer'
-								/>
-								<FaTrash
-									size={19}
-									color='#fa4334'
-									onClick={() =>
-										deleteElement('Rol', `/api/roles/${role._id}`, () =>
-											refetch()
-										)
-									}
-									cursor='pointer'
-								/>
-							</div>
-						</div>
-					)}
-				</PaginatedList>
+				{/* Paginación */}
+				{totalPages > 1 && (
+					<Pagination
+						count={totalPages}
+						page={currentPage}
+						onChange={(_, newPage) => setCurrentPage(newPage)}
+						className='mt-6'
+					/>
+				)}
 			</section>
 
 			{/* Modales */}

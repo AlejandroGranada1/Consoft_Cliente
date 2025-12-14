@@ -2,12 +2,20 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Swal from 'sweetalert2';
 import { useGetProductById, useQuickQuotation } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import { useAddItemAutoCart } from '@/hooks/apiHooks';
 import Image from 'next/image';
 
+const AVAILABLE_COLORS = [
+	{ name: 'Nogal', value: 'nogal', hex: '#7B4A12' },
+	{ name: 'Blanco', value: 'blanco', hex: '#FFFFFF' },
+	{ name: 'Negro', value: 'negro', hex: '#000000' },
+	{ name: 'Gris', value: 'gris', hex: '#9CA3AF' },
+	{ name: 'Café oscuro', value: 'cafe_oscuro', hex: '#4B2E1E' },
+	{ name: 'Azul petróleo', value: 'azul_petroleo', hex: '#1F4E5F' },
+	{ name: 'Verde oliva', value: 'verde_oliva', hex: '#556B2F' },
+];
 export default function ProductDetailPage() {
 	const { id } = useParams();
 	const router = useRouter();
@@ -18,17 +26,17 @@ export default function ProductDetailPage() {
 
 	const product = data?.data;
 
+	console.log(product);
 
-	console.log(product)
-
-	const quickQuotationMutation = useQuickQuotation();
 	const addItemMutation = useAddItemAutoCart();
 
 	const [quantity, setQuantity] = useState(1);
-	const [color, setColor] = useState('');
+	const [color, setColor] = useState<string>('');
 	const [customSize, setCustomSize] = useState('');
 
 	const addToCart = async () => {
+		const Swal = (await import('sweetalert2')).default;
+
 		if (!user) {
 			Swal.fire({
 				title: 'Inicia sesión para añadir al carrito',
@@ -43,6 +51,15 @@ export default function ProductDetailPage() {
 		if (!product) return;
 
 		try {
+			if (!color) {
+				Swal.fire({
+					title: 'Selecciona un color',
+					text: 'Debes elegir un color para el mueble',
+					icon: 'warning',
+				});
+				return;
+			}
+
 			const payload = {
 				productId: product._id,
 				quantity,
@@ -71,50 +88,11 @@ export default function ProductDetailPage() {
 		}
 	};
 
-	const requestQuotation = async () => {
-		if (!user) {
-			Swal.fire({
-				title: 'Inicia sesión para solicitar una cotización',
-				icon: 'warning',
-				showConfirmButton: false,
-				timer: 1500,
-			});
-			router.push('/client/auth/login');
-			return;
-		}
-
-		if (!product) return;
-
-		try {
-			const payload = {
-				productId: product._id,
-				quantity,
-				color,
-				size: customSize,
-			};
-			await quickQuotationMutation.mutateAsync(payload);
-
-			Swal.fire({
-				title: 'Cotización solicitada',
-				text: 'Tu solicitud de cotización se ha enviado correctamente',
-				icon: 'success',
-				confirmButtonColor: '#8B5A2B',
-			});
-		} catch (error) {
-			console.log(error);
-			Swal.fire({
-				title: 'Error',
-				text: 'No se pudo solicitar la cotización',
-				icon: 'error',
-			});
-		}
-	};
-
 	if (isLoading) return <p className='p-10'>Cargando producto...</p>;
 	if (!product) return <p className='p-10'>Producto no encontrado</p>;
 
 	return (
-		<section className='bg-[#f2f2f2] min-h-screen py-10 px-6'>
+		<section className='bg-[#FFF9F4] min-h-screen py-10 px-6'>
 			<div className='max-w-5xl mx-auto bg-white p-10 rounded-2xl shadow-lg'>
 				<div className='grid grid-cols-1 md:grid-cols-2 gap-12'>
 					<div className='relative w-full h-80 rounded-xl overflow-hidden bg-gray-100 border flex items-center justify-center'>
@@ -154,14 +132,44 @@ export default function ProductDetailPage() {
 							</div>
 
 							<div>
-								<label className='font-medium'>Color</label>
-								<input
-									type='text'
+								<label className='font-medium block mb-2'>Color</label>
+
+								<select
 									value={color}
 									onChange={(e) => setColor(e.target.value)}
-									className='input-style w-full'
-									placeholder='Ej: Nogal, blanco...'
-								/>
+									className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brown bg-white'>
+									<option value=''>Selecciona un color</option>
+
+									{AVAILABLE_COLORS.map((c) => (
+										<option
+											key={c.value}
+											value={c.value}>
+											{c.name}
+										</option>
+									))}
+								</select>
+
+								{/* Vista previa del color seleccionado */}
+								<div className='flex items-center gap-2 mt-3 h-10'>
+									{color && (
+										<>
+											<span
+												className='w-6 h-6 rounded-full border'
+												style={{
+													backgroundColor: AVAILABLE_COLORS.find(
+														(c) => c.value === color
+													)?.hex,
+												}}
+											/>
+											<span className='text-sm text-gray-700'>
+												{
+													AVAILABLE_COLORS.find((c) => c.value === color)
+														?.name
+												}
+											</span>
+										</>
+									)}
+								</div>
 							</div>
 
 							<div>
@@ -174,18 +182,11 @@ export default function ProductDetailPage() {
 									placeholder='Ej: 50x40'
 								/>
 							</div>
-							<div className='mt-3 grid grid-cols-2 gap-4'>
-								<button
-									onClick={addToCart}
-									className='w-full border border-brown  hover:bg-[#70461f] text-brown hover:text-white py-3 rounded-lg font-semibold transition cursor-pointer'>
-									Agregar al carrito
-								</button>
-								<button
-									onClick={requestQuotation}
-									className='w-full border border-brown  hover:bg-[#70461f] text-brown hover:text-white py-3 rounded-lg font-semibold transition cursor-pointer'>
-									Solicitar Cotizacion
-								</button>
-							</div>
+							<button
+								onClick={addToCart}
+								className='w-full border border-brown  hover:bg-[#70461f] text-brown hover:text-white py-3 rounded-lg font-semibold transition cursor-pointer'>
+								Agregar al carrito
+							</button>
 						</div>
 					</div>
 				</div>

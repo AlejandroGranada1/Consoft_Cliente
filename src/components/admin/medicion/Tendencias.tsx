@@ -1,5 +1,6 @@
 'use client';
-import { FaUserPlus, FaChartLine, FaStar, FaChartBar } from 'react-icons/fa';
+import { UserPlus, TrendingUp, Star, BarChart3 } from 'lucide-react';
+
 
 export default function GrowthTrends() {
 	const metrics = [
@@ -7,7 +8,7 @@ export default function GrowthTrends() {
 			id: 1,
 			name: 'Usuarios Registrados',
 			value: 56,
-			icon: <FaUserPlus className='text-green-500 text-lg' />,
+			icon: <UserPlus className='text-green-500 text-lg' />,
 			classes: 'border-green-200 bg-green-50',
 			color: 'green',
 		},
@@ -15,7 +16,7 @@ export default function GrowthTrends() {
 			id: 2,
 			name: 'Tasa de Conversión',
 			value: 25,
-			icon: <FaChartLine className='text-blue-500 text-lg' />,
+			icon: <TrendingUp className='text-blue-500 text-lg' />,
 			classes: 'border-blue-200 bg-blue-50',
 			color: 'blue',
 		},
@@ -23,7 +24,7 @@ export default function GrowthTrends() {
 			id: 3,
 			name: 'Satisfacción',
 			value: 6.8,
-			icon: <FaStar className='text-yellow-500 text-lg' />,
+			icon: <Star className='text-yellow-500 text-lg' />,
 			classes: 'border-yellow-200 bg-yellow-50',
 			color: 'yellow',
 		},
@@ -31,7 +32,7 @@ export default function GrowthTrends() {
 			id: 4,
 			name: 'Usuarios Activos',
 			value: 23,
-			icon: <FaChartBar className='text-purple-500 text-lg' />,
+			icon: <BarChart3 className='text-purple-500 text-lg' />,
 			classes: 'border-purple-200 bg-purple-50',
 			color: 'purple',
 		},

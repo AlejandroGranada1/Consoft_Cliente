@@ -1,7 +1,8 @@
 'use client';
+import { X, Plus, Minus } from 'lucide-react';
 import { DefaultModalProps, Order, OrderWithPartialUser, User } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
-import { IoMdClose, IoMdAdd, IoMdRemove } from 'react-icons/io';
+
 import api from '@/components/Global/axios';
 import { updateElement } from '../../global/alerts';
 import { formatDateForInput } from '@/lib/formatDate';
@@ -144,7 +145,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 					<button
 						onClick={onClose}
 						className='absolute top-0 left-0 text-2xl text-gray-500 hover:text-black'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold text-center'>Editar Pedido</h1>
 				</header>
@@ -211,7 +212,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 								type='button'
 								onClick={addItem}
 								className='flex items-center justify-center border border-brown text-brown rounded-md px-2 py-1 hover:bg-brown hover:text-white'>
-								<IoMdAdd />
+								<Plus />
 							</button>
 						</div>
 
@@ -269,7 +270,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 									type='button'
 									onClick={() => removeItem(idx)}
 									className='flex items-center justify-center border border-red-400 text-red-500 rounded-md px-2 py-1 hover:bg-red-500 hover:text-white'>
-									<IoMdRemove />
+									<Minus />
 								</button>
 							</div>
 						))}

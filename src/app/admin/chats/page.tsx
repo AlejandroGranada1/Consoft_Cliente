@@ -1,16 +1,21 @@
 'use client';
 
+import { ChevronDown } from 'lucide-react';
 import { useGetAllCarts, useGetMessages } from '@/hooks/apiHooks';
 import { ChatMessage } from '@/lib/types';
 import { useUser } from '@/providers/userContext';
 import { useEffect, useRef, useState } from 'react';
-import { FaCaretDown } from 'react-icons/fa';
+
 import io from 'socket.io-client';
 
 export default function AdminChatsPage() {
 	const [selectedChat, setSelectedChat] = useState<any>(null);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [showProducts, setShowProducts] = useState(false);
+	const { data, refetch } = useGetAllCarts();
+	const { data: messagesData } = useGetMessages(selectedChat?._id || '');
+
+
 
 	const [newMessage, setNewMessage] = useState('');
 
@@ -34,15 +39,13 @@ export default function AdminChatsPage() {
 	// ----------------------------
 	// Obtener todas las cotizaciones
 	// ----------------------------
-	const { data, refetch } = useGetAllCarts();
 	console.log(data);
-	const allowedStatuses = ['solicitada', 'en_proceso', 'cotizada'];
+	const allowedStatuses = ['Solicitada', 'En Proceso', 'Cotizada'];
 	const chats = (data?.quotations ?? []).filter((q) => allowedStatuses.includes(q.status));
 
 	// ----------------------------
 	// Obtener mensajes del chat seleccionado
 	// ----------------------------
-	const { data: messagesData } = useGetMessages(selectedChat?._id || '');
 
 	useEffect(() => {
 		const normalized =
@@ -160,7 +163,7 @@ export default function AdminChatsPage() {
 							<button
 								onClick={() => setShowProducts(!showProducts)}
 								className='flex items-center gap-2 bg-white/20 px-3 py-1 rounded hover:bg-white/30 transition'>
-								Productos <FaCaretDown />
+								Productos <ChevronDown />
 							</button>
 
 							{/* Dropdown */}

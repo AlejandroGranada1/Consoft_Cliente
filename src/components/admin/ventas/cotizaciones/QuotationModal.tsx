@@ -1,8 +1,9 @@
+import { X } from 'lucide-react';
 import { useSetQuote } from '@/hooks/apiHooks';
 import { DefaultModalProps } from '@/lib/types';
 import Image from 'next/image';
 import React, { useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
+
 
 function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps) {
 	if (!isOpen || !extraProps) return null;
@@ -17,7 +18,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 	const [prices, setPrices] = useState<{ [id: string]: number }>(() => {
 		const initial: { [id: string]: number } = {};
 		items.forEach((item: any) => {
-			initial[item._id] = item.price ?? 0;
+			initial[item._id] = item.price ?? "";
 		});
 		return initial;
 	});
@@ -88,7 +89,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 					<button
 						onClick={onClose}
 						className='absolute top-0 left-0 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold text-center'>
 						COTIZACIÓN PARA {quotation.user.name}
@@ -143,7 +144,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 									<input
 										type='number'
 										className='border rounded-lg p-2 text-sm'
-										placeholder='0'
+										placeholder=''
 										value={prices[item._id] ?? 0}
 										onChange={(e) => handlePrice(item._id, Number(e.target.value))}
 									/>

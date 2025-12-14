@@ -1,7 +1,8 @@
 'use client';
+import { X } from 'lucide-react';
 import { DefaultModalProps, Category } from '@/lib/types';
 import React, { useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
+
 import { createElement } from '../../global/alerts';
 import api from '@/components/Global/axios';
 
@@ -52,7 +53,7 @@ function CreateCategoryModal({ isOpen, onClose, updateList }: DefaultModalProps<
 					<button
 						onClick={onClose}
 						className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold mb-4'>AGREGAR CATEGORÍA</h1>
 				</header>

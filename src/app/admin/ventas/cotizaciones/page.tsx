@@ -1,15 +1,21 @@
 'use client';
-import React, { useState } from 'react';
-import { FaSearch, FaEye } from 'react-icons/fa';
+import { Search, Eye } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+
 import PaginatedList from '@/components/Global/Pagination';
 import { useGetAllCarts } from '@/hooks/apiHooks';
 import QuotationPriceModal from '@/components/admin/ventas/cotizaciones/QuotationModal';
 import QuotationModal from '@/components/admin/ventas/cotizaciones/QuotationModal';
+import Pagination from '@/components/Global/Pagination';
+import QuotationRow from '@/components/admin/ventas/cotizaciones/QuotationRow';
+import { Quotation } from '@/lib/types';
 
 function Page() {
 	const [detailsModal, setDetailsModal] = useState(false);
-	const [selectedQuotation, setSelectedQuotation] = useState<any>();
+	const [selectedQuotation, setSelectedQuotation] = useState<Quotation>();
 	const [filterText, setFilterText] = useState('');
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
 
 	const { data: quotations } = useGetAllCarts();
 
@@ -23,6 +29,15 @@ function Page() {
 			q.user.name.toLowerCase().includes(filterText.toLowerCase())
 	);
 
+	const totalPages = Math.ceil(filteredQuotations.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const currentQuotations = filteredQuotations.slice(startIndex, endIndex);
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [filterText]);
+
 	return (
 		<div className='px-4 md:px-20'>
 			<header className='flex flex-col gap-4 md:h-40 justify-around'>
@@ -33,7 +48,7 @@ function Page() {
 				{/* acciones */}
 				<div className='flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center'>
 					<div className='relative w-full md:w-64'>
-						<FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+						<Search className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
 
 						<input
 							type='text'
@@ -57,62 +72,31 @@ function Page() {
 				</div>
 
 				{/* listado con paginación */}
-				<PaginatedList
-					data={filteredQuotations}
-					itemsPerPage={5}>
-					{(q) => (
-						<div
+				{currentQuotations.length > 0 ? (
+					currentQuotations.map((q) => (
+						<QuotationRow
 							key={q._id}
-							className='grid grid-cols-1 md:grid-cols-5 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown/10 rounded-lg p-4 md:py-2'>
-							{/* MOBILE VIEW */}
-							<div className='w-full md:hidden text-center space-y-2 border-b pb-4'>
-								<p>
-									<span className='font-semibold'>Código:</span> {q._id}
-								</p>
-								<p>
-									<span className='font-semibold'>Cliente:</span> {q.user?.name}
-								</p>
-								<p>
-									<span className='font-semibold'>Estado:</span> {q.status == "en_proceso" ? "En proceso" : q.status}
-								</p>
-								<p>
-									<span className='font-semibold'>Items:</span> {q.items.length}
-								</p>
+							q={q}
+							onView={() => {
+								setDetailsModal(true);
+								setSelectedQuotation(q);
+							}}
+						/>
+					))
+				) : (
+					<div className='text-center py-8 text-gray-500'>
+						No hay cotizaciones para mostrar
+					</div>
+				)}
 
-								{/* acciones mobile */}
-								<div className='flex gap-4 mt-2 justify-center'>
-									<FaEye
-										size={20}
-										color='#d9b13b'
-										onClick={() => {
-											setDetailsModal(true);
-											setSelectedQuotation(q);
-										}}
-										cursor='pointer'
-									/>
-								</div>
-							</div>
-
-							{/* DESKTOP VIEW */}
-							<p className='hidden md:block'>{q._id}</p>
-							<p className='hidden md:block'>{q.user.name}</p>
-							<p className='hidden md:block capitalize'>{q.status == "en_proceso" ? "En proceso" : q.status}</p>
-							<p className='hidden md:block'>{q.items.length}</p>
-
-							<div className='hidden md:flex justify-evenly place-items-center w-full'>
-								<FaEye
-									size={20}
-									color='#d9b13b'
-									onClick={() => {
-										setDetailsModal(true);
-										setSelectedQuotation(q);
-									}}
-									cursor='pointer'
-								/>
-							</div>
-						</div>
-					)}
-				</PaginatedList>
+				{totalPages > 1 && (
+					<Pagination
+						count={totalPages}
+						page={currentPage}
+						onChange={(_, newPage) => setCurrentPage(newPage)}
+						className='mt-6'
+					/>
+				)}
 			</section>
 
 			{/* MODAL DE DETALLES */}

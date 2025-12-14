@@ -1,12 +1,12 @@
-'use client';
+'use client'
+import { LogOut } from 'lucide-react';
 import Sidebar from '@/components/admin/global/Sidebar';
 import api from '@/components/Global/axios';
-import { useEffect } from 'react';
-import { CiLogout } from 'react-icons/ci';
-import Swal from 'sweetalert2';
+
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-	const handleLogout = () => {
+	const handleLogout = async () => {
+		const Swal = (await import('sweetalert2')).default;
 		Swal.fire({
 			title: '¿Cerrar sesión?',
 			html: 'Estas apunto de cerrar sesion',
@@ -24,8 +24,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 		});
 	};
 
-	useEffect(() => {
-	}, []);
 
 	return (
 		<div className='flex'>
@@ -39,7 +37,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 					<p className='py-1 px-4 rounded-xl border border-gray-300 text-sm'>
 						Administrador
 					</p>
-					<CiLogout
+					<LogOut
 						onClick={handleLogout}
 						size={30}
 						cursor={'pointer'}

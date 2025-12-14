@@ -1,44 +1,84 @@
 'use client';
+import { Pencil, Eye, Search, Trash2, Plus } from 'lucide-react';
 import { Order, User } from '@/lib/types';
 import CreateOrderModal from '@/components/admin/ventas/Pedidos/CreateOrderModal';
 import OrderDetailsModal from '@/components/admin/ventas/Pedidos/OrderDetails';
 import { deleteElement } from '@/components/admin/global/alerts';
 import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
-import { FaEdit, FaEye, FaSearch, FaTrash } from 'react-icons/fa';
-import { IoMdAdd } from 'react-icons/io';
+
 import PaginatedList from '@/components/Global/Pagination';
 import EditOrderModal from '@/components/admin/ventas/Pedidos/EditOrderModal';
+import Pagination from '@/components/Global/Pagination';
+import OrderRow from '@/components/admin/ventas/Pedidos/OrderRow';
+import { useDeleteOrder, useGetOrders } from '@/hooks/useOrders';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [editModal, setEditModal] = useState(false);
 	const [order, setOrder] = useState<Order>();
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
 
-	const [orders, setOrders] = useState<Order[]>([]);
 	const [filterText, setFilterText] = useState('');
-
-	const fetchOrders = async () => {
-		try {
-			const response = await api.get('/api/orders');
-			setOrders(response.data);
-		} catch (err) {
-			console.error('Error al traer pedidos', err);
-		}
-	};
-
-	useEffect(() => {
-		fetchOrders();
-	}, []);
-	console.log(orders);
+	const deleteOrder = useDeleteOrder();
+	const { data: orders, refetch } = useGetOrders();
 
 	// 📌 Filtrar pedidos
-	const filteredOrders = orders.filter(
-		(o) =>
+	const filteredOrders = orders?.filter(
+		(o: Order) =>
 			o._id?.toLowerCase().includes(filterText.toLowerCase()) ||
 			(o.user as User).name.toLowerCase().includes(filterText.toLowerCase())
 	);
+
+	const totalPages = Math.ceil(filteredOrders?.length / itemsPerPage);
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const currentOrders = filteredOrders?.slice(startIndex, endIndex);
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [filterText]);
+
+	const handleDeleteOrder = async (id: string) => {
+		const Swal = (await import('sweetalert2')).default;
+		try {
+			Swal.fire({
+				title: '¿Estas seguro de eliminar este pedido?',
+				text: 'Esta accion es irreversible',
+				icon: 'warning',
+				showCancelButton: true,
+				showConfirmButton: true,
+				confirmButtonText: 'Aceptar',
+				confirmButtonColor: 'lightgreen',
+				cancelButtonText: 'Cancelar',
+			}).then(async (response) => {
+				if (response.isConfirmed) {
+					await deleteOrder.mutateAsync(id);
+					Swal.fire({
+						toast: true,
+						animation: false,
+						timerProgressBar: true,
+						showConfirmButton: false,
+						title: 'Pedido eliminado exitosamente',
+						icon: 'success',
+						position: 'top-right',
+						timer: 1500,
+						customClass: {
+							timerProgressBar: 'swal2-progress-bar',
+						},
+					});
+					refetch();
+				}
+			});
+		} catch (error: any) {
+			Swal.fire({
+				title: 'Error',
+				text: error.message,
+			});
+		}
+	};
 
 	return (
 		<div className='px-4 md:px-20'>
@@ -50,10 +90,10 @@ function Page() {
 				{/* acciones */}
 				<div className='flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center'>
 					<div className='relative w-full md:w-64'>
-						<FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+						<Search className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
 
 						<datalist id='orders'>
-							{orders.map((o) => (
+							{orders?.map((o: Order) => (
 								<option
 									key={o._id}
 									value={o._id}></option>
@@ -73,7 +113,7 @@ function Page() {
 					<button
 						onClick={() => setCreateModal(true)}
 						className='flex items-center justify-center py-2 px-6 md:px-10 border border-brown rounded-lg cursor-pointer text-brown w-full md:w-fit'>
-						<IoMdAdd
+						<Plus
 							size={25}
 							className='mr-2'
 						/>{' '}
@@ -94,163 +134,43 @@ function Page() {
 					<p>Acciones</p>
 				</div>
 
-				{/* listado con paginación */}
-				<PaginatedList
-					data={filteredOrders}
-					itemsPerPage={5}>
-					{(o: Order) => (
-						<div
+				{currentOrders?.length > 0 ? (
+					currentOrders?.map((o: Order) => (
+						<OrderRow
 							key={o._id}
-							className='grid grid-cols-1 md:grid-cols-7 gap-2 md:gap-0 place-items-center py-3 border-brown/40 md:border-b md:border-brown/10 rounded-lg p-4 md:py-2'>
-							{/* 📱 Vista mobile */}
-							<div className='w-full md:hidden text-center space-y-2 border-b pb-4'>
-								<p>
-									<span className='font-semibold'>Id Pedido:</span> {o._id}
-								</p>
-								<p>
-									<span className='font-semibold'>Cliente:</span> {(o.user as User).name}
-								</p>
-								<p>
-									<span className='font-semibold'>Valor:</span>{' '}
-									{o.items
-										.reduce((total, item) => total + item.valor, 0)
-										.toLocaleString('es-CO', {
-											style: 'currency',
-											currency: 'COP',
-										})}
-								</p>
-								<p>
-									<span className='font-semibold'>Estado:</span>{' '}
-									<span
-										className={`${
-											o.status == 'Completado'
-												? 'text-blue-500'
-												: o.status == 'Cancelado'
-												? 'text-red'
-												: 'text-orange'
-										}`}>
-										{o.status}
-									</span>
-								</p>
-								<p>
-									<span className='font-semibold'>Pago:</span>{' '}
-									<span
-										className={`${
-											o.paymentStatus === 'Pagado'
-												? 'text-green-500'
-												: 'text-orange'
-										}`}>
-										{o.paymentStatus}
-									</span>
-								</p>
-								<p>
-									<span className='font-semibold'>Items:</span> {o.items.length}
-								</p>
+							order={o}
+							onDelete={() => handleDeleteOrder(o._id!)}
+							onEdit={() => {
+								setEditModal(true);
+								setOrder(o);
+							}}
+							onView={() => {
+								setDetailsModal(true);
+								setOrder(o);
+							}}
+						/>
+					))
+				) : (
+					<div className='text-center py-8 text-gray-500'>
+						No hay pedidos para mostrar
+					</div>
+				)}
 
-								{/* 👁️ acciones */}
-								<div className='flex gap-4 mt-2 justify-center'>
-									<FaEye
-										size={20}
-										color='#d9b13b'
-										onClick={() => {
-											setDetailsModal(true);
-											setOrder(o);
-										}}
-										cursor='pointer'
-									/>
-									<FaEdit
-										size={20}
-										color='#7588f0'
-										onClick={() => {
-											setEditModal(true);
-											setOrder(o);
-										}}
-										cursor='pointer'
-									/>
-									<FaTrash
-										size={19}
-										color='#fa4334'
-										onClick={() =>
-											deleteElement('Pedido', `/api/orders/${o._id}`, () =>
-												fetchOrders()
-											)
-										}
-										cursor='pointer'
-									/>
-								</div>
-							</div>
-
-							{/* 💻 Vista desktop */}
-							<p className='hidden md:block truncate w-20'>{o._id}</p>
-							<p className='hidden md:block'>{(o.user as User).name}</p>
-							<p className='hidden md:block'>
-								{o.items
-									.reduce((total, item) => total + item.valor, 0)
-									.toLocaleString('es-CO', {
-										style: 'currency',
-										currency: 'COP',
-									})}
-							</p>
-							<p
-								className={`hidden md:block ${
-									o.status == 'Completado'
-										? 'text-blue-500'
-										: o.status == 'Cancelado'
-										? 'text-red'
-										: 'text-orange'
-								}`}>
-								{o.status == "en_proceso" ? "En Proceso" : o.status}
-							</p>
-							<p
-								className={`hidden md:block ${
-									o.paymentStatus === 'Pagado' ? 'text-green-500' : 'text-orange'
-								}`}>
-								{o.paymentStatus}
-							</p>
-							<p className='hidden md:block'>{o.items.length}</p>
-
-							<div className='hidden md:flex justify-evenly place-items-center w-full'>
-								<div className='flex gap-4 mt-2 justify-center'>
-									<FaEye
-										size={20}
-										color='#d9b13b'
-										onClick={() => {
-											setDetailsModal(true);
-											setOrder(o);
-										}}
-										cursor='pointer'
-									/>
-									<FaEdit
-										size={20}
-										color='#7588f0'
-										onClick={() => {
-											setEditModal(true);
-											setOrder(o);
-										}}
-										cursor='pointer'
-									/>
-									<FaTrash
-										size={19}
-										color='#fa4334'
-										onClick={() =>
-											deleteElement('Pedido', `/api/orders/${o._id}`, () =>
-												fetchOrders()
-											)
-										}
-										cursor='pointer'
-									/>
-								</div>
-							</div>
-						</div>
-					)}
-				</PaginatedList>
+				{totalPages > 1 && (
+					<Pagination
+						count={totalPages}
+						page={currentPage}
+						onChange={(_, newPage) => setCurrentPage(newPage)}
+						className='mt-6'
+					/>
+				)}
 			</section>
 
 			{/* modales */}
 			<CreateOrderModal
 				isOpen={createModal}
 				onClose={() => setCreateModal(false)}
-				updateList={() => fetchOrders()}
+				updateList={() => refetch()}
 			/>
 			<OrderDetailsModal
 				isOpen={detailsModal}
@@ -261,7 +181,7 @@ function Page() {
 				isOpen={editModal}
 				onClose={() => setEditModal(false)}
 				extraProps={order}
-				updateList={() => fetchOrders()}
+				updateList={() => refetch()}
 			/>
 		</div>
 	);

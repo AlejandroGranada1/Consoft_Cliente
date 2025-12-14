@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Calendar, TimePicker, FormField, ServiceSelector } from '@/components/agenda';
 import { useAddVisit } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
-import Swal from 'sweetalert2';
 
 export default function ScheduleSection() {
 	const [date, setDate] = useState<Date | undefined>(undefined);
@@ -13,44 +12,66 @@ export default function ScheduleSection() {
 	const [description, setDescription] = useState('');
 	const [service, setService] = useState<string>('');
 
-	const { user } = useUser();
+	const { user, loading } = useUser();
 	const router = useRouter();
 	const addVisit = useAddVisit();
 
 	useEffect(() => {
+		if (loading) return; // ⛔ aún validando sesión
+
 		if (user === null) {
-			Swal.fire({
-				icon: 'warning',
-				title: 'Inicia sesión',
-				text: 'Debes registrarte o iniciar sesión para agendar una cita.',
-			}).then(() => {
+			(async () => {
+				const Swal = (await import('sweetalert2')).default;
+
+				await Swal.fire({
+					icon: 'warning',
+					title: 'Inicia sesión',
+					text: 'Debes registrarte o iniciar sesión para agendar una cita.',
+				});
+
 				router.push('/client/auth/login');
-			});
+			})();
 		}
 	}, [user, router]);
 
-	if (user === undefined) return null;
-	if (user === null) return null;
+	if (user === undefined || user === null) return null;
 
+	const resetForm = () => {
+		setDate(undefined);
+		setTime(null);
+		setDescription('');
+		setService('');
+	};
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
 		if (!date || !time || !service) {
-			Swal.fire({
+			// alerta campos incompletos
+			return;
+		}
+
+		if (!user.address) {
+			const Swal = (await import('sweetalert2')).default;
+
+			await Swal.fire({
 				icon: 'warning',
-				title: 'Campos incompletos',
-				text: 'Por favor, completa todos los campos obligatorios.',
+				title: 'Dirección requerida',
+				text: 'Debes registrar una dirección antes de agendar una visita.',
 			});
+
 			return;
 		}
 
 		const payload = {
-			user: user?.id!,
+			user: user.id,
 			visitDate: date,
-			address: user?.address!,
+			address: user.address,
 			status: 'Pendiente',
 			services: service,
+			description,
 		};
+
+		const Swal = (await import('sweetalert2')).default;
 
 		const result = await Swal.fire({
 			title: '¿Confirmar visita?',
@@ -67,15 +88,16 @@ export default function ScheduleSection() {
 		try {
 			await addVisit.mutateAsync(payload);
 
-			Swal.fire({
+			await Swal.fire({
 				icon: 'success',
 				title: 'Visita agendada',
 				text: 'Tu visita ha sido creada exitosamente.',
 				timer: 1500,
 				showConfirmButton: false,
 			});
-		} catch (error) {
-			Swal.fire({
+			resetForm()
+		} catch {
+			await Swal.fire({
 				icon: 'error',
 				title: 'Error',
 				text: 'Hubo un problema al crear la visita.',
@@ -84,10 +106,11 @@ export default function ScheduleSection() {
 	};
 
 	return (
-		<section className='py-10 px-4 bg-[#fff9f6]'>
+		<section className='py-10 px-4 bg-[#fff9f4]'>
 			<h2 className='text-2xl md:text-3xl font-bold text-center mb-1 text-gray-900'>
 				Agenda tu visita
 			</h2>
+
 			<p className='text-center text-gray-700 mb-6'>
 				Elige la fecha, hora y servicio que más te convenga
 			</p>
@@ -99,7 +122,11 @@ export default function ScheduleSection() {
 					<h3 className='text-base font-semibold text-gray-800 mb-2'>
 						Selecciona el servicio
 					</h3>
-					<ServiceSelector value={service} onSelect={setService} />
+
+					<ServiceSelector
+						value={service}
+						onSelect={setService}
+					/>
 				</div>
 
 				<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -107,7 +134,12 @@ export default function ScheduleSection() {
 						<h3 className='text-base font-semibold text-gray-800 mb-2'>
 							Selecciona la fecha
 						</h3>
-						<Calendar mode='single' selected={date} onSelect={setDate} className='mx-auto' />
+
+						<Calendar
+							value={date}
+							onChange={setDate}
+							className='mx-auto'
+						/>
 					</div>
 
 					<div className='flex flex-col items-center'>
@@ -115,7 +147,11 @@ export default function ScheduleSection() {
 							<h3 className='text-base font-semibold text-gray-800 mb-2'>
 								Selecciona la hora
 							</h3>
-							<TimePicker selectedTime={time} onSelect={setTime} />
+
+							<TimePicker
+								selectedTime={time}
+								onSelect={setTime}
+							/>
 						</div>
 
 						<img
@@ -130,6 +166,7 @@ export default function ScheduleSection() {
 					<h3 className='text-base font-semibold text-gray-800 mb-2'>
 						Añade una descripción
 					</h3>
+
 					<FormField
 						label=''
 						placeholder='Añade una descripción'

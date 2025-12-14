@@ -1,6 +1,7 @@
 'use client';
+import { X } from 'lucide-react';
 import React, { useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
+
 import { DefaultModalProps, Order, Service, User } from '@/lib/types';
 import EditOrderModal from './EditOrderModal';
 
@@ -30,7 +31,7 @@ function OrderDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Or
 					<button
 						onClick={onClose}
 						className='absolute top-0 left-0 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<IoMdClose />
+						<X />
 					</button>
 					<h1 className='text-xl font-semibold text-center'>DETALLES DEL PEDIDO</h1>
 				</header>
