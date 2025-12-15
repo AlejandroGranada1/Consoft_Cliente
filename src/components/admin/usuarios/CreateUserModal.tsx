@@ -6,35 +6,48 @@ import { createElement } from '@/components/admin/global/alerts';
 import api from '@/components/Global/axios';
 import { DefaultModalProps } from '@/lib/types';
 
-function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<any>) {
+function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>) {
 	const [userData, setUserData] = useState({
 		name: '',
 		email: '',
 		password: '',
 		role: '',
 	});
+
 	const [roles, setRoles] = useState<{ _id: string; name: string }[]>([]);
 
-	// Obtener roles desde API
+	// 🔹 Cargar roles cuando se abre el modal
 	useEffect(() => {
-		const isModalOpen = async () => {
-			const Swal = (await import('sweetalert2')).default;
+		if (!isOpen) return;
 
-			if (isOpen) {
-				api.get('/api/roles')
-					.then((res) => {
-						if (res.data && res.data.ok) {
-							setRoles(res.data.roles);
-						} else {
-							setRoles([]);
-						}
-					})
-					.catch((err) => {
-						console.error('Error al obtener roles:', err);
-						Swal.fire('Error', 'No se pudieron cargar los roles', 'error');
-					});
+		const fetchRoles = async () => {
+			const Swal = (await import('sweetalert2')).default;
+			try {
+				const res = await api.get('/api/roles');
+				if (res.data?.ok) {
+					setRoles(res.data.roles);
+				} else {
+					setRoles([]);
+				}
+			} catch (err) {
+				console.error('Error al obtener roles:', err);
+				Swal.fire('Error', 'No se pudieron cargar los roles', 'error');
 			}
 		};
+
+		fetchRoles();
+	}, [isOpen]);
+
+	// 🔹 Limpiar modal al cerrar
+	useEffect(() => {
+		if (!isOpen) {
+			setUserData({
+				name: '',
+				email: '',
+				password: '',
+				role: '',
+			});
+		}
 	}, [isOpen]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -43,11 +56,12 @@ function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMod
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
 		const Swal = (await import('sweetalert2')).default;
 
-		e.preventDefault();
-
 		const { name, email, password, role } = userData;
+
+		// 🔹 Alertas por campos vacíos
 		if (!name || !email || !password || !role) {
 			return Swal.fire('Campos incompletos', 'Todos los campos son obligatorios', 'warning');
 		}
@@ -64,7 +78,7 @@ function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMod
 	if (!isOpen) return null;
 
 	return (
-		<div className='modal-bg fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50'>
+		<div className='modal-bg fixed inset-0 flex items-center justify-center bg-black/20 z-50'>
 			<div className='modal-frame bg-white rounded-xl shadow-lg p-6 w-full max-w-lg relative'>
 				<header className='w-fit mx-auto'>
 					<button
@@ -75,9 +89,7 @@ function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMod
 					<h1 className='text-xl font-semibold mb-4'>AGREGAR NUEVO USUARIO</h1>
 				</header>
 
-				<form
-					onSubmit={handleSubmit}
-					className='space-y-4'>
+				<form onSubmit={handleSubmit} className='space-y-4'>
 					{/* Nombre */}
 					<div className='flex flex-col'>
 						<label htmlFor='name'>Nombre</label>
@@ -92,7 +104,7 @@ function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMod
 						/>
 					</div>
 
-					{/* Correo */}
+					{/* Email */}
 					<div className='flex flex-col'>
 						<label htmlFor='email'>Correo Electrónico</label>
 						<input
@@ -106,7 +118,7 @@ function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMod
 						/>
 					</div>
 
-					{/* Contraseña */}
+					{/* Password */}
 					<div className='flex flex-col'>
 						<label htmlFor='password'>Contraseña</label>
 						<input
@@ -124,16 +136,14 @@ function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMod
 					<div className='flex flex-col'>
 						<label htmlFor='role'>Rol</label>
 						<select
+							id='role'
+							name='role'
 							value={userData.role}
 							onChange={handleChange}
-							name='role'
-							id='role'
 							className='border px-3 py-2 rounded-md'>
 							<option value=''>Seleccionar rol</option>
 							{roles.map((role) => (
-								<option
-									key={role._id}
-									value={role._id}>
+								<option key={role._id} value={role._id}>
 									{role.name}
 								</option>
 							))}
@@ -143,15 +153,16 @@ function CreateUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMod
 					{/* Botones */}
 					<div className='w-full flex justify-between mt-6'>
 						<button
-							type='submit'
-							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-							Guardar
-						</button>
-						<button
 							type='button'
 							onClick={onClose}
 							className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
 							Cancelar
+						</button>
+
+						<button
+							type='submit'
+							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
+							Guardar
 						</button>
 					</div>
 				</form>
