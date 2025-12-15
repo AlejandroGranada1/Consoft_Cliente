@@ -18,15 +18,11 @@ interface Props {
 export default function NotificationCard({
 	_id,
 	totalEstimate,
-	status,
 	createdAt,
 	items,
-	adminNotes,
 	refetch,
 }: Props) {
 	const setDesicion = useUserDesicion();
-
-	console.log(items);
 
 	const rejectAlert = async () => {
 		const Swal = (await import('sweetalert2')).default;
@@ -45,9 +41,8 @@ export default function NotificationCard({
 			refetch?.();
 		}
 
-		Swal.fire({
+		await Swal.fire({
 			title: 'Cotización rechazada',
-			text: 'Has rechazado la cotización.',
 			icon: 'error',
 			confirmButtonColor: '#8B5A2B',
 		});
@@ -68,56 +63,110 @@ export default function NotificationCard({
 			refetch?.();
 		}
 
-		Swal.fire({
+		await Swal.fire({
 			title: '¡Gracias por tu respuesta!',
-			text: 'Nos pondremos en contacto contigo pronto.',
 			icon: 'success',
 			confirmButtonColor: '#8B5A2B',
 		});
 	};
 
 	return (
-		<div className='flex flex-col justify-evenly gap-4 bg-white shadow-sm rounded-xl p-4 border border-[#E5E5E5] hover:shadow-md transition'>
-			<h3 className='text-2xl font-semibold text-[#1E293B] mb-2'>
-				Informe del estado de la cotizacion {/*  */}
-			</h3>
-			{items.map((item) => (
-				<div
-					key={item.product._id}
-					className='border-b border-gray-400 py-2'>
-					<details className='cursor-pointer'>
-						<summary>
-							{item.product.name} - Cantidad: {item.quantity}
-						</summary>
-						<p className='text-gray-800 text-sm'>
-							{item.adminNotes
-								? item.adminNotes
-								: 'No hay notas del administrador para este producto'}
-						</p>
-					</details>
-				</div>
-			))}
+		<div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-6">
 
-			<section>
-				<p className='text-lg font-medium text-[#1E293B]'>Total estimado: </p>
-				<p className='text-xl font-semibold text-green'>{formatCOP(totalEstimate)}</p>
-			</section>
-			<p className='text-center'>¿Desea continuar con el pedido?</p>
-			<div className='flex justify-evenly py-4 mt-2'>
-				<button
-					onClick={acceptAlert}
-					className='px-6 py-2 rounded-lg bg-green hover:bg-green-700 text-white transition-colors cursor-pointer'>
-					Continuar
-				</button>
-				<button
-					onClick={rejectAlert}
-					className='px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer'>
-					Rechazar
-				</button>
+			{/* ───── HEADER ───── */}
+			<div>
+				<h3 className="text-xl font-semibold text-[#1E293B]">
+					Detalle de la cotización
+				</h3>
+				<p className="text-sm text-gray-500">
+					{formatDateForInput(createdAt)}
+				</p>
 			</div>
-			<span className='text-sm text-[#8B5E3C] mt-2 block'>
-				{formatDateForInput(createdAt)}
-			</span>
+
+			{/* ───── PRODUCTOS ───── */}
+			<div className="space-y-4">
+				{items.map(item => {
+					const unitPrice = (item as any).price ?? 0;
+					const subtotal = unitPrice * item.quantity;
+
+					return (
+						<div
+							key={item.product._id}
+							className="flex gap-4 border rounded-lg p-4 bg-gray-50"
+						>
+							{/* Imagen */}
+							<img
+								src={item.product.imageUrl || '/placeholder.png'}
+								alt={item.product.name}
+								className="w-20 h-20 rounded-lg object-cover border"
+							/>
+
+							{/* Info */}
+							<div className="flex-1 space-y-1">
+								<p className="font-medium text-[#1E293B]">
+									{item.product.name}
+								</p>
+
+								<p className="text-sm text-gray-600">
+									Precio unitario:{' '}
+									<span className="font-medium">
+										{unitPrice
+											? formatCOP(unitPrice)
+											: 'Pendiente'}
+									</span>
+								</p>
+
+								<p className="text-sm text-gray-600">
+									Cantidad: {item.quantity}
+								</p>
+
+								{unitPrice > 0 && (
+									<p className="text-sm font-medium text-gray-800">
+										Subtotal: {formatCOP(subtotal)}
+									</p>
+								)}
+
+								<p className="text-sm text-gray-700 mt-1">
+									<span className="font-medium">Nota admin:</span>{' '}
+									{item.adminNotes || 'Sin notas'}
+								</p>
+							</div>
+						</div>
+					);
+				})}
+			</div>
+
+			{/* ───── TOTAL ───── */}
+			<div className="border-t pt-4">
+				<p className="text-sm text-gray-500">Total estimado</p>
+				<p className="text-2xl font-semibold text-green-600">
+					{formatCOP(totalEstimate)}
+				</p>
+			</div>
+
+			{/* ───── ACCIONES ───── */}
+			<div className="text-center space-y-4">
+				<p className="text-gray-700 font-medium">
+					¿Desea continuar con el pedido?
+				</p>
+
+				<div className="flex justify-center gap-4">
+					<button
+						onClick={acceptAlert}
+						className="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition"
+					>
+						Continuar
+					</button>
+
+					<button
+						onClick={rejectAlert}
+						className="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition"
+					>
+						Rechazar
+					</button>
+				</div>
+			</div>
+
 		</div>
 	);
 }
