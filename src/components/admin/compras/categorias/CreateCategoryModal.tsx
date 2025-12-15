@@ -1,18 +1,27 @@
 'use client';
 import { X } from 'lucide-react';
 import { DefaultModalProps, Category } from '@/lib/types';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 import { createElement } from '../../global/alerts';
-import api from '@/components/Global/axios';
+
+const initialState: Omit<Category, 'id'> = {
+	name: '',
+	description: '',
+	products: [],
+	_id: undefined,
+};
 
 function CreateCategoryModal({ isOpen, onClose, updateList }: DefaultModalProps<Category>) {
-	const [categoryData, setCategoryData] = useState<Omit<Category, 'id'>>({
-		name: '',
-		description: '',
-		products: [],
-        _id: undefined
-	});
+	const [categoryData, setCategoryData] = useState<Omit<Category, 'id'>>(initialState);
+
+	/* 🔹 LIMPIAR AL CERRAR (MISMO PATRÓN) */
+	useEffect(() => {
+		if (!isOpen) {
+			setCategoryData(initialState);
+		}
+	}, [isOpen]);
 
 	// Maneja cambios en inputs
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,18 +35,27 @@ function CreateCategoryModal({ isOpen, onClose, updateList }: DefaultModalProps<
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
+		/* 🔹 VALIDACIONES (IGUAL QUE SERVICES) */
+		if (!categoryData.name.trim() || !categoryData.description?.trim()) {
+			return Swal.fire(
+				'Campos incompletos',
+				'Nombre y descripción son obligatorios',
+				'warning'
+			);
+		}
+
 		try {
-			const confirm = await createElement('categoría', '/api/categories', categoryData, updateList);
+			const confirm = await createElement(
+				'categoría',
+				'/api/categories',
+				categoryData,
+				updateList
+			);
+
 			if (confirm) {
-				if (updateList) await updateList(); // refresca categorías
+				if (updateList) await updateList();
 				onClose();
-				// Reinicia el formulario
-				setCategoryData({
-					name: '',
-					description: '',
-					products: [],
-                    _id: undefined
-				});
+				setCategoryData(initialState);
 			}
 		} catch (error) {
 			console.error('Error al crear categoría:', error);
@@ -87,19 +105,18 @@ function CreateCategoryModal({ isOpen, onClose, updateList }: DefaultModalProps<
 						/>
 					</div>
 
-
 					{/* Botones */}
 					<div className='w-full flex justify-between mt-10'>
-						<button
-							type='submit'
-							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-							Guardar
-						</button>
 						<button
 							type='button'
 							onClick={onClose}
 							className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
 							Cancelar
+						</button>
+						<button
+							type='submit'
+							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
+							Guardar
 						</button>
 					</div>
 				</form>
