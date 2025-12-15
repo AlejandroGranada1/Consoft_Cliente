@@ -5,13 +5,24 @@ import AuthInput from "@/components/auth/AuthInput";
 import AuthButton from "@/components/auth/AuthButton";
 import { useState } from "react";
 import { useForgotPassword } from "@/hooks/apiHooks";
+import Swal from "sweetalert2";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const { mutate: forgotPassword, isPending, isSuccess, error } = useForgotPassword();
+  const { mutate: forgotPassword, isSuccess, error } = useForgotPassword();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Correo requerido",
+        text: "Por favor ingresa tu correo electrónico.",
+      });
+      return;
+    }
+
     forgotPassword(email);
   };
 
@@ -34,7 +45,10 @@ export default function ForgotPasswordPage() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        <AuthButton text={isPending ? "Enviando..." : "Enviar"} type="submit" />
+        <AuthButton
+          text="Enviar"
+          type="submit"
+        />
 
         {isSuccess && (
           <p className="text-sm text-center text-green-700">
@@ -44,7 +58,8 @@ export default function ForgotPasswordPage() {
 
         {error && (
           <p className="text-sm text-center text-red-700">
-            {(error as any)?.response?.data?.message || "Error al enviar la solicitud"}
+            {(error as any)?.response?.data?.message ||
+              "Error al enviar la solicitud"}
           </p>
         )}
       </form>
