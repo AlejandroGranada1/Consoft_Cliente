@@ -8,98 +8,142 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function PedidosPage() {
-	const { user } = useUser();
+	const { user, loading } = useUser();
 	const router = useRouter();
 
+	/* ───────── PROTEGER RUTA ───────── */
 	useEffect(() => {
-		if (user === null) {
-			router.push('/client/auth/login');
-		}
-	}, [user, router]);
+		if (loading) return;
 
-	if (user === undefined) return null;
+		if (user === null) {
+			(async () => {
+				const Swal = (await import('sweetalert2')).default;
+
+				await Swal.fire({
+					icon: 'warning',
+					title: 'Inicia sesión',
+					text: 'Debes iniciar sesión para ver tus pedidos.',
+				});
+
+				router.push('/client/auth/login');
+			})();
+		}
+	}, [user, loading, router]);
+
+	if (user === undefined) {
+		return <p className="p-6 text-center text-gray-500">Validando sesión...</p>;
+	}
+
 	if (user === null) return null;
 
+	/* ───────── DATA ───────── */
 	const { data, isLoading, error } = useMyOrders();
 	const pedidos: PedidoUI[] = data ?? [];
 
+	/* ───────── UI ───────── */
 	return (
-		<main className='p-6 bg-[#fff9f4] min-h-screen'>
-			<h1 className='text-2xl font-bold text-center text-[#8B5E3C] mb-8'>
-				Mis pedidos
-			</h1>
+		<main className="min-h-screen bg-white p-6">
+			<div className="max-w-6xl mx-auto">
 
-			{isLoading && (
-				<div className='bg-yellow-50 border border-yellow-200 rounded-xl p-10 text-center text-[#8B5E3C] text-lg shadow-sm'>
-					Cargando pedidos...
-				</div>
-			)}
+				{/* TITULO */}
+				<h1 className="text-2xl font-semibold text-[#0F172A] text-center mb-8">
+					Mis pedidos
+				</h1>
 
-			{error && (
-				<div className='bg-red-50 border border-red-200 rounded-xl p-10 text-center text-red-700 text-lg shadow-sm'>
-					Error cargando pedidos
-				</div>
-			)}
+				{/* LOADING */}
+				{isLoading && (
+					<div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center text-gray-500">
+						Cargando pedidos...
+					</div>
+				)}
 
-			{!isLoading && !error && pedidos.length === 0 && (
-				<div className='bg-yellow-50 border border-yellow-200 rounded-xl p-10 text-center text-[#8B5E3C] text-lg shadow-sm'>
-					Aún no tienes pedidos
-				</div>
-			)}
+				{/* ERROR */}
+				{error && (
+					<div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center text-red-600">
+						Ocurrió un error cargando tus pedidos
+					</div>
+				)}
 
-			{pedidos.length > 0 && (
-				<div className='overflow-x-auto shadow-lg rounded-xl border border-gray-200'>
-					<table className='min-w-full text-sm text-center bg-white rounded-lg'>
-						<thead className='bg-[#8B5E3C] text-white'>
-							<tr>
-								<th className='py-3 px-4'>Pedido</th>
-								<th className='py-3 px-4'>Estado</th>
-								<th className='py-3 px-4'>Valor Acordado</th>
-								<th className='py-3 px-4'>Días Restantes</th>
-								<th className='py-3 px-4'>Restante</th>
-								<th className='py-3 px-4'>Acción</th>
-							</tr>
-						</thead>
-						<tbody>
-							{pedidos.map((p: PedidoUI) => (
-								<tr
-									key={p.id}
-									className='border-b hover:bg-yellow-50 transition-colors'
-								>
-									<td className='py-3 px-4 font-medium text-[#1E293B]'>
-										{p.nombre}
-									</td>
+				{/* EMPTY */}
+				{!isLoading && !error && pedidos.length === 0 && (
+					<div className="bg-gray-50 border border-gray-200 rounded-xl p-10 text-center">
+						<p className="text-gray-600 mb-4">
+							Aún no tienes pedidos registrados
+						</p>
+						<Link
+							href="/client/productos"
+							className="inline-block px-6 py-2 rounded-full bg-[#8B5E3C] text-white hover:bg-[#6B4226] transition"
+						>
+							Explorar productos
+						</Link>
+					</div>
+				)}
 
-									<td className='py-3 px-4'>
-										<span
-											className={`px-3 py-1 rounded-full text-xs font-semibold ${
-												p.estado === 'Listo'
-													? 'bg-green-100 text-green-700'
-													: 'bg-yellow-100 text-yellow-700'
-											}`}
-										>
-											{p.estado}
-										</span>
-									</td>
-
-									<td className='py-3 px-4'>{p.valor}</td>
-									<td className='py-3 px-4'>{p.dias}</td>
-									<td className='py-3 px-4'>${p.restante}</td>
-
-									<td className='py-3 px-4'>
-										<Link
-											href={`/client/pedidos/${p.id}`}
-											className='inline-block px-4 py-1 bg-[#8B5E3C] text-white rounded-full text-xs font-medium shadow hover:bg-[#5C3A21] transition-colors'
-										>
-											Ver más
-										</Link>
-									</td>
+				{/* TABLA */}
+				{pedidos.length > 0 && (
+					<div className="overflow-x-auto border border-gray-200 rounded-xl shadow-sm">
+						<table className="min-w-full text-sm bg-white">
+							<thead className="bg-[#8B5E3C] text-white">
+								<tr>
+									<th className="py-3 px-4 text-left">Pedido</th>
+									<th className="py-3 px-4 text-center">Estado</th>
+									<th className="py-3 px-4 text-center">Valor</th>
+									<th className="py-3 px-4 text-center">Entrega</th>
+									<th className="py-3 px-4 text-center">Restante</th>
+									<th className="py-3 px-4 text-right">Acción</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
-				</div>
-			)}
+							</thead>
+
+							<tbody>
+								{pedidos.map((p: PedidoUI) => (
+									<tr
+										key={p.id}
+										className="border-b last:border-none hover:bg-gray-50 transition"
+									>
+										<td className="py-3 px-4 font-medium text-[#0F172A]">
+											{p.nombre}
+										</td>
+
+										<td className="py-3 px-4 text-center">
+											<span
+												className={`px-3 py-1 rounded-full text-xs font-semibold
+													${p.estado === 'Listo'
+														? 'bg-green-100 text-green-700'
+														: 'bg-yellow-100 text-yellow-700'
+													}`}
+											>
+												{p.estado}
+											</span>
+										</td>
+
+										<td className="py-3 px-4 text-center">
+											{p.valor}
+										</td>
+
+										<td className="py-3 px-4 text-center">
+											{p.dias}
+										</td>
+
+										<td className="py-3 px-4 text-center">
+											${p.restante}
+										</td>
+
+										<td className="py-3 px-4 text-right">
+											<Link
+												href={`/client/pedidos/${p.id}`}
+												className="inline-block px-4 py-2 rounded-full bg-[#8B5E3C]
+													text-white text-xs font-medium hover:bg-[#6B4226] transition"
+											>
+												Ver detalle
+											</Link>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				)}
+			</div>
 		</main>
 	);
 }
