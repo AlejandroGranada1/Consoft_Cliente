@@ -1,23 +1,37 @@
 'use client';
 import { X } from 'lucide-react';
 import { DefaultModalProps, Service } from '@/lib/types';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 import { createElement } from '../../global/alerts';
 
+const initialState: Service = {
+  _id: undefined,
+  name: '',
+  description: '',
+  imageUrl: '',
+  status: true,
+};
+
 function CreateServiceModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Service>) {
-  const [serviceData, setServiceData] = useState<Service>({
-    _id: undefined,
-    name: '',
-    description: '',
-    imageUrl: '',
-    status: true,
-  });
+  const [serviceData, setServiceData] = useState<Service>(initialState);
+
+  /* -------- LIMPIAR MODAL AL CERRAR -------- */
+  useEffect(() => {
+    if (!isOpen) {
+      setServiceData(initialState);
+    }
+  }, [isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
-    if (name === 'imageUrl' && files) {
-      setServiceData((prev) => ({ ...prev, imageUrl: URL.createObjectURL(files[0]) }));
+
+    if (name === 'imageUrl' && files && files[0]) {
+      setServiceData((prev) => ({
+        ...prev,
+        imageUrl: URL.createObjectURL(files[0]),
+      }));
     } else {
       setServiceData((prev) => ({ ...prev, [name]: value }));
     }
@@ -25,11 +39,28 @@ function CreateServiceModal({ isOpen, onClose, extraProps, updateList }: Default
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    /* -------- VALIDACIONES -------- */
+    if (!serviceData.name.trim() || !serviceData.description?.trim()) {
+      return Swal.fire(
+        'Campos incompletos',
+        'Todos los campos son obligatorios',
+        'warning'
+      );
+    }
+
+    if (!serviceData.imageUrl) {
+      return Swal.fire(
+        'Imagen requerida',
+        'Debe seleccionar una imagen para el servicio',
+        'warning'
+      );
+    }
+
     await createElement('Servicio', '/api/services', serviceData, updateList);
     console.log('Servicio creado:', serviceData);
 
-    // Reset formulario
-    setServiceData({ _id: undefined, name: '', description: '', imageUrl: '', status: true });
+    setServiceData(initialState);
     onClose();
   };
 
@@ -92,15 +123,15 @@ function CreateServiceModal({ isOpen, onClose, extraProps, updateList }: Default
             {/* Botones */}
             <div className='w-full flex justify-between mt-10'>
               <button
-                type='submit'
-                className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-                Guardar
-              </button>
-              <button
                 type='button'
                 onClick={onClose}
                 className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
                 Cancelar
+              </button>
+              <button
+                type='submit'
+                className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
+                Guardar
               </button>
             </div>
           </form>
@@ -108,7 +139,11 @@ function CreateServiceModal({ isOpen, onClose, extraProps, updateList }: Default
           {/* Preview de la imagen */}
           <div className='border rounded-lg flex items-center justify-center'>
             {serviceData.imageUrl && (
-              <img src={serviceData.imageUrl} alt='Preview' className='max-h-40 object-contain' />
+              <img
+                src={serviceData.imageUrl}
+                alt='Preview'
+                className='max-h-40 object-contain'
+              />
             )}
           </div>
         </section>
