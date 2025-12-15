@@ -48,7 +48,7 @@ function Page() {
 		try {
 			Swal.fire({
 				title: '¿Estas seguro de eliminar este Usuario?',
-				text: 'Esta accion es irreversible',
+				text: 'Esta acción es irreversible',
 				icon: 'warning',
 				showCancelButton: true,
 				showConfirmButton: true,
@@ -83,50 +83,44 @@ function Page() {
 	};
 
 	return (
-		<div className='px-4 md:px-20'>
-			<header className='flex flex-col gap-4 md:h-40 justify-around'>
-				<h1 className='text-xl md:text-2xl text-brown text-center md:text-left'>
+		<div className="px-4 md:px-20">
+			<header className="flex flex-col gap-4 md:h-40 justify-around">
+				<h1 className="text-xl md:text-2xl text-brown text-center md:text-left">
 					GESTIÓN DE USUARIOS
 				</h1>
 
-				<div className='flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center'>
-					<div className='relative w-full md:w-64'>
-						<Search className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+				<div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+					<div className="relative w-full md:w-64">
+						<Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
 
-						<datalist id='users'>
+						<datalist id="users">
 							{users?.map((u: User) => (
-								<option
-									key={u._id}
-									value={u.name}></option>
+								<option key={u._id} value={u.name}></option>
 							))}
 						</datalist>
 
 						<input
-							type='text'
-							list='users'
-							placeholder='Buscar Usuario'
+							type="text"
+							list="users"
+							placeholder="Buscar Usuario"
 							value={filterText}
 							onChange={(e) => setFilterText(e.target.value)}
-							className='pl-10 pr-4 py-2 border border-brown rounded-lg w-full text-sm placeholder-gray-400 focus:outline-none focus:ring focus:ring-brown'
+							className="pl-10 pr-4 py-2 border border-brown rounded-lg w-full text-sm placeholder-gray-400 focus:outline-none focus:ring focus:ring-brown"
 						/>
 					</div>
 
 					<button
 						onClick={() => setCreateModal(true)}
-						className='flex items-center justify-center py-2 px-6 md:px-10 border border-brown rounded-lg cursor-pointer text-brown w-full md:w-fit'>
-						<Plus
-							size={25}
-							className='mr-2'
-						/>{' '}
-						Agregar Nuevo Usuario
+						className="flex items-center justify-center py-2 px-6 md:px-10 border border-brown rounded-lg cursor-pointer text-brown w-full md:w-fit"
+					>
+						<Plus size={25} className="mr-2" /> Agregar Nuevo Usuario
 					</button>
 				</div>
 			</header>
 
-			<section className='w-full mx-auto mt-6 flex flex-col justify-between border-t border-gray'>
+			<section className="w-full mx-auto mt-6 flex flex-col justify-between border-t border-gray">
 				{/* Encabezado tabla - solo en desktop */}
-				<div className='hidden md:grid grid-cols-7 place-items-center py-6 font-semibold'>
-					<p></p>
+				<div className="hidden md:grid grid-cols-6 place-items-center py-6 font-semibold">
 					<p>Usuario</p>
 					<p>Correo</p>
 					<p>Rol</p>
@@ -153,7 +147,7 @@ function Page() {
 						/>
 					))
 				) : (
-					<div className='text-center py-8 text-gray-500'>
+					<div className="text-center py-8 text-gray-500">
 						No hay usuarios para mostrar
 					</div>
 				)}
@@ -164,7 +158,7 @@ function Page() {
 						count={totalPages}
 						page={currentPage}
 						onChange={(_, newPage) => setCurrentPage(newPage)}
-						className='mt-6'
+						className="mt-6"
 					/>
 				)}
 			</section>
