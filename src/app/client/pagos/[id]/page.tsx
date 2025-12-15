@@ -10,57 +10,81 @@ export default function PagoPage() {
 	const router = useRouter();
 	const { id: pedidoId } = useParams();
 	const sendPayment = useSendPayment();
-	const [metodo, setMetodo] = useState<'Nequi' | 'Bancolombia' | null>(null);
-	const [comprobantePreview, setComprobantePreview] = useState<string | null>(null);
-	const [file, setFile] = useState<File | null>(null);
-	const [tipoPago, setTipoPago] = useState<'abono' | 'final' | null>(null);
+
 	const { user, loading } = useUser();
 
-	useEffect(() => {
-		if (loading) return; // ⛔ aún validando sesión
+	const [metodo, setMetodo] = useState<'Nequi' | 'Bancolombia' | null>(null);
+	const [tipoPago, setTipoPago] = useState<'abono' | 'final' | null>(null);
+	const [file, setFile] = useState<File | null>(null);
+	const [preview, setPreview] = useState<string | null>(null);
 
-		if (user === null) {
+	/* ───────── AUTH ───────── */
+	useEffect(() => {
+		if (loading) return;
+
+		if (!user) {
 			(async () => {
 				const Swal = (await import('sweetalert2')).default;
 
 				await Swal.fire({
 					icon: 'warning',
 					title: 'Inicia sesión',
-					text: 'Debes registrarte o iniciar sesión para agendar una cita.',
+					text: 'Debes iniciar sesión para realizar un pago.',
 				});
 
 				router.push('/client/auth/login');
 			})();
 		}
-	}, [user, router]);
+	}, [user, loading, router]);
 
-	if (user === undefined) {
-		return <p className='p-6'>Validando sesión...</p>;
-	}
+	if (!user) return null;
 
-	if (user === null) {
-		return null;
-	}
-
+	/* ───────── FILE ───────── */
 	const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-		if (e.target.files && e.target.files[0]) {
-			const f = e.target.files[0];
-			setFile(f);
-			setComprobantePreview(URL.createObjectURL(f));
-		}
+		const f = e.target.files?.[0];
+		if (!f) return;
+
+		setFile(f);
+		setPreview(URL.createObjectURL(f));
 	};
 
+	/* ───────── CONFIRM ───────── */
 	const confirmarPago = async () => {
 		const Swal = (await import('sweetalert2')).default;
 
+		if (!metodo) {
+			return Swal.fire({
+				icon: 'warning',
+				title: 'Selecciona un método de pago',
+			});
+		}
+
 		if (!file) {
-			Swal.fire({ icon: 'warning', title: 'Falta comprobante' });
-			return;
+			return Swal.fire({
+				icon: 'warning',
+				title: 'Falta el comprobante',
+				text: 'Debes subir el comprobante del pago.',
+			});
 		}
+
 		if (!tipoPago) {
-			Swal.fire({ icon: 'warning', title: 'Selecciona tipo de pago' });
-			return;
+			return Swal.fire({
+				icon: 'warning',
+				title: 'Selecciona el tipo de pago',
+			});
 		}
+
+		const confirm = await Swal.fire({
+			title: '¿Confirmar pago?',
+			text: 'El comprobante será enviado para verificación.',
+			icon: 'question',
+			showCancelButton: true,
+			confirmButtonText: 'Confirmar',
+			cancelButtonText: 'Cancelar',
+			reverseButtons: true, // ✅ confirmar a la derecha
+		});
+
+		if (!confirm.isConfirmed) return;
 
 		sendPayment.mutate(
 			{
@@ -69,108 +93,141 @@ export default function PagoPage() {
 				tipoPago,
 			},
 			{
-				onSuccess: () => {
-					Swal.fire({
+				onSuccess: async () => {
+					await Swal.fire({
 						icon: 'success',
 						title: 'Pago enviado',
-						text: 'Tu comprobante está en verificación',
-					}).then(() => router.push('/client/pedidos'));
+						text: 'Tu comprobante está en verificación.',
+					});
+
+					router.push('/client/pedidos');
 				},
 				onError: () => {
 					Swal.fire({
 						icon: 'error',
 						title: 'Error al enviar el pago',
-						text: 'Intenta nuevamente',
+						text: 'Intenta nuevamente.',
 					});
 				},
 			}
 		);
 	};
 
+	/* ───────── UI ───────── */
 	return (
-		<main className='p-6 min-h-screen bg-[#FAF4EF] flex flex-col justify-between'>
-			<div>
-				<button
-					onClick={() => router.back()}
-					className='mb-6 flex items-center gap-2 px-4 py-2 bg-[#6B4226] text-white rounded-full shadow hover:bg-[#4e2f1b]'>
-					Volver
-				</button>
+		<main className="min-h-screen bg-white p-6 flex justify-center">
+			<div className="w-full max-w-xl space-y-8">
 
-				<h1 className='text-2xl font-bold text-center text-[#5C3A21] mb-8'>
-					Realizar Pago
-				</h1>
-
-				<div className='grid grid-cols-2 gap-6 mb-10'>
+				{/* HEADER */}
+				<div className="flex items-center justify-between">
 					<button
-						onClick={() => setMetodo('Nequi')}
-						className={`p-4 rounded-xl border shadow text-center ${
-							metodo === 'Nequi' ? 'bg-[#FFD9E6] border-pink-400' : 'bg-white'
-						}`}>
-						<p className='font-bold text-[#8B5E3C]'>Nequi</p>
+						onClick={() => router.back()}
+						className="px-4 py-2 rounded-full bg-[#8B5E3C] text-white text-sm hover:bg-[#6B4226] transition"
+					>
+						Volver
 					</button>
 
-					<button
-						onClick={() => setMetodo('Bancolombia')}
-						className={`p-4 rounded-xl border shadow text-center ${
-							metodo === 'Bancolombia' ? 'bg-[#FFF1C4] border-yellow-400' : 'bg-white'
-						}`}>
-						<p className='font-bold text-[#8B5E3C]'>Bancolombia</p>
-					</button>
+					<h1 className="text-xl font-semibold text-[#0F172A]">
+						Realizar pago
+					</h1>
+
+					<div className="w-16" />
 				</div>
-				<div className='flex justify-center'>{metodo && <QR type={metodo!} />}</div>
-				<div className='mb-10'>
-					<p className='font-semibold text-[#8B5E3C] mb-2'>Comprobante</p>
 
-					{comprobantePreview ? (
-						<img
-							src={comprobantePreview}
-							alt='Comprobante'
-							className='w-full h-64 object-contain border rounded-lg shadow mb-4'
-						/>
-					) : (
-						<div className='w-full h-64 border rounded-lg flex items-center justify-center text-gray-500 mb-4'>
-							Sin archivo seleccionado
-						</div>
-					)}
+				{/* MÉTODO */}
+				<div>
+					<p className="font-medium text-gray-700 mb-3">
+						Método de pago
+					</p>
+
+					<div className="grid grid-cols-2 gap-4">
+						{['Nequi', 'Bancolombia'].map(m => (
+							<button
+								key={m}
+								onClick={() => setMetodo(m as any)}
+								className={`p-4 rounded-xl border transition
+									${metodo === m
+										? 'border-[#8B5E3C] bg-[#F9F5F1]'
+										: 'border-gray-200 bg-white hover:bg-gray-50'
+									}`}
+							>
+								<p className="font-semibold text-[#0F172A]">
+									{m}
+								</p>
+							</button>
+						))}
+					</div>
+				</div>
+
+				{/* QR */}
+				{metodo && (
+					<div className="flex justify-center border border-gray-200 rounded-xl p-4">
+						<QR type={metodo} />
+					</div>
+				)}
+
+				{/* COMPROBANTE */}
+				<div>
+					<p className="font-medium text-gray-700 mb-2">
+						Comprobante
+					</p>
+
+					<div className="border border-gray-200 rounded-xl bg-white p-3">
+						{preview ? (
+							<img
+								src={preview}
+								alt="Comprobante"
+								className="w-full h-52 object-contain rounded-lg"
+							/>
+						) : (
+							<div className="h-52 flex items-center justify-center text-gray-400">
+								Sin archivo seleccionado
+							</div>
+						)}
+					</div>
 
 					<input
-						type='file'
-						accept='image/*'
+						type="file"
+						accept="image/*"
 						onChange={handleFile}
-						className='w-full bg-white p-2 border rounded shadow'
+						className="mt-3 w-full text-sm"
 					/>
 				</div>
 
-				<div className='mb-6'>
-					<p className='font-semibold text-[#8B5E3C] mb-2'>Tipo de pago</p>
+				{/* TIPO */}
+				<div>
+					<p className="font-medium text-gray-700 mb-3">
+						Tipo de pago
+					</p>
 
-					<div className='grid grid-cols-2 gap-6'>
-						<button
-							onClick={() => setTipoPago('abono')}
-							className={`p-3 rounded-xl border shadow ${
-								tipoPago === 'abono' ? 'bg-[#F3E8D5] border-[#D1B08C]' : 'bg-white'
-							}`}>
-							Abono
-						</button>
-
-						<button
-							onClick={() => setTipoPago('final')}
-							className={`p-3 rounded-xl border shadow ${
-								tipoPago === 'final' ? 'bg-[#F3E8D5] border-[#D1B08C]' : 'bg-white'
-							}`}>
-							Pago Final
-						</button>
+					<div className="grid grid-cols-2 gap-4">
+						{['abono', 'final'].map(t => (
+							<button
+								key={t}
+								onClick={() => setTipoPago(t as any)}
+								className={`p-3 rounded-xl border transition
+									${tipoPago === t
+										? 'border-[#8B5E3C] bg-[#F9F5F1]'
+										: 'border-gray-200 bg-white hover:bg-gray-50'
+									}`}
+							>
+								{t === 'abono' ? 'Abono' : 'Pago final'}
+							</button>
+						))}
 					</div>
 				</div>
-			</div>
 
-			<div className='mt-10 flex justify-end'>
-				<button
-					onClick={confirmarPago}
-					className='px-6 py-3 bg-[#8B5E3C] text-white rounded-full shadow hover:bg-[#5C3A21] transition-colors'
-					disabled={sendPayment.isPending}>
-					{sendPayment.isPending ? 'Enviando...' : 'Confirmar Pago'}
-				</button>
+				{/* CONFIRM */}
+				<div className="flex justify-end pt-4">
+					<button
+						onClick={confirmarPago}
+						disabled={sendPayment.isPending}
+						className="px-6 py-3 rounded-full bg-[#8B5E3C] text-white font-medium hover:bg-[#6B4226] disabled:opacity-50 transition"
+					>
+						{sendPayment.isPending ? 'Enviando…' : 'Confirmar pago'}
+					</button>
+				</div>
+
 			</div>
 		</main>
 	);
