@@ -2,9 +2,16 @@
 import { X } from 'lucide-react';
 import { DefaultModalProps, Category } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 import { updateElement } from '../../global/alerts';
-import api from '@/components/Global/axios';
+
+const initialState: Category = {
+	_id: '',
+	name: '',
+	description: '',
+	products: [],
+};
 
 function EditCategoryModal({
 	isOpen,
@@ -12,19 +19,18 @@ function EditCategoryModal({
 	extraProps,
 	updateList,
 }: DefaultModalProps<Category>) {
-	const [categoryData, setCategoryData] = useState<Category>({
-		_id: '',
-		name: '',
-		description: '',
-		products: [],
-	});
+	const [categoryData, setCategoryData] = useState<Category>(initialState);
 
-	// 🔹 Prellenar datos cuando se abre el modal
+	/* 🔹 PRELLENAR / LIMPIAR (MISMO QUE SERVICES) */
 	useEffect(() => {
-		if (extraProps) {
+		if (isOpen && extraProps) {
 			setCategoryData(extraProps);
 		}
-	}, [extraProps, isOpen]);
+
+		if (!isOpen) {
+			setCategoryData(initialState);
+		}
+	}, [isOpen, extraProps]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -37,12 +43,23 @@ function EditCategoryModal({
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
+		/* 🔹 VALIDACIONES */
+		if (!categoryData.name.trim() || !categoryData.description?.trim()) {
+			return Swal.fire(
+				'Campos incompletos',
+				'Nombre y descripción son obligatorios',
+				'warning'
+			);
+		}
+
 		try {
-			// llamada al helper (muestra alertas)
-			const resposne = await updateElement(
+			await updateElement(
 				'Categoría',
 				`/api/categories/${categoryData._id}`,
-				{ name: categoryData.name, description: categoryData.description },
+				{
+					name: categoryData.name,
+					description: categoryData.description,
+				},
 				updateList
 			);
 
@@ -96,15 +113,15 @@ function EditCategoryModal({
 					{/* Botones */}
 					<div className='w-full flex justify-between mt-10'>
 						<button
-							type='submit'
-							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-							Guardar
-						</button>
-						<button
 							type='button'
 							onClick={onClose}
 							className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
 							Cancelar
+						</button>
+						<button
+							type='submit'
+							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
+							Guardar
 						</button>
 					</div>
 				</form>
