@@ -51,7 +51,7 @@ export default function NotificationsPage() {
 	);
 
 
-	console.log(allQuotations)
+	console.log(notifications)
 	/* seleccionar la primera automáticamente */
 	useEffect(() => {
 		if (!selectedId && notifications.length > 0) {

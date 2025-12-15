@@ -19,7 +19,7 @@ export default function RoleRow({ role, onView, onEdit, onDelete }: RoleRowProps
 			</p>
 
 			{/* Descripción */}
-			<p className='table-item'>
+			<p className='table-item truncate w-20'>
 				<span className='font-semibold md:hidden'>Descripción: </span>
 				{role.description}
 			</p>

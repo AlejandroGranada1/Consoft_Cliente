@@ -19,7 +19,7 @@ export default function Navbar() {
 	};
 
 	return (
-		<nav className='flex items-center justify-between px-6 py-4 bg-white shadow-sm relative'>
+		<nav className='flex items-center justify-between px-6 py-4 bg-white shadow-sm relative text-sm'>
 			<Link
 				href='/client'
 				className='text-xl font-bold'>
@@ -59,7 +59,7 @@ export default function Navbar() {
 				</Link>
 				<Link
 					href='/client/servicios'
-					className={`relative pb-1 ${isActive('/client/servicios') && 'font-semibold'}`}>
+					className={`relative pb-1 mr-2 ${isActive('/client/servicios') && 'font-semibold'}`}>
 					Servicios
 					{isActive('/client/servicios') && (
 						<span className='absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]'></span>

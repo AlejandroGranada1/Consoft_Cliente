@@ -12,6 +12,8 @@ export default function PedidosPage() {
 	const router = useRouter();
 	const { data, isLoading, error } = useMyOrders();
 
+	console.log(data?.raw)
+
 	/* ───────── PROTEGER RUTA ───────── */
 	useEffect(() => {
 		if (loading) return;

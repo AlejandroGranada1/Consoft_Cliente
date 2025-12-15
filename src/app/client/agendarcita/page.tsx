@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Calendar, TimePicker, FormField, ServiceSelector } from '@/components/agenda';
-import { useAddVisit } from '@/hooks/apiHooks';
+import { useCreateVisit } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import Swal from 'sweetalert2';
 
@@ -14,7 +14,7 @@ export default function ScheduleSection() {
 
 	const { user } = useUser();
 
-	const addVisit = useAddVisit();
+	const addVisit = useCreateVisit();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();

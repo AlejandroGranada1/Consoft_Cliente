@@ -32,7 +32,7 @@ export default function UserRow({ onDelete, onEdit, onView, user }: UserRowProps
 			</p>
 
 			{/* Correo */}
-			<p className='table-item'>
+			<p className='table-item truncate w-20'>
 				<span className='font-semibold md:hidden'>Correo: </span>
 				{user.email}
 			</p>
@@ -40,7 +40,7 @@ export default function UserRow({ onDelete, onEdit, onView, user }: UserRowProps
 			{/* Rol */}
 			<p className='table-item'>
 				<span className='font-semibold md:hidden'>Rol: </span>
-				{(user.role as Role).name}
+				{(user.role as Role)?.name}
 			</p>
 
 			{/* Fecha de Registro */}
