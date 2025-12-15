@@ -2,46 +2,53 @@
 import { X } from 'lucide-react';
 import { DefaultModalProps, Category, Product } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 import api from '@/components/Global/axios';
 import { updateElement } from '../../global/alerts';
 
-function EditProductModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Product>) {
-	// 📌 Estado único para el formulario
-	const [formData, setFormData] = useState<{
-		_id: string;
-		name: string;
-		description: string;
-		category: string; // solo guardamos el id
-		imageUrl: string;
-		status: boolean;
-		imageFile?: File;
-	}>({
-		_id: '',
-		name: '',
-		description: '',
-		category: '',
-		imageUrl: '',
-		status: true,
-	});
+const initialState = {
+	_id: '',
+	name: '',
+	description: '',
+	category: '',
+	imageUrl: '',
+	status: true,
+	imageFile: undefined as File | undefined,
+};
 
+function EditProductModal({
+	isOpen,
+	onClose,
+	extraProps,
+	updateList,
+}: DefaultModalProps<Product>) {
+	const [formData, setFormData] = useState(initialState);
 	const [categories, setCategories] = useState<Category[]>([]);
 
-	// 📌 Prellenar datos cuando se abre
+	/* 🔹 Prellenar datos */
 	useEffect(() => {
 		if (extraProps) {
 			setFormData({
 				_id: extraProps._id!,
 				name: extraProps.name,
-				description: extraProps.description!,
+				description: extraProps.description || '',
 				category: extraProps.category?._id || '',
 				imageUrl: extraProps.imageUrl || '',
 				status: extraProps.status,
+				imageFile: undefined,
 			});
 		}
 	}, [extraProps, isOpen]);
 
-	// 📌 Traer categorías
+	/* 🔹 Limpiar modal al cerrar */
+	useEffect(() => {
+		if (!isOpen) {
+			setFormData(initialState);
+		}
+	}, [isOpen]);
+
+	/* 🔹 Cargar categorías */
 	useEffect(() => {
 		const fetchCategories = async () => {
 			try {
@@ -51,35 +58,64 @@ function EditProductModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 				console.error('Error al cargar categorías', err);
 			}
 		};
+
 		if (isOpen) fetchCategories();
 	}, [isOpen]);
 
-	// 📌 Manejo de inputs
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+	const handleChange = (
+		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+	) => {
+		const { name, value, type, checked } = e.target as HTMLInputElement;
+
 		setFormData((prev) => ({
 			...prev,
-			[e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value,
+			[name]: type === 'checkbox' ? checked : value,
 		}));
 	};
 
-	// 📌 Manejo de archivo
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		if (e.target.files && e.target.files[0]) {
-			const file = e.target.files[0];
+		const file = e.target.files?.[0];
+		if (file) {
 			setFormData((prev) => ({
 				...prev,
-				imageUrl: URL.createObjectURL(file), // preview local
 				imageFile: file,
+				imageUrl: URL.createObjectURL(file),
 			}));
 		}
 	};
 
-	// 📌 Enviar formulario
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		/* 🔹 VALIDACIONES (igual patrón) */
+		if (!formData.name.trim() || !formData.description.trim()) {
+			return Swal.fire(
+				'Campos incompletos',
+				'Nombre y descripción son obligatorios',
+				'warning'
+			);
+		}
+
+		if (!formData.category) {
+			return Swal.fire(
+				'Categoría requerida',
+				'Debe seleccionar una categoría',
+				'warning'
+			);
+		}
+
 		try {
-			await updateElement('Producto', `/api/products/${formData._id}`, formData, updateList);
-			onClose();
+			const confirm = await updateElement(
+				'Producto',
+				`/api/products/${formData._id}`,
+				formData,
+				updateList
+			);
+
+			if (confirm) {
+				onClose();
+				setFormData(initialState);
+			}
 		} catch (err) {
 			console.error('Error al actualizar producto', err);
 		}
@@ -99,9 +135,7 @@ function EditProductModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 					<h1 className='text-xl font-semibold mb-4'>EDITAR PRODUCTO</h1>
 				</header>
 
-				<form
-					onSubmit={handleSubmit}
-					className='grid grid-cols-2 gap-6'>
+				<form onSubmit={handleSubmit} className='grid grid-cols-2 gap-6'>
 					<div className='flex flex-col gap-4'>
 						{/* Nombre */}
 						<div className='flex flex-col'>
@@ -120,16 +154,14 @@ function EditProductModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 						<div className='flex flex-col'>
 							<label htmlFor='category'>Categoría</label>
 							<select
-								name='category'
 								id='category'
+								name='category'
 								value={formData.category}
 								onChange={handleChange}
 								className='border px-3 py-2 rounded-md'>
 								<option value=''>Seleccione una categoría</option>
 								{categories.map((c) => (
-									<option
-										key={c._id}
-										value={c._id}>
+									<option key={c._id} value={c._id}>
 										{c.name}
 									</option>
 								))}
@@ -154,7 +186,6 @@ function EditProductModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 							<label htmlFor='image'>Imagen</label>
 							<input
 								id='image'
-								name='image'
 								type='file'
 								accept='image/*'
 								onChange={handleFileChange}
@@ -165,9 +196,8 @@ function EditProductModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 						{/* Estado */}
 						<div className='flex items-center gap-3 mt-2'>
 							<input
-								id='status'
-								name='status'
 								type='checkbox'
+								name='status'
 								checked={formData.status}
 								onChange={handleChange}
 								className='h-4 w-4 cursor-pointer'
@@ -178,7 +208,7 @@ function EditProductModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 						</div>
 					</div>
 
-					{/* Preview de imagen */}
+					{/* Preview */}
 					<div className='border rounded-lg flex justify-center items-center'>
 						{formData.imageUrl ? (
 							<img
@@ -194,15 +224,15 @@ function EditProductModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 					{/* Botones */}
 					<div className='col-span-2 flex justify-between mt-6'>
 						<button
-							type='submit'
-							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-							Guardar
-						</button>
-						<button
 							type='button'
 							onClick={onClose}
 							className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
 							Cancelar
+						</button>
+						<button
+							type='submit'
+							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
+							Guardar
 						</button>
 					</div>
 				</form>
