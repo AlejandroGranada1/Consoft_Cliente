@@ -1,63 +1,90 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import NotificationCard from '@/components/notificaciones/NotificationCard';
 import EmptyState from '@/components/notificaciones/EmptyState';
 import { useMyCart } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 
 export default function NotificationsPage() {
-	const router = useRouter();
-	const { user, loading } = useUser();
+	const { user } = useUser();
 	const { data: cart, refetch } = useMyCart();
-	
+
+	const [selectedId, setSelectedId] = useState<string | null>(null);
+
+	/* 🚨 proteger ruta */
 	useEffect(() => {
-		if (loading) return; // ⛔ aún validando sesión
-
 		if (user === null) {
-			(async () => {
-				const Swal = (await import('sweetalert2')).default;
-
-				await Swal.fire({
-					icon: 'warning',
-					title: 'Inicia sesión',
-					text: 'Debes registrarte o iniciar sesión para agendar una cita.',
-				});
-
-				router.push('/client/auth/login');
-			})();
+			redirect('/auth/login');
 		}
-	}, [user, router]);
+	}, [user]);
 
-	if (user === undefined || user === null) return null;
+	if (!user) return null;
 
+	const quotations =
+		cart?.quotations?.filter(q => q.status === 'cotizada') ?? [];
+
+	/* seleccionar la primera automáticamente */
+	useEffect(() => {
+		if (!selectedId && quotations.length > 0) {
+			setSelectedId(quotations[0]._id);
+		}
+	}, [quotations, selectedId]);
+
+	const selectedQuote = quotations.find(q => q._id === selectedId);
 
 	return (
-		<section className='bg-[#f9f9f9] min-h-screen py-10 px-6'>
-			<div className='max-w-2xl mx-auto'>
-				<h1 className='text-2xl font-bold text-[#1E293B] mb-6'>Notificaciones</h1>
+		<section className="bg-[#f9f9f9] min-h-screen p-6">
+			<h1 className="text-2xl font-bold text-[#1E293B] mb-6">
+				Notificaciones
+			</h1>
 
-				{cart?.quotations?.length! > 0 && (
-					<div className='space-y-4'>
-						{cart?.quotations.map((quote: any) => {
-							return quote.status === 'cotizada' ? (
-								<NotificationCard
-									key={quote._id}
-									createdAt={quote.createdAt}
-									totalEstimate={quote.totalEstimate}
-									_id={quote._id}
-									status={quote.status}
-									items={quote.items}
-									refetch={refetch}
-									adminNotes={quote.adminNotes}
-								/>
-							) : (
-								<EmptyState key={`empty-${quote._id}`} />
-							);
-						})}
-					</div>
-				)}
+			{quotations.length === 0 && <EmptyState />}
+
+			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+				{/* ───── LISTA IZQUIERDA ───── */}
+				<div className="space-y-2">
+					{quotations.map(q => (
+						<button
+							key={q._id}
+							onClick={() => setSelectedId(q._id)}
+							className={`w-full text-left p-4 rounded-lg border transition
+								${q._id === selectedId
+									? 'bg-blue-50 border-blue-400'
+									: 'bg-white hover:bg-gray-50'
+								}`}
+						>
+							<p className="font-semibold">
+								Cotización #{q._id.slice(-5)}
+							</p>
+							<p className="text-sm text-gray-500">
+								{q.items.length} productos
+							</p>
+						</button>
+					))}
+				</div>
+
+				{/* ───── DETALLE DERECHA ───── */}
+				<div className="md:col-span-2">
+					{selectedQuote ? (
+						<NotificationCard
+							_id={selectedQuote._id}
+							createdAt={selectedQuote.createdAt}
+							totalEstimate={selectedQuote.totalEstimate ?? 0}
+							items={selectedQuote.items}
+							status={selectedQuote.status}
+							adminNotes={selectedQuote.adminNotes}
+							refetch={refetch}
+						/>
+					) : (
+						<p className="text-center text-gray-500 mt-20">
+							Selecciona una cotización
+						</p>
+					)}
+				</div>
+
 			</div>
 		</section>
 	);
