@@ -12,17 +12,12 @@ export const useGetVisits = () => {
 	});
 };
 
-export const useAddVisit = () => {
+export const useCreateVisit = () => {
 	const queryClient = useQueryClient();
+
 	return useMutation({
-		mutationFn: async (newVisit: {
-			user: string;
-			visitDate: Date;
-			address: string;
-			status: string;
-			services: string;
-		}) => {
-			const { data } = await api.post('/api/visits', newVisit);
+		mutationFn: async (visitData: any) => {
+			const { data } = await api.post('/api/visits', visitData);
 			return data;
 		},
 		onSuccess: () => {

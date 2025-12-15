@@ -112,7 +112,7 @@ export interface Attachment {
 
 export interface Order {
 	_id: string | undefined;
-	user: string | User; // User ID
+	user:  User | string; // User ID
 	status: string; // e.g. "In process", "Completed"
 	address: string;
 	startedAt: string;

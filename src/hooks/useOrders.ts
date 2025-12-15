@@ -105,3 +105,62 @@ export const useDeleteOrder = () => {
 		},
 	});
 };
+
+// hooks/apiHooks.ts - Agregar esto
+export const useCreateOrder = () => {
+	const queryClient = useQueryClient();
+	
+	return useMutation({
+		mutationFn: async (orderData: any) => {
+			const { data } = await api.post('/api/orders', orderData);
+			return data;
+		},
+		onSuccess: () => {
+			// Invalidar todas las queries relacionadas con órdenes
+			queryClient.invalidateQueries({ queryKey: ['orders'] });
+			queryClient.invalidateQueries({ queryKey: ['myOrders'] });
+		},
+	});
+};
+
+// Y actualizar el hook useGetServices para devolver correctamente los datos:
+export const useGetServices = () => {
+	return useQuery({
+		queryKey: ['services'],
+		queryFn: async () => {
+			const { data } = await api.get('/api/services');
+			return data; // Asegúrate que devuelva { services: [...] }
+		},
+		staleTime: 1000 * 60 * 5,
+	});
+};
+
+// Y useGetUsers:
+export const useGetUsers = () => {
+	return useQuery({
+		queryKey: ['users'],
+		queryFn: async () => {
+			const { data } = await api.get('/api/users');
+			return data; // Asegúrate que devuelva { users: [...] }
+		},
+		staleTime: 1000 * 60 * 5,
+	});
+};
+
+// hooks/apiHooks.ts
+export const useUpdateOrder = () => {
+	const queryClient = useQueryClient();
+	
+	return useMutation({
+		mutationFn: async ({ id, data }: { id: string; data: any }) => {
+			const { data: response } = await api.put(`/api/orders/${id}`, data);
+			return response;
+		},
+		onSuccess: () => {
+			// Invalidar todas las queries relacionadas
+			queryClient.invalidateQueries({ queryKey: ['orders'] });
+			queryClient.invalidateQueries({ queryKey: ['myOrders'] });
+			queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+		},
+	});
+};

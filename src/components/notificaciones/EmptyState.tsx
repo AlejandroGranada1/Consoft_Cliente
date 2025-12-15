@@ -1,13 +1,24 @@
-import Link from 'next/link';
-
+// components/notificaciones/EmptyState.tsx
 export default function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <img src="/empty-box.svg" alt="Sin notificaciones" className="w-24 h-24 opacity-70" />
-      <p className="mt-4 text-[#1E293B] text-lg">Aún no tienes notificaciones</p>
-      <Link href={"/client/productos"} className="mt-6 px-6 py-2 bg-[#8B5E3C] text-white rounded-xl hover:bg-[#70492F] cursor-pointer">
-        Explorar productos
-      </Link>
-    </div>
-  )
+	return (
+		<div className='bg-white rounded-xl p-8 text-center border shadow-sm max-w-md mx-auto'>
+			<div className='text-6xl mb-4'>📭</div>
+			<h3 className='text-xl font-semibold text-gray-800 mb-2'>No hay notificaciones</h3>
+			<p className='text-gray-600 mb-4'>
+				Todavía no tienes cotizaciones procesadas. Cuando envíes una cotización, aquí verás
+				su estado y las respuestas del administrador.
+			</p>
+			<div className='space-y-2 text-sm text-gray-500'>
+				<p>
+					📦 <strong>Envía una cotización</strong> desde tu carrito
+				</p>
+				<p>
+					⏳ <strong>Espera la respuesta</strong> del administrador
+				</p>
+				<p>
+					🔔 <strong>Recibirás notificaciones</strong> aquí
+				</p>
+			</div>
+		</div>
+	);
 }
