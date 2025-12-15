@@ -1,53 +1,44 @@
+'use client';
 import { X } from 'lucide-react';
-import { DefaultModalProps, Role, User } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
 
-import axios from 'axios'; // Importa axios para hacer el llamado a la API
+import { DefaultModalProps, Role, User } from '@/lib/types';
 import api from '@/components/Global/axios';
 import { updateElement } from '../global/alerts';
 
 function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<User>) {
-	const [userData, setUserData] = useState<User>({
-		_id: extraProps?._id,
-		name: extraProps?.name || '',
-		address: extraProps?.address || '',
-		email: extraProps?.email || '',
-		phone: extraProps?.phone || '',
-		registeredAt: extraProps?.registeredAt || new Date().toISOString(),
-		role: extraProps?.role || '',
-		status: extraProps?.status || false,
-		featuredProducts: extraProps?.featuredProducts || [],
-		document: '',
-		id: '',
-		profile_picture: '',
-	});
+	const [userData, setUserData] = useState<User | null>(null);
+	const [roles, setRoles] = useState<Role[]>([]);
 
-	const [roles, setRoles] = useState<Role[]>([]); // Estado para los roles disponibles
-
-	// Llamado a la API para obtener los roles
+	// 🔹 Cargar roles al abrir modal
 	useEffect(() => {
-		if (isOpen) {
-			const fetchRoles = async () => {
-				const response = await api.get('/api/roles');
-				setRoles(response.data.roles);
-			};
-			fetchRoles();
-		}
-	}, [isOpen]); // Solo se hace el llamado cuando el modal se abre
+		if (!isOpen) return;
 
-	// Prellenar datos al abrir modal
+		const fetchRoles = async () => {
+			try {
+				const res = await api.get('/api/roles');
+				setRoles(res.data.roles || []);
+			} catch (error) {
+				console.error('Error al obtener roles:', error);
+			}
+		};
+
+		fetchRoles();
+	}, [isOpen]);
+
+	// 🔹 Prellenar datos
 	useEffect(() => {
-		if (extraProps) {
+		if (extraProps && isOpen) {
 			setUserData({
-				_id: extraProps?._id,
-				name: extraProps?.name || '',
-				address: extraProps?.address || '',
-				email: extraProps?.email || '',
-				phone: extraProps?.phone || '',
-				registeredAt: extraProps?.registeredAt || new Date().toISOString(),
-				role: extraProps?.role || '',
-				status: extraProps?.status || false,
-				featuredProducts: extraProps?.featuredProducts || [],
+				_id: extraProps._id,
+				name: extraProps.name || '',
+				address: extraProps.address || '',
+				email: extraProps.email || '',
+				phone: extraProps.phone || '',
+				registeredAt: extraProps.registeredAt || new Date().toISOString(),
+				role: extraProps.role || '',
+				status: extraProps.status ?? false,
+				featuredProducts: extraProps.featuredProducts || [],
 				document: '',
 				id: '',
 				profile_picture: '',
@@ -55,31 +46,44 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 		}
 	}, [extraProps, isOpen]);
 
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+	// 🔹 Limpiar modal al cerrar
+	useEffect(() => {
+		if (!isOpen) setUserData(null);
+	}, [isOpen]);
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
-		setUserData((prev) => ({
-			...prev,
-			[name]: value,
-		}));
+		setUserData((prev) => (prev ? { ...prev, [name]: value } : prev));
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		const response = updateElement(
+		if (!userData) return;
+
+		if (!userData.name || !userData.email || !userData.role) {
+			const Swal = (await import('sweetalert2')).default;
+			return Swal.fire(
+				'Campos incompletos',
+				'Nombre, correo y rol son obligatorios',
+				'warning'
+			);
+		}
+
+		await updateElement(
 			'Usuario',
 			`/api/users/${userData._id}`,
 			userData,
 			updateList!
 		);
-		console.log('Usuario actualizado:', userData);
+
 		onClose();
 	};
 
-	if (!isOpen) return null;
+	if (!isOpen || !userData) return null;
 
 	return (
-		<div className='modal-bg'>
-			<div className='modal-frame w-[600px]'>
+		<div className='modal-bg fixed inset-0 flex items-center justify-center bg-black/20 z-50'>
+			<div className='modal-frame bg-white rounded-xl shadow-lg p-6 w-full max-w-[600px] relative'>
 				<header className='w-fit mx-auto'>
 					<button
 						onClick={onClose}
@@ -92,11 +96,9 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 				<form onSubmit={handleSubmit}>
 					{/* Nombre */}
 					<div className='flex flex-col'>
-						<label htmlFor='name'>Nombre</label>
+						<label>Nombre</label>
 						<input
-							id='name'
 							name='name'
-							type='text'
 							value={userData.name}
 							onChange={handleChange}
 							className='border px-3 py-2 rounded-md'
@@ -105,9 +107,8 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 
 					{/* Email */}
 					<div className='flex flex-col mt-4'>
-						<label htmlFor='email'>Correo</label>
+						<label>Correo</label>
 						<input
-							id='email'
 							name='email'
 							type='email'
 							value={userData.email}
@@ -118,11 +119,9 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 
 					{/* Teléfono */}
 					<div className='flex flex-col mt-4'>
-						<label htmlFor='phone'>Teléfono</label>
+						<label>Teléfono</label>
 						<input
-							id='phone'
 							name='phone'
-							type='text'
 							value={userData.phone}
 							onChange={handleChange}
 							className='border px-3 py-2 rounded-md'
@@ -131,11 +130,9 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 
 					{/* Dirección */}
 					<div className='flex flex-col mt-4'>
-						<label htmlFor='address'>Dirección</label>
+						<label>Dirección</label>
 						<input
-							id='address'
 							name='address'
-							type='text'
 							value={userData.address}
 							onChange={handleChange}
 							className='border px-3 py-2 rounded-md'
@@ -144,27 +141,26 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 
 					{/* Rol */}
 					<div className='flex flex-col mt-4'>
-						<label htmlFor='role'>Rol</label>
+						<label>Rol</label>
 						<select
-							id='role'
-							name='role'
 							value={(userData.role as Role)?._id || ''}
 							onChange={(e) =>
-								setUserData((prev) => ({
-									...prev,
-									role: {
-										...(prev.role as Role),
-										_id: e.target.value,
-										name: e.target.options[e.target.selectedIndex].text,
-									},
-								}))
+								setUserData((prev) =>
+									prev
+										? {
+												...prev,
+												role: {
+													_id: e.target.value,
+													name: e.target.options[e.target.selectedIndex].text,
+												} as Role,
+										  }
+										: prev
+								)
 							}
 							className='border px-3 py-2 rounded-md'>
 							<option value=''>Seleccionar rol</option>
 							{roles.map((role) => (
-								<option
-									key={role._id}
-									value={role._id}>
+								<option key={role._id} value={role._id}>
 									{role.name}
 								</option>
 							))}
@@ -174,17 +170,13 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 					{/* Estado */}
 					<div className='flex items-center gap-3 mt-4'>
 						<input
-							id='status'
-							name='status'
 							type='checkbox'
 							checked={userData.status}
 							onChange={(e) =>
-								setUserData((prev) => ({
-									...prev,
-									status: e.target.checked,
-								}))
+								setUserData((prev) =>
+									prev ? { ...prev, status: e.target.checked } : prev
+								)
 							}
-							className='h-4 w-4 cursor-pointer'
 						/>
 						<span className={userData.status ? 'text-green-600' : 'text-red-600'}>
 							{userData.status ? 'Activo' : 'Inactivo'}
@@ -194,15 +186,16 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 					{/* Botones */}
 					<div className='w-full flex justify-between mt-10'>
 						<button
-							type='submit'
-							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-							Guardar
-						</button>
-						<button
 							type='button'
 							onClick={onClose}
 							className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
 							Cancelar
+						</button>
+
+						<button
+							type='submit'
+							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
+							Guardar
 						</button>
 					</div>
 				</form>
