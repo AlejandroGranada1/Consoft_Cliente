@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { Eye, EyeOff } from 'lucide-react';
 import { useGetProfile, useUpdateUser, useChangePassword } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import { useRouter } from 'next/navigation';
@@ -10,12 +11,13 @@ export default function ProfilePage() {
 	const router = useRouter();
 	const { user, loading } = useUser();
 
-	// Hooks SIEMPRE arriba
+	// Hooks
 	const { data, isLoading } = useGetProfile();
 	const updateUser = useUpdateUser();
-	const dbUser = data?.user;
 	const changePassword = useChangePassword();
+	const dbUser = data?.user;
 
+	// Estados perfil
 	const [form, setForm] = useState({
 		name: '',
 		email: '',
@@ -27,15 +29,20 @@ export default function ProfilePage() {
 	const [profilePreview, setProfilePreview] = useState<string | null>(null);
 	const [profileFile, setProfileFile] = useState<File | null>(null);
 
+	// Estados contraseña
 	const [passwordForm, setPasswordForm] = useState({
 		currentPassword: '',
 		newPassword: '',
 		confirmPassword: '',
 	});
 
+	const [showCurrent, setShowCurrent] = useState(false);
+	const [showNew, setShowNew] = useState(false);
+	const [showConfirm, setShowConfirm] = useState(false);
+
 	// Redirección si no hay sesión
 	useEffect(() => {
-		if (loading) return; // ⛔ aún validando sesión
+		if (loading) return;
 
 		if (user === null) {
 			(async () => {
@@ -44,15 +51,15 @@ export default function ProfilePage() {
 				await Swal.fire({
 					icon: 'warning',
 					title: 'Inicia sesión',
-					text: 'Debes registrarte o iniciar sesión para agendar una cita.',
+					text: 'Debes iniciar sesión para acceder a tu perfil',
 				});
 
 				router.push('/client/auth/login');
 			})();
 		}
-	}, [user, router]);
+	}, [user, router, loading]);
 
-	// Cargar datos del perfil en el formulario
+	// Cargar datos
 	useEffect(() => {
 		if (dbUser) {
 			setForm({
@@ -62,17 +69,26 @@ export default function ProfilePage() {
 				address: dbUser.address ?? '',
 				phone: dbUser.phone ?? '',
 			});
-
 			setProfilePreview(dbUser.profile_picture ?? null);
 		}
 	}, [dbUser]);
 
 	if (isLoading || !dbUser) {
-		return <p className='p-10 text-center'>Cargando...</p>;
+		return <p className="p-10 text-center">Cargando...</p>;
 	}
 
+	// Guardar perfil
 	const handleUpdateProfile = async () => {
 		const Swal = (await import('sweetalert2')).default;
+
+		if (!form.name || !form.document || !form.address || !form.phone) {
+			await Swal.fire({
+				icon: 'error',
+				title: 'Campos incompletos',
+				text: 'Completa todos los campos',
+			});
+			return;
+		}
 
 		try {
 			const formData = new FormData();
@@ -90,293 +106,200 @@ export default function ProfilePage() {
 				formData,
 			});
 
-			Swal.fire({
+			await Swal.fire({
 				icon: 'success',
 				title: 'Perfil actualizado',
-				text: 'Tu información ha sido guardada correctamente',
-				confirmButtonColor: 'brown',
+				text: 'Información guardada correctamente',
 			});
 		} catch {
-			Swal.fire('Error', 'No se pudo actualizar el perfil', 'error');
+			await Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: 'No se pudo actualizar el perfil',
+			});
 		}
 	};
 
-	// Primero, necesitas importar el hook de cambio de contraseña
-	// Agrega esto en tus imports:
-
-	// Luego, en tu componente, agrega el hook después de los otros:
-
-	// Ahora la función completa:
+	// Cambiar contraseña
 	const handleChangePassword = async () => {
 		const Swal = (await import('sweetalert2')).default;
 
-		// Validación 1: Campos vacíos
-		if (
-			!passwordForm.currentPassword ||
-			!passwordForm.newPassword ||
-			!passwordForm.confirmPassword
-		) {
+		if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
 			await Swal.fire({
 				icon: 'error',
 				title: 'Campos incompletos',
-				text: 'Por favor, completa todos los campos',
-				confirmButtonColor: 'brown',
+				text: 'Completa todos los campos',
 			});
 			return;
 		}
 
-		// Validación 2: Coincidencia de contraseñas
 		if (passwordForm.newPassword !== passwordForm.confirmPassword) {
 			await Swal.fire({
 				icon: 'error',
 				title: 'Contraseñas no coinciden',
-				text: 'La nueva contraseña y la confirmación deben ser iguales',
-				confirmButtonColor: 'brown',
 			});
 			return;
 		}
 
-		// Validación 3: Misma contraseña actual
 		if (passwordForm.currentPassword === passwordForm.newPassword) {
 			await Swal.fire({
 				icon: 'error',
 				title: 'Contraseña inválida',
 				text: 'La nueva contraseña no puede ser igual a la actual',
-				confirmButtonColor: 'brown',
 			});
 			return;
 		}
 
-		// Validación 4: Cumplir con requisitos del backend
-		const hasUppercase = /[A-Z]/.test(passwordForm.newPassword);
+		const hasUpper = /[A-Z]/.test(passwordForm.newPassword);
 		const hasNumber = /\d/.test(passwordForm.newPassword);
 		const hasSpecial = /[^A-Za-z0-9]/.test(passwordForm.newPassword);
-		const isValidLength = passwordForm.newPassword.length >= 8;
+		const validLength = passwordForm.newPassword.length >= 8;
 
-		if (!hasUppercase || !hasNumber || !hasSpecial) {
+		if (!hasUpper || !hasNumber || !hasSpecial || !validLength) {
 			await Swal.fire({
 				icon: 'error',
 				title: 'Contraseña débil',
 				html: `
-				La contraseña debe cumplir con:
-				<ul class="text-left mt-2 ml-4">
-					li>• Al menos una letra mayúscula</li>
-					<li>• Al menos un número</li>
-					<li>• Al menos un carácter especial</li>
-					<li>• Mínimo 8 caracteres</li>
-				</ul>
-			`,
-				confirmButtonColor: 'brown',
-			});
-			return;
-		}
-
-		if (!isValidLength) {
-			await Swal.fire({
-				icon: 'error',
-				title: 'Contraseña corta',
-				text: 'La contraseña debe tener al menos 8 caracteres',
-				confirmButtonColor: 'brown',
+					<ul class="text-left ml-4">
+						<li>• Una letra mayúscula</li>
+						<li>• Un número</li>
+						<li>• Un carácter especial</li>
+						<li>• Mínimo 8 caracteres</li>
+					</ul>
+				`,
 			});
 			return;
 		}
 
 		try {
-			// Mostrar loading
 			Swal.fire({
-				title: 'Cambiando contraseña...',
-				text: 'Por favor espera',
+				title: 'Actualizando...',
 				allowOutsideClick: false,
-				didOpen: () => {
-					Swal.showLoading();
-				},
+				didOpen: () => Swal.showLoading(),
 			});
 
-			// Llamar a la API
 			await changePassword.mutateAsync({
 				currentPassword: passwordForm.currentPassword,
 				newPassword: passwordForm.newPassword,
 			});
 
-			// Éxito
 			await Swal.fire({
 				icon: 'success',
-				title: '¡Contraseña actualizada!',
-				text: 'Tu contraseña ha sido cambiada exitosamente',
-				confirmButtonColor: 'brown',
+				title: 'Contraseña actualizada',
 			});
 
-			// Limpiar formulario
 			setPasswordForm({
 				currentPassword: '',
 				newPassword: '',
 				confirmPassword: '',
 			});
 		} catch (error: any) {
-			console.error('Error al cambiar contraseña:', error);
-
-			let errorMessage = 'Error al cambiar la contraseña';
-
-			// Manejo de errores específicos del backend
-			if (error.response?.data?.message) {
-				const backendMessage = error.response.data.message;
-
-				if (backendMessage.includes('Current password is incorrect')) {
-					errorMessage = 'La contraseña actual es incorrecta';
-				} else if (backendMessage.includes('Password must include')) {
-					errorMessage = 'La nueva contraseña no cumple con los requisitos de seguridad';
-				} else {
-					errorMessage = backendMessage;
-				}
-			}
-
 			await Swal.fire({
 				icon: 'error',
 				title: 'Error',
-				text: errorMessage,
-				confirmButtonColor: 'brown',
+				text: error.response?.data?.message || 'No se pudo cambiar la contraseña',
 			});
 		}
 	};
 
-	if (user === undefined || user === null) return null;
+	if (!user) return null;
 
 	return (
-		<div className='max-w-4xl mx-auto p-6'>
-			<h1 className='text-3xl font-bold text-gray-800 mb-6'>Mi Perfil</h1>
+		<main className="min-h-screen bg-[#FAF4EF] py-10 px-6">
+			<div className="max-w-4xl mx-auto space-y-8">
 
-			<div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-				{/* Foto de perfil */}
-				<div className='flex flex-col items-center bg-white shadow p-5 rounded-lg'>
-					<Image
-						src={profilePreview || '/default-user.png'}
-						alt='Foto de perfil'
-						width={150}
-						height={150}
-						className='rounded-full object-cover border shadow'
-					/>
+				<h1 className="text-2xl font-semibold">Mi perfil</h1>
 
-					<label className='mt-4 cursor-pointer bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 text-sm'>
-						Cambiar foto
-						<input
-							type='file'
-							accept='image/*'
-							className='hidden'
-							onChange={(e) => {
-								const file = e.target.files?.[0];
-								if (file) {
-									setProfileFile(file);
-									setProfilePreview(URL.createObjectURL(file));
-								}
-							}}
-						/>
-					</label>
-				</div>
-
-				{/* Información personal */}
-				<div className='md:col-span-2 bg-white shadow p-6 rounded-lg'>
-					<h2 className='text-xl font-semibold mb-4'>Información Personal</h2>
-
-					<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-						<input
-							type='text'
-							value={form.name}
-							onChange={(e) => setForm({ ...form, name: e.target.value })}
-							placeholder='Nombre'
-							className='input'
+				{/* PERFIL */}
+				<div className="grid md:grid-cols-3 gap-6">
+					<div className="bg-white border rounded-xl p-6 flex flex-col items-center">
+						<Image
+							src={profilePreview || '/default-user.png'}
+							alt="Perfil"
+							width={140}
+							height={140}
+							className="rounded-full border object-cover"
 						/>
 
-						<input
-							type='text'
-							value={form.document}
-							onChange={(e) => setForm({ ...form, document: e.target.value })}
-							placeholder='Documento'
-							className='input'
-						/>
-
-						<input
-							type='text'
-							value={form.address}
-							onChange={(e) => setForm({ ...form, address: e.target.value })}
-							placeholder='Dirección'
-							className='input'
-						/>
-
-						<input
-							type='text'
-							value={form.phone}
-							onChange={(e) => setForm({ ...form, phone: e.target.value })}
-							placeholder='Teléfono'
-							className='input'
-						/>
-
-						<input
-							type='text'
-							value={form.email}
-							readOnly
-							className='input bg-gray-100 cursor-not-allowed'
-						/>
+						<label className="mt-4 cursor-pointer text-sm px-4 py-2 rounded-full bg-[#F3E8D5]">
+							Cambiar foto
+							<input
+								type="file"
+								accept="image/*"
+								className="hidden"
+								onChange={(e) => {
+									const file = e.target.files?.[0];
+									if (file) {
+										setProfileFile(file);
+										setProfilePreview(URL.createObjectURL(file));
+									}
+								}}
+							/>
+						</label>
 					</div>
 
-					<button
-						onClick={handleUpdateProfile}
-						className='mt-4 bg-[#5C3A21] text-white px-5 py-2 rounded-md hover:bg-[#472D19]'>
-						Guardar Cambios
-					</button>
-				</div>
-			</div>
+					<div className="md:col-span-2 bg-white border rounded-xl p-6 space-y-4">
+						<h2 className="font-semibold">Información personal</h2>
 
-			{/* Cambiar contraseña */}
-			<div className='bg-white shadow p-6 rounded-lg mt-6'>
-				<h2 className='text-xl font-semibold mb-4'>Cambiar Contraseña</h2>
+						<div className="grid md:grid-cols-2 gap-4">
+							{[
+								{ key: 'name', ph: 'Nombre' },
+								{ key: 'document', ph: 'Documento' },
+								{ key: 'address', ph: 'Dirección' },
+								{ key: 'phone', ph: 'Teléfono' },
+							].map((f) => (
+								<input
+									key={f.key}
+									value={(form as any)[f.key]}
+									onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+									placeholder={f.ph}
+									className="px-4 py-2 border rounded-lg"
+								/>
+							))}
+							<input value={form.email} readOnly className="px-4 py-2 border rounded-lg bg-gray-100" />
+						</div>
 
-				<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-					<input
-						type='password'
-						placeholder='Contraseña actual'
-						value={passwordForm.currentPassword}
-						onChange={(e) =>
-							setPasswordForm({
-								...passwordForm,
-								currentPassword: e.target.value,
-							})
-						}
-						className='input'
-					/>
-
-					<input
-						type='password'
-						placeholder='Nueva contraseña'
-						value={passwordForm.newPassword}
-						onChange={(e) =>
-							setPasswordForm({
-								...passwordForm,
-								newPassword: e.target.value,
-							})
-						}
-						className='input'
-					/>
-
-					<input
-						type='password'
-						placeholder='Confirmar contraseña'
-						value={passwordForm.confirmPassword}
-						onChange={(e) =>
-							setPasswordForm({
-								...passwordForm,
-								confirmPassword: e.target.value,
-							})
-						}
-						className='input'
-					/>
+						<div className="flex justify-end pt-4">
+							<button onClick={handleUpdateProfile} className="px-6 py-2 rounded-full bg-[#8B5E3C] text-white">
+								Guardar cambios
+							</button>
+						</div>
+					</div>
 				</div>
 
-				<button
-					onClick={handleChangePassword}
-					className='mt-4 bg-[#1E293B] text-white px-5 py-2 rounded-md hover:bg-[#162034]'>
-					Actualizar contraseña
-				</button>
+				{/* CONTRASEÑA */}
+				<div className="bg-white border rounded-xl p-6 space-y-4">
+					<h2 className="font-semibold">Seguridad</h2>
+
+					<div className="grid md:grid-cols-3 gap-4">
+						{[
+							{ key: 'currentPassword', label: 'Contraseña actual', show: showCurrent, setShow: setShowCurrent },
+							{ key: 'newPassword', label: 'Nueva contraseña', show: showNew, setShow: setShowNew },
+							{ key: 'confirmPassword', label: 'Confirmar contraseña', show: showConfirm, setShow: setShowConfirm },
+						].map((f) => (
+							<div key={f.key} className="relative">
+								<input
+									type={f.show ? 'text' : 'password'}
+									placeholder={f.label}
+									value={(passwordForm as any)[f.key]}
+									onChange={(e) => setPasswordForm({ ...passwordForm, [f.key]: e.target.value })}
+									className="w-full px-4 py-2 pr-10 border rounded-lg"
+								/>
+								<button type="button" onClick={() => f.setShow(!f.show)} className="absolute right-3 top-1/2 -translate-y-1/2">
+									{f.show ? <EyeOff size={18} /> : <Eye size={18} />}
+								</button>
+							</div>
+						))}
+					</div>
+
+					<div className="flex justify-end pt-4">
+						<button onClick={handleChangePassword} className="px-6 py-2 rounded-full bg-[#1E293B] text-white">
+							Actualizar contraseña
+						</button>
+					</div>
+				</div>
+
 			</div>
-		</div>
+		</main>
 	);
 }
