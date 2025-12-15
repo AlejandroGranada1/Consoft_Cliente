@@ -2,33 +2,35 @@
 import { X } from 'lucide-react';
 import { DefaultModalProps, Category, Product } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 import api from '@/components/Global/axios';
 import { createElement } from '../../global/alerts';
+
+const initialState = {
+	_id: undefined,
+	name: '',
+	description: '',
+	category: {
+		_id: '',
+		name: '',
+		description: '',
+		products: [],
+	},
+	imageUrl: '',
+	imageFile: null as File | null,
+	status: true,
+};
 
 function CreateProductModal({
 	isOpen,
 	onClose,
 	updateList,
 }: DefaultModalProps<Product> & { updateList?: () => void }) {
-	const [formData, setFormData] = useState<any>({
-		_id: undefined,
-		name: '',
-		description: '',
-		category: {
-			_id: '',
-			name: '',
-			description: '',
-			products: [],
-		},
-		imageUrl: '',   // preview
-		imageFile: null, // file real que se enviará al backend
-		status: true,
-	});
-
+	const [formData, setFormData] = useState<any>(initialState);
 	const [categories, setCategories] = useState<Category[]>([]);
 
-	// 📌 Traer categorías
+	/* 🔹 Cargar categorías */
 	useEffect(() => {
 		const fetchCategories = async () => {
 			try {
@@ -38,11 +40,20 @@ function CreateProductModal({
 				console.error('Error al cargar categorías', err);
 			}
 		};
+
 		if (isOpen) fetchCategories();
 	}, [isOpen]);
 
-	// 📌 Manejar cambios de texto/select
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+	/* 🔹 Limpiar modal al cerrar */
+	useEffect(() => {
+		if (!isOpen) {
+			setFormData(initialState);
+		}
+	}, [isOpen]);
+
+	const handleChange = (
+		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+	) => {
 		const { name, value } = e.target;
 
 		if (name === 'category') {
@@ -59,55 +70,64 @@ function CreateProductModal({
 		}));
 	};
 
-	// 📌 Manejar archivo (imagen)
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (file) {
 			setFormData((prev: any) => ({
 				...prev,
 				imageFile: file,
-				imageUrl: URL.createObjectURL(file), // preview
+				imageUrl: URL.createObjectURL(file),
 			}));
 		}
 	};
 
-	// 📌 Guardar producto
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
+		/* 🔹 VALIDACIONES */
+		if (!formData.name.trim() || !formData.description.trim()) {
+			return Swal.fire(
+				'Campos incompletos',
+				'Nombre y descripción son obligatorios',
+				'warning'
+			);
+		}
+
+		if (!formData.category?._id) {
+			return Swal.fire(
+				'Categoría requerida',
+				'Debe seleccionar una categoría',
+				'warning'
+			);
+		}
+
+		if (!formData.imageFile) {
+			return Swal.fire(
+				'Imagen requerida',
+				'Debe seleccionar una imagen para el producto',
+				'warning'
+			);
+		}
+
 		try {
-			// Construimos el FormData REAL
 			const fd = new FormData();
 			fd.append('name', formData.name);
 			fd.append('description', formData.description);
 			fd.append('category', formData.category._id);
 			fd.append('status', String(formData.status));
+			fd.append('image', formData.imageFile);
 
-			if (formData.imageFile) {
-				fd.append('image', formData.imageFile); // <-- así se envía la imagen real
-			}
-
-			const confirm = await createElement('Producto', '/api/products', fd, updateList);
+			const confirm = await createElement(
+				'Producto',
+				'/api/products',
+				fd,
+				updateList
+			);
 
 			if (confirm) {
 				updateList && updateList();
 				onClose();
-
-				// Reset form
-				setFormData({
-					_id: undefined,
-					name: '',
-					description: '',
-					category: {
-						_id: '',
-						name: '',
-						description: '',
-						products: [],
-					},
-					imageUrl: '',
-					imageFile: null,
-					status: true,
-				});
+				setFormData(initialState);
 			}
 		} catch (err) {
 			console.error('Error al crear producto', err);
@@ -130,7 +150,6 @@ function CreateProductModal({
 
 				<form onSubmit={handleSubmit} className='grid grid-cols-2 gap-6'>
 					<div className='flex flex-col gap-4'>
-						
 						{/* Nombre */}
 						<div className='flex flex-col'>
 							<label htmlFor='name'>Producto</label>
@@ -182,7 +201,6 @@ function CreateProductModal({
 							<label htmlFor='image'>Imagen</label>
 							<input
 								id='image'
-								name='image'
 								type='file'
 								accept='image/*'
 								onChange={handleFileChange}
@@ -193,8 +211,6 @@ function CreateProductModal({
 						{/* Estado */}
 						<div className='flex items-center gap-3 mt-2'>
 							<input
-								id='status'
-								name='status'
 								type='checkbox'
 								checked={formData.status}
 								onChange={(e) =>
@@ -205,7 +221,10 @@ function CreateProductModal({
 								}
 								className='h-4 w-4 cursor-pointer'
 							/>
-							<span className={formData.status ? 'text-green-600' : 'text-red-600'}>
+							<span
+								className={
+									formData.status ? 'text-green-600' : 'text-red-600'
+								}>
 								{formData.status ? 'Activo' : 'Inactivo'}
 							</span>
 						</div>
@@ -227,15 +246,15 @@ function CreateProductModal({
 					{/* Botones */}
 					<div className='col-span-2 flex justify-between mt-6'>
 						<button
-							type='submit'
-							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-							Guardar
-						</button>
-						<button
 							type='button'
 							onClick={onClose}
 							className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
 							Cancelar
+						</button>
+						<button
+							type='submit'
+							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
+							Guardar
 						</button>
 					</div>
 				</form>
