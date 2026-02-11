@@ -23,21 +23,16 @@ export default function ProductCard({
 
 	const userId = (Usuario as User)?.id;
 
-	// Hook siempre en el mismo orden
 	const updateUser = useUpdateUser();
 	const { data } = useGetUserById(userId ?? '');
 
 	const user = data?.data;
-
-	// Ahora mapear los favoritos para obtener solo los IDs
 	const favorites: string[] = user?.favorites?.map((f: any) => f._id) ?? [];
-
 	const isFavorite = favorites.includes(id);
 
 	const toggleFavorite = async () => {
 		const Swal = (await import('sweetalert2')).default;
-
-		if (!user?._id) return console.warn('Usuario no cargado todavía.');
+		if (!user?._id) return;
 
 		const updatedFavorites = isFavorite
 			? favorites.filter((fid) => fid !== id)
@@ -52,59 +47,95 @@ export default function ProductCard({
 			Swal.fire({
 				toast: true,
 				animation: false,
-				timerProgressBar: true,
-				title: isFavorite
-					? 'Producto removido de la lista de favoritos'
-					: 'Producto agregado a la lista de favoritos',
-				icon: 'success',
 				timer: 700,
+				title: isFavorite
+					? 'Producto removido de favoritos'
+					: 'Producto agregado a favoritos',
+				icon: 'success',
 				showConfirmButton: false,
 				position: 'top-right',
-				customClass: {
-					timerProgressBar: 'swal2-progress-bar',
-				},
 			});
 
 			refetch?.();
 		} catch (err) {
-			console.error('Error al actualizar favoritos:', err);
+			console.error(err);
 		}
 	};
 
 	return (
-		<div className='bg-white rounded-xl border flex flex-col justify-evenly border-black shadow h-[320px] w-[300px]'>
-			<div className='relative w-full h-56 rounded-t-xl overflow-hidden'>
+		<article
+			className='
+        bg-white rounded-[14px] overflow-hidden
+        shadow-[0_4px_24px_rgba(44,36,32,0.10)]
+        hover:shadow-[0_12px_40px_rgba(44,36,32,0.18)]
+        transition-all duration-300
+        hover:-translate-y-1
+        cursor-pointer
+      '
+			onClick={() => router.push(`productos/${id}`)}>
+			{/* Imagen */}
+			<div className='relative aspect-[4/3] bg-[#F2E8D9] overflow-hidden'>
 				<Image
 					src={image}
 					alt={name}
 					fill
-					className='object-cover'
-					sizes='20'
-					loading='lazy'
+					className='object-cover transition-transform duration-500 group-hover:scale-105'
+					sizes='300px'
 				/>
 
+				{/* Favorito */}
 				{userId && (
 					<button
-						onClick={toggleFavorite}
-						className='absolute top-2 right-2 p-2 rounded-full bg-white shadow hover:bg-gray-100 cursor-pointer'>
+						onClick={(e) => {
+							e.stopPropagation();
+							toggleFavorite();
+						}}
+						className='
+              absolute top-3 right-3 z-10
+              w-9 h-9 rounded-full
+              bg-white/90 backdrop-blur
+              shadow-md
+              flex items-center justify-center
+              hover:scale-110 transition
+            '>
 						<Heart
-							size={20}
-							className={isFavorite ? 'text-red-500' : 'text-gray-500'}
+							size={16}
+							className={isFavorite ? 'text-red-500' : 'text-[#9A8F87]'}
 							fill={isFavorite ? 'currentColor' : 'none'}
 						/>
 					</button>
 				)}
 			</div>
 
-			<div className='flex flex-col flex-1 p-4'>
-				<h2 className='text-lg font-semibold'>{name}</h2>
+			{/* Contenido */}
+			<div className='p-5 space-y-3'>
+				<h3 className='font-serif text-lg font-semibold text-[#2C2420] leading-snug'>
+					{name}
+				</h3>
 
-				<button
-					onClick={() => router.push(`productos/${id}`)}
-					className='mt-2 px-4 py-2 bg-[#8B5E3C] text-white rounded-lg hover:bg-[#70492F] cursor-pointer'>
-					Ver detalle
-				</button>
+				{/* Estado */}
+				<div className='flex items-center justify-between'>
+					<span className='flex items-center gap-2 text-[11px] uppercase tracking-wide text-[#8B5A2B] font-medium'>
+						<span className='w-1.5 h-1.5 rounded-full bg-[#C8973A]' />
+						Bajo pedido
+					</span>
+
+					<button
+						onClick={(e) => {
+							e.stopPropagation();
+							router.push(`productos/${id}`);
+						}}
+						className='
+              px-4 py-2 text-xs font-medium
+              bg-[#2C2420] text-white
+              rounded-lg
+              hover:bg-[#5C3317]
+              transition
+            '>
+						Ver detalle
+					</button>
+				</div>
 			</div>
-		</div>
+		</article>
 	);
 }
