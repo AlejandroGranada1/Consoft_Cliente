@@ -2,37 +2,38 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useGetProductById, useQuickQuotation } from '@/hooks/apiHooks';
-import { useUser } from '@/providers/userContext';
+import { useGetProductById } from '@/hooks/apiHooks';
 import { useAddItemAutoCart } from '@/hooks/apiHooks';
+import { useUser } from '@/providers/userContext';
 import Image from 'next/image';
+import { ArrowLeft, ShieldCheck, Truck, Pencil } from 'lucide-react';
 
 const AVAILABLE_COLORS = [
 	{ name: 'Nogal', value: 'nogal', hex: '#7B4A12' },
-	{ name: 'Blanco', value: 'blanco', hex: '#FFFFFF' },
-	{ name: 'Negro', value: 'negro', hex: '#000000' },
+	{ name: 'Blanco', value: 'blanco', hex: '#F5F5F5' },
+	{ name: 'Negro', value: 'negro', hex: '#1A1A1A' },
 	{ name: 'Gris', value: 'gris', hex: '#9CA3AF' },
 	{ name: 'Café oscuro', value: 'cafe_oscuro', hex: '#4B2E1E' },
 	{ name: 'Azul petróleo', value: 'azul_petroleo', hex: '#1F4E5F' },
 	{ name: 'Verde oliva', value: 'verde_oliva', hex: '#556B2F' },
 ];
+
 export default function ProductDetailPage() {
 	const { id } = useParams();
 	const router = useRouter();
-
 	const { user } = useUser();
 
 	const { data, isLoading } = useGetProductById(String(id));
-
 	const product = data?.data;
-
-	console.log(product);
 
 	const addItemMutation = useAddItemAutoCart();
 
 	const [quantity, setQuantity] = useState(1);
-	const [color, setColor] = useState<string>('');
+	const [color, setColor] = useState('');
 	const [customSize, setCustomSize] = useState('');
+
+	const changeQty = (delta: number) =>
+		setQuantity((q) => Math.max(1, q + delta));
 
 	const addToCart = async () => {
 		const Swal = (await import('sweetalert2')).default;
@@ -41,154 +42,176 @@ export default function ProductDetailPage() {
 			Swal.fire({
 				title: 'Inicia sesión para añadir al carrito',
 				icon: 'warning',
+				timer: 1400,
 				showConfirmButton: false,
-				timer: 1500,
 			});
 			router.push('/client/auth/login');
 			return;
 		}
 
-		if (!product) return;
-
-		try {
-			if (!color) {
-				Swal.fire({
-					title: 'Selecciona un color',
-					text: 'Debes elegir un color para el mueble',
-					icon: 'warning',
-				});
-				return;
-			}
-
-			const payload = {
-				productId: product._id,
-				quantity,
-				color,
-				size: customSize,
-			};
-
-			console.log(payload);
-			await addItemMutation.mutateAsync(payload);
-
+		if (!color) {
 			Swal.fire({
-				title: 'Añadido al carrito',
-				text: 'El producto ha sido añadido correctamente',
-				icon: 'success',
-				confirmButtonColor: '#8B5A2B',
+				title: 'Selecciona un color',
+				icon: 'warning',
 			});
-
-			router.push('/client/productos');
-		} catch (err) {
-			console.log(err);
-			Swal.fire({
-				title: 'Error',
-				text: 'No se pudo agregar al carrito',
-				icon: 'error',
-			});
+			return;
 		}
+
+		await addItemMutation.mutateAsync({
+			productId: product._id,
+			quantity,
+			color,
+			size: customSize,
+		});
+
+		Swal.fire({
+			title: 'Añadido al carrito',
+			icon: 'success',
+			timer: 1200,
+			showConfirmButton: false,
+		});
+
+		router.push('/client/productos');
 	};
 
-	if (isLoading) return <p className='p-10'>Cargando producto...</p>;
+	if (isLoading) return <p className='p-10'>Cargando producto…</p>;
 	if (!product) return <p className='p-10'>Producto no encontrado</p>;
 
 	return (
-		<section className='bg-[#FFF9F4] min-h-screen py-10 px-6'>
-			<div className='max-w-5xl mx-auto bg-white p-10 rounded-2xl shadow-lg'>
-				<div className='grid grid-cols-1 md:grid-cols-2 gap-12'>
-					<div className='relative w-full h-80 rounded-xl overflow-hidden bg-gray-100 border flex items-center justify-center'>
-						{product.imageUrl && product.imageUrl.trim() !== '' ? (
-							<Image
-								src={product.imageUrl}
-								alt={product.name}
-								fill
-								className='object-contain'
-							/>
-						) : (
-							<Image
-								src='/def_prod.png'
-								alt='Imagen por defecto'
-								fill
-								className='object-contain'
-							/>
-						)}
-					</div>
+		<section className='bg-[#FAF5EE] min-h-screen px-6 py-12'>
+			<div className='max-w-6xl mx-auto'>
 
-					<div>
-						<h1 className='text-3xl font-bold text-gray-900'>{product.name}</h1>
-						<p className='text-gray-600 mt-2 leading-relaxed'>{product.description}</p>
+				{/* Back */}
+				<button
+					onClick={() => router.back()}
+					className='flex items-center gap-2 text-sm text-gray-500 hover:text-[#8B5A2B] mb-10'>
+					<ArrowLeft size={16} />
+					Volver al catálogo
+				</button>
 
-						<hr className='my-6' />
+				<div className='grid grid-cols-1 md:grid-cols-2 gap-16'>
 
-						<div className='space-y-4'>
-							<div>
-								<label className='font-medium mr-4'>Cantidad</label>
-								<input
-									type='number'
-									min='1'
-									value={quantity}
-									onChange={(e) => setQuantity(Number(e.target.value))}
-									className='input-style w-24'
-								/>
-							</div>
-
-							<div>
-								<label className='font-medium block mb-2'>Color</label>
-
-								<select
-									value={color}
-									onChange={(e) => setColor(e.target.value)}
-									className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brown bg-white'>
-									<option value=''>Selecciona un color</option>
-
-									{AVAILABLE_COLORS.map((c) => (
-										<option
-											key={c.value}
-											value={c.value}>
-											{c.name}
-										</option>
-									))}
-								</select>
-
-								{/* Vista previa del color seleccionado */}
-								<div className='flex items-center gap-2 mt-3 h-10'>
-									{color && (
-										<>
-											<span
-												className='w-6 h-6 rounded-full border'
-												style={{
-													backgroundColor: AVAILABLE_COLORS.find(
-														(c) => c.value === color
-													)?.hex,
-												}}
-											/>
-											<span className='text-sm text-gray-700'>
-												{
-													AVAILABLE_COLORS.find((c) => c.value === color)
-														?.name
-												}
-											</span>
-										</>
-									)}
-								</div>
-							</div>
-
-							<div>
-								<label className='font-medium'>Tamaño personalizado</label>
-								<input
-									type='text'
-									value={customSize}
-									onChange={(e) => setCustomSize(e.target.value)}
-									className='input-style w-full'
-									placeholder='Ej: 50x40'
-								/>
-							</div>
-							<button
-								onClick={addToCart}
-								className='w-full border border-brown  hover:bg-[#70461f] text-brown hover:text-white py-3 rounded-lg font-semibold transition cursor-pointer'>
-								Agregar al carrito
-							</button>
+					{/* Imagen */}
+					<div className='relative aspect-square rounded-2xl overflow-hidden bg-[#F2E8D9] shadow'>
+						<Image
+							src={product.imageUrl || '/def_prod.png'}
+							alt={product.name}
+							fill
+							className='object-cover'
+						/>
+						<div className='absolute bottom-4 left-4 bg-[#FAF5EE]/90 backdrop-blur px-4 py-2 rounded-lg text-xs uppercase tracking-wider'>
+							Madera certificada
 						</div>
 					</div>
+
+					{/* Info */}
+					<div className='flex flex-col gap-8'>
+						<div>
+							<span className='text-xs tracking-[.22em] uppercase text-[#C8973A]'>
+								Colección
+							</span>
+							<h1 className='font-serif text-3xl font-light mt-2'>
+								{product.name}
+							</h1>
+						</div>
+
+						<p className='text-sm leading-relaxed text-gray-600'>
+							{product.description}
+						</p>
+
+						<hr className='border-[#D9CFCA]' />
+
+						{/* Cantidad */}
+						<div>
+							<span className='text-xs uppercase tracking-widest font-medium'>
+								Cantidad
+							</span>
+							<div className='flex items-center border rounded-lg w-fit mt-2'>
+								<button
+									onClick={() => changeQty(-1)}
+									className='w-10 h-10 bg-[#F2E8D9] hover:bg-[#D9CFCA]'>
+									−
+								</button>
+								<div className='w-12 text-center font-medium'>
+									{quantity}
+								</div>
+								<button
+									onClick={() => changeQty(1)}
+									className='w-10 h-10 bg-[#F2E8D9] hover:bg-[#D9CFCA]'>
+									+
+								</button>
+							</div>
+						</div>
+
+						{/* Colores */}
+						<div>
+							<span className='text-xs uppercase tracking-widest font-medium'>
+								Color
+							</span>
+							<div className='flex flex-wrap gap-4 mt-3'>
+								{AVAILABLE_COLORS.map((c) => (
+									<button
+										key={c.value}
+										onClick={() => setColor(c.value)}
+										className={`flex flex-col items-center gap-1 ${
+											color === c.value ? 'scale-110' : ''
+										}`}>
+										<span
+											className='w-8 h-8 rounded-full border-2'
+											style={{
+												backgroundColor: c.hex,
+												borderColor:
+													color === c.value ? '#8B5A2B' : '#D9CFCA',
+											}}
+										/>
+										<span className='text-[10px] text-gray-500'>
+											{c.name}
+										</span>
+									</button>
+								))}
+							</div>
+						</div>
+
+						{/* Tamaño */}
+						<div>
+							<span className='text-xs uppercase tracking-widest font-medium'>
+								Tamaño personalizado
+							</span>
+							<input
+								value={customSize}
+								onChange={(e) => setCustomSize(e.target.value)}
+								placeholder='Ej: 220x90 cm'
+								className='mt-2 w-full border rounded-lg px-4 py-3 focus:outline-none focus:border-[#8B5A2B]'
+							/>
+							<p className='text-xs text-gray-500 mt-1'>
+								Opcional · Medidas especiales
+							</p>
+						</div>
+
+						{/* Acción */}
+						<button
+							onClick={addToCart}
+							className='w-full bg-[#2C2420] hover:bg-[#5C3317] text-white py-4 rounded-lg flex items-center justify-center gap-2'>
+							Agregar al carrito
+						</button>
+
+						{/* Trust strip */}
+						<div className='grid grid-cols-3 gap-4 bg-[#F2E8D9] border rounded-lg p-4'>
+							<div className='flex items-center gap-2 text-xs text-gray-600'>
+								<ShieldCheck size={16} />
+								Garantía 2 años
+							</div>
+							<div className='flex items-center gap-2 text-xs text-gray-600'>
+								<Truck size={16} />
+								Envío a domicilio
+							</div>
+							<div className='flex items-center gap-2 text-xs text-gray-600'>
+								<Pencil size={16} />
+								Personalizable
+							</div>
+						</div>
+					</div>
+
 				</div>
 			</div>
 		</section>
