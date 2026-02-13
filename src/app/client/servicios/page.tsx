@@ -72,20 +72,6 @@ export default function ServiciosPage() {
 						</Link>
 					</div>
 				</div>
-
-				{/* --- Sección 3: Reseñas --- */}
-				<h2 className='text-2xl font-semibold text-[#4b2e1a] mt-12 mb-6 text-center'>
-					Reseñas
-				</h2>
-				<div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-					<ReviewCard
-						name='Laura G.'
-						location='Medellín'
-						comment='El comedor que me fabricaron quedó perfecto. Pudieron ajustar las medidas y el acabado fue incluso mejor de lo que esperaba.'
-						rating={4}
-						avatar='/laura.png'
-					/>
-				</div>
 			</div>
 		</section>
 	);
