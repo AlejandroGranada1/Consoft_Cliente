@@ -32,7 +32,8 @@ export default function ProductDetailPage() {
 	const [color, setColor] = useState('');
 	const [customSize, setCustomSize] = useState('');
 
-	const changeQty = (delta: number) => setQuantity((q) => Math.max(1, q + delta));
+	const changeQty = (delta: number) =>
+		setQuantity((q) => Math.max(1, q + delta));
 
 	const addToCart = async () => {
 		const Swal = (await import('sweetalert2')).default;
@@ -79,6 +80,7 @@ export default function ProductDetailPage() {
 	return (
 		<section className='bg-[#FAF5EE] min-h-screen px-6 py-12'>
 			<div className='max-w-6xl mx-auto'>
+
 				{/* Back */}
 				<button
 					onClick={() => router.back()}
@@ -88,6 +90,7 @@ export default function ProductDetailPage() {
 				</button>
 
 				<div className='grid grid-cols-1 md:grid-cols-2 gap-16'>
+
 					{/* Imagen */}
 					<div className='relative aspect-square rounded-2xl overflow-hidden bg-[#F2E8D9] shadow'>
 						<Image
@@ -107,7 +110,9 @@ export default function ProductDetailPage() {
 							<span className='text-xs tracking-[.22em] uppercase text-[#C8973A]'>
 								Colección
 							</span>
-							<h1 className='font-serif text-3xl font-light mt-2'>{product.name}</h1>
+							<h1 className='font-serif text-3xl font-light mt-2'>
+								{product.name}
+							</h1>
 						</div>
 
 						<p className='text-sm leading-relaxed text-gray-600'>
@@ -127,7 +132,9 @@ export default function ProductDetailPage() {
 									className='w-10 h-10 bg-[#F2E8D9] hover:bg-[#D9CFCA]'>
 									−
 								</button>
-								<div className='w-12 text-center font-medium'>{quantity}</div>
+								<div className='w-12 text-center font-medium'>
+									{quantity}
+								</div>
 								<button
 									onClick={() => changeQty(1)}
 									className='w-10 h-10 bg-[#F2E8D9] hover:bg-[#D9CFCA]'>
@@ -157,7 +164,9 @@ export default function ProductDetailPage() {
 													color === c.value ? '#8B5A2B' : '#D9CFCA',
 											}}
 										/>
-										<span className='text-[10px] text-gray-500'>{c.name}</span>
+										<span className='text-[10px] text-gray-500'>
+											{c.name}
+										</span>
 									</button>
 								))}
 							</div>
@@ -202,6 +211,7 @@ export default function ProductDetailPage() {
 							</div>
 						</div>
 					</div>
+
 				</div>
 			</div>
 		</section>
