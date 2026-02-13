@@ -36,12 +36,13 @@ export default function DatePicker({ value, onChange, className = '' }: DatePick
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+        {['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'].map((day) => (
           <div key={day} className="text-sm font-semibold text-gray-500">{day}</div>
         ))}
         
         {daysInMonth.map((day) => (
           <button
+          type='button'
             key={day.toString()}
             onClick={() => handleDateClick(day)}
             className={`py-2 px-3 rounded-full w-full text-sm ${
