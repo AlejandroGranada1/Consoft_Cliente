@@ -58,11 +58,12 @@ export default function ScheduleSection() {
 				timer: 1500,
 				showConfirmButton: false,
 			});
-		} catch (error) {
+		} catch (error: any) {
+			console.log(error)
 			Swal.fire({
 				icon: 'error',
 				title: 'Error',
-				text: 'Hubo un problema al crear la visita.',
+				text: `No se pudo agendar la visita. ${error.response.data.message}`,
 			});
 		}
 	};
@@ -104,12 +105,6 @@ export default function ScheduleSection() {
 								</h3>
 								<TimePicker selectedTime={time} onSelect={setTime} />
 							</div>
-
-							<img
-								src="/Agenda.png"
-								alt="Ilustración agenda"
-								className="max-w-[140px] mt-6 opacity-95"
-							/>
 						</div>
 					</div>
 
