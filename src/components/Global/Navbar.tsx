@@ -16,7 +16,7 @@ export default function Navbar() {
   return (
     <nav className="bg-white shadow-sm relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-        <Link href="/client" className="text-xl font-bold text-[#1E293B]">
+        <Link href="/client" className="text-xl font-bold text-[#1E293B] sm:text-sm">
           Confort <span className="text-[#5C3A21]">&</span> Estilo
         </Link>
 
@@ -25,7 +25,7 @@ export default function Navbar() {
           <Link href="/client" className={`relative pb-1 ${isActive('/client') && 'font-semibold'}`}>
             Inicio {isActive('/client') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]"></span>}
           </Link>
-          <Link href="/client/agendarcita" className={`relative pb-1 ${isActive('/client/agendarcita') && 'font-semibold'}`}>
+          <Link href="/client/agendarcita" className={`relative pb-1${isActive('/client/agendarcita') && 'font-semibold'}`}>
             Agendar Cita {isActive('/client/agendarcita') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]"></span>}
           </Link>
           <Link href="/client/productos" className={`relative pb-1 ${isActive('/client/productos') && 'font-semibold'}`}>
