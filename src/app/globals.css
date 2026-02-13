@@ -23,7 +23,7 @@
 	}
 
 	.table-preset {
-		@apply grid grid-cols-1  gap-3 md:gap-0 place-items-center py-4 md:py-2 border-b border-brown/10 px-4 md:px-0;
+		@apply grid grid-cols-1 gap-3 md:gap-0 place-items-center py-4 md:py-2 border-b border-brown/10 px-4 md:px-0;
 	}
 
 	.table-item {
@@ -32,6 +32,14 @@
 
 	.input-style {
 		@apply border rounded-lg px-3 py-2 shadow-sm focus:ring-2 focus:ring-[#8B5A2B] focus:outline-none;
+	}
+
+	.menu-item {
+		@apply flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors;
+	}
+
+	.dropdown-item {
+		@apply flex items-center gap-2 px-4 py-2 hover:bg-gray-50 transition-colors text-sm;
 	}
 }
 
