@@ -26,7 +26,7 @@ export default function VisitRow({ onView, onDelete, visit }: VisitRowProps) {
 			{/* Cliente */}
 			<p className='table-item'>
 				<span className='font-semibold md:hidden'>Cliente: </span>
-				{visit?.user?.name}
+				{!visit.isGuest ? visit?.user?.name : visit?.guestInfo?.name}
 			</p>
 			
 			{/* Estado */}

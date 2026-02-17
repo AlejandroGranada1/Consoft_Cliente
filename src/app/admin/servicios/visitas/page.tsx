@@ -13,6 +13,8 @@ function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [visits, setVisits] = useState<Visit[]>([]);
+
+	console.log(visits)
 	const [visit, setVisit] = useState<Visit>();
 	const [filterText, setFilterText] = useState('');
 
