@@ -30,9 +30,9 @@ export default function DatePicker({ value, onChange, className = '' }: DatePick
   return (
     <div className={`relative ${className}`}>
       <div className="flex justify-between items-center mb-2">
-        <button onClick={handlePrevMonth} className="text-xl text-gray-600">←</button>
+        <button type='button' onClick={handlePrevMonth} className="text-xl text-gray-600">←</button>
         <span className="text-lg font-semibold">{format(currentMonth, 'MMMM yyyy')}</span>
-        <button onClick={handleNextMonth} className="text-xl text-gray-600">→</button>
+        <button type='button' onClick={handleNextMonth} className="text-xl text-gray-600">→</button>
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center">

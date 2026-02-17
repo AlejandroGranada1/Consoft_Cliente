@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
 				hostname: 'res.cloudinary.com',
 			},
 		],
+		// ✅ Formatos modernos para mejor rendimiento
+		formats: ['image/avif', 'image/webp'],
+		// ✅ Minimiza los tamaños de imagen
+		deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
 	},
 	async headers() {
 		return [
@@ -24,50 +29,113 @@ const nextConfig: NextConfig = {
 					},
 				],
 			},
+			// ✅ Headers de caché para assets estáticos
+			{
+				source: '/(.*)',
+				headers: [
+					{
+						key: 'X-DNS-Prefetch-Control',
+						value: 'on',
+					},
+				],
+			},
 		];
 	},
 	compiler: {
 		removeConsole: process.env.NODE_ENV === 'production',
 	},
 	experimental: {
-		optimizePackageImports: ['lucide-react'],
+		// ✅ Optimiza imports de librerías grandes
+		optimizePackageImports: [
+			'lucide-react',
+			'@headlessui/react',
+			'@radix-ui/react-dropdown-menu',
+			'date-fns',
+		],
+		// ✅ Mejora el rendimiento de navegación
+		optimisticClientCache: true,
 	},
-	// Optimización de chunks
-	webpack: (config, { isServer }) => {
+	// ✅ Configuración mejorada de webpack
+	webpack: (config, { isServer, dev }) => {
 		if (!isServer) {
 			config.optimization = {
 				...config.optimization,
+				moduleIds: 'deterministic',
+				runtimeChunk: 'single',
 				splitChunks: {
 					chunks: 'all',
+					maxInitialRequests: 25,
+					minSize: 20000,
 					cacheGroups: {
-						default: false,
-						vendors: false,
-						// Vendor chunk para librerías grandes
+						// Librerías de React
+						react: {
+							test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+							name: 'react',
+							priority: 40,
+							reuseExistingChunk: true,
+						},
+						// Librerías UI grandes
+						ui: {
+							test: /[\\/]node_modules[\\/](@headlessui|@radix-ui)[\\/]/,
+							name: 'ui-libs',
+							priority: 35,
+							reuseExistingChunk: true,
+						},
+						// Socket.io (carga bajo demanda)
+						socket: {
+							test: /[\\/]node_modules[\\/](socket\.io-client)[\\/]/,
+							name: 'socket',
+							priority: 38,
+							reuseExistingChunk: true,
+						},
+						// SweetAlert2 (carga bajo demanda)
+						sweetalert: {
+							test: /[\\/]node_modules[\\/](sweetalert2)[\\/]/,
+							name: 'sweetalert',
+							priority: 38,
+							reuseExistingChunk: true,
+						},
+						// Vendor general
 						vendor: {
+							test: /[\\/]node_modules[\\/]/,
 							name: 'vendor',
-							chunks: 'all',
-							test: /node_modules/,
 							priority: 20,
+							reuseExistingChunk: true,
 						},
 						// Chunk separado para admin
 						admin: {
-							name: 'admin',
 							test: /[\\/]app[\\/]admin[\\/]/,
+							name: 'admin',
 							priority: 30,
+							reuseExistingChunk: true,
 						},
-						// Chunk separado para componentes comunes
+						// Componentes comunes
 						common: {
-							name: 'common',
 							minChunks: 2,
 							priority: 10,
 							reuseExistingChunk: true,
+							name: 'common',
 						},
 					},
 				},
 			};
 		}
+
+		// ✅ Optimización de producción
+		if (!dev) {
+			config.optimization.minimize = true;
+		}
+
 		return config;
 	},
+	// ✅ Reduce el tamaño de las páginas
+	compress: true,
+	// ✅ Mejora el poder de caché
+	poweredByHeader: false,
+	// ✅ Optimiza la generación de páginas estáticas
+	...(process.env.NODE_ENV === 'production' && {
+		output: 'standalone',
+	}),
 };
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({

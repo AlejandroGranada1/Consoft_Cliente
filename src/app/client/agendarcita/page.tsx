@@ -5,13 +5,19 @@ import Link from 'next/link';
 import { Calendar, TimePicker, FormField, ServiceSelector } from '@/components/agenda';
 import { useCreateVisit } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
-import Swal from 'sweetalert2';
+
+// ✅ Función helper para cargar SweetAlert2 solo cuando se necesita
+const showAlert = async (config: any) => {
+	const Swal = (await import('sweetalert2')).default;
+	return Swal.fire(config);
+};
 
 export default function ScheduleSection() {
 	const [date, setDate] = useState<Date | undefined>(undefined);
 	const [time, setTime] = useState<string | null>(null);
 	const [description, setDescription] = useState('');
 	const [service, setService] = useState<string>('');
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const { user } = useUser();
 	const addVisit = useCreateVisit();
@@ -20,7 +26,7 @@ export default function ScheduleSection() {
 		e.preventDefault();
 
 		if (!date || !time || !service) {
-			Swal.fire({
+			await showAlert({
 				icon: 'warning',
 				title: 'Campos incompletos',
 				text: 'Por favor, completa todos los campos obligatorios.',
@@ -36,7 +42,7 @@ export default function ScheduleSection() {
 			services: service,
 		};
 
-		const result = await Swal.fire({
+		const result = await showAlert({
 			title: '¿Confirmar visita?',
 			icon: 'question',
 			showCancelButton: true,
@@ -48,23 +54,32 @@ export default function ScheduleSection() {
 
 		if (!result.isConfirmed) return;
 
+		setIsSubmitting(true);
+
 		try {
 			await addVisit.mutateAsync(payload);
 
-			Swal.fire({
+			await showAlert({
 				icon: 'success',
 				title: 'Visita agendada',
 				text: 'Tu visita ha sido creada exitosamente.',
 				timer: 1500,
 				showConfirmButton: false,
 			});
-		} catch (error: any) {
-			console.log(error)
-			Swal.fire({
+
+			// Reset form
+			setDate(undefined);
+			setTime(null);
+			setDescription('');
+			setService('');
+		} catch (error) {
+			await showAlert({
 				icon: 'error',
 				title: 'Error',
 				text: `No se pudo agendar la visita. ${error.response.data.message}`,
 			});
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -79,15 +94,29 @@ export default function ScheduleSection() {
 					Elige la fecha, hora y servicio que más te convenga
 				</p>
 
-				<form
-					onSubmit={handleSubmit}
-					className="bg-white shadow-lg rounded-2xl p-5 md:p-8 grid grid-cols-1 gap-6 max-w-4xl mx-auto"
-				>
+			<form
+				onSubmit={handleSubmit}
+				className='bg-white shadow-lg rounded-2xl p-5 md:p-8 grid grid-cols-1 gap-6 max-w-4xl mx-auto'>
+				<div>
+					<h3 className='text-base font-semibold text-gray-800 mb-2'>
+						Selecciona el servicio
+					</h3>
+					<ServiceSelector
+						value={service}
+						onSelect={setService}
+					/>
+				</div>
+
+				<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 					<div>
 						<h3 className="text-base font-semibold text-gray-800 mb-2">
 							Selecciona el servicio
 						</h3>
-						<ServiceSelector value={service} onSelect={setService} />
+						<Calendar
+							value={date}
+							onChange={setDate}
+							className='mx-auto'
+						/>
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -98,72 +127,38 @@ export default function ScheduleSection() {
 							<Calendar value={date} onChange={setDate} className="mx-auto" />
 						</div>
 
-						<div className="flex flex-col items-center">
-							<div className="w-full">
-								<h3 className="text-base font-semibold text-gray-800 mb-2">
-									Selecciona la hora
-								</h3>
-								<TimePicker selectedTime={time} onSelect={setTime} />
-							</div>
-						</div>
-					</div>
-
-					<div>
-						<h3 className="text-base font-semibold text-gray-800 mb-2">
-							Añade una descripción
-						</h3>
-						<FormField
-							label=""
-							placeholder="Añade una descripción"
-							value={description}
-							onChange={(e) => setDescription(e.target.value)}
+						<img
+							src='/Agenda.png'
+							alt='Ilustración agenda'
+							width={140}
+							height={140}
+							loading='lazy'
+							className='mt-6 opacity-95'
 						/>
 					</div>
-
-					<div className="flex justify-center">
-						<button
-							type="submit"
-							className="bg-[#8B5E3C] text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-[#734a2e] transition"
-						>
-							Agendar
-						</button>
-					</div>
-				</form>
-			</div>
-
-			{/* OVERLAY LOGIN */}
-			{!user && (
-				<div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50">
-					<div
-						className="
-							bg-white rounded-2xl p-6 md:p-8 text-center
-							max-w-sm w-full shadow-2xl
-							-transform -translate-y-20
-						"
-					>
-						<h3 className="text-xl font-bold text-gray-900 mb-2">
-							Inicia sesión
-						</h3>
-						<p className="text-gray-600 mb-6">
-							Para agendar una visita necesitas estar logeado
-						</p>
-
-						<Link
-							href="/client/auth/login"
-							className="block bg-[#8B5E3C] text-white py-2 rounded-lg font-medium hover:bg-[#734a2e] transition mb-3"
-						>
-							Iniciar sesión
-						</Link>
-
-						<Link
-							href="/client/auth/register"
-							className="block text-[#8B5E3C] font-medium hover:underline"
-						>
-							¿No tienes cuenta? Regístrate
-						</Link>
-					</div>
 				</div>
-			)}
+
+				<div>
+					<h3 className='text-base font-semibold text-gray-800 mb-2'>
+						Añade una descripción (opcional)
+					</h3>
+					<FormField
+						label=''
+						placeholder='Añade una descripción'
+						value={description}
+						onChange={(e) => setDescription(e.target.value)}
+					/>
+				</div>
+
+				<div className='flex justify-center'>
+					<button
+						type='submit'
+						disabled={isSubmitting}
+						className='bg-[#8B5E3C] text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-[#734a2e] transition disabled:opacity-50 disabled:cursor-not-allowed'>
+						{isSubmitting ? 'Agendando...' : 'Agendar'}
+					</button>
+				</div>
+			</form>
 		</section>
 	);
 }
