@@ -90,6 +90,12 @@ export interface Visit {
 	address: string;
 	status: string;
 	services: Visit[]; // Array of Service IDs
+	isGuest: boolean
+	guestInfo: {
+		email: string
+		name: string
+		phone: string
+	}
 }
 
 export interface OrderItem {
