@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Calendar, TimePicker, FormField, ServiceSelector } from '@/components/agenda';
 import { useCreateVisit, useCreateVisitForMe } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
+import { format } from 'date-fns';
 
 // helper SweetAlert2
 const showAlert = async (config: any) => {
@@ -28,6 +29,7 @@ export default function ScheduleSection() {
 	const [userEmail, setUserEmail] = useState('');
 	const [userPhone, setUserPhone] = useState('');
 	const [userAddress, setUserAddress] = useState('');
+
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -63,7 +65,7 @@ export default function ScheduleSection() {
 		}
 
 		const basePayload = {
-			visitDate: date,
+			visitDate: format(date, "yyyy-MM-dd"),
 			visitTime: time,
 			address: userAddress.trim(),
 			services: [service],
@@ -71,13 +73,15 @@ export default function ScheduleSection() {
 		};
 
 		const payload = isLogged
-			? basePayload
+			? { ...basePayload }
 			: {
 					...basePayload,
 					userName: userName.trim(),
 					userEmail: userEmail.trim(),
 					userPhone: userPhone.trim(),
 				};
+
+		console.log(payload)
 
 		const result = await showAlert({
 			title: '¿Confirmar visita?',
@@ -90,8 +94,9 @@ export default function ScheduleSection() {
             <p><strong>Email:</strong> ${userEmail}</p>
             <p><strong>Teléfono:</strong> ${userPhone}</p>
           `
-					: `<p><strong>Solicitante:</strong> ${user?.name}</p>`
+					: `<p><strong>Solicitante:</strong> ${user?.email}</p>`
 			}
+
           <p><strong>Dirección:</strong> ${userAddress}</p>
           <p><strong>Servicio:</strong> ${service}</p>
           <p><strong>Fecha:</strong> ${date.toLocaleDateString()}</p>
@@ -115,6 +120,7 @@ export default function ScheduleSection() {
 				await createGuestVisit.mutateAsync(payload);
 			}
 
+			console.log(payload);
 			await showAlert({
 				icon: 'success',
 				title: 'Visita agendada',
@@ -131,11 +137,11 @@ export default function ScheduleSection() {
 			setUserEmail('');
 			setUserPhone('');
 			setUserAddress('');
-		} catch (error) {
+		} catch (error: any) {
 			await showAlert({
 				icon: 'error',
 				title: 'Error',
-				text: 'Hubo un problema al crear la visita.',
+				text: `${error.status == 409 && "Esta hora no esta disponible, por favor elige otra."}`,
 			});
 			console.error(error);
 		} finally {
