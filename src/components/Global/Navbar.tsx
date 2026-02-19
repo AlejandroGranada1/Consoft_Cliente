@@ -29,7 +29,7 @@ export default function Navbar() {
             Agendar Cita {isActive('/client/agendarcita') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]"></span>}
           </Link>
           <Link href="/client/productos" className={`relative pb-1 ${isActive('/client/productos') && 'font-semibold'}`}>
-            Productos {isActive('/client/productos') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]"></span>}
+            Referencias{isActive('/client/productos') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]"></span>}
           </Link>
           <Link href="/client/servicios" className={`relative pb-1 ${isActive('/client/servicios') && 'font-semibold'}`}>
             Servicios {isActive('/client/servicios') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]"></span>}
