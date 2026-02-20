@@ -4,12 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import NotificationCard from '@/components/notificaciones/NotificationCard';
 import EmptyState from '@/components/notificaciones/EmptyState';
-import { useMyCart } from '@/hooks/apiHooks';
+import {  useMyQuotations } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 
 export default function NotificationsPage() {
 	const { user, loading } = useUser();
-	const { data, isLoading, refetch } = useMyCart();
+	const { data, isLoading, refetch } = useMyQuotations();
 	const router = useRouter();
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -34,7 +34,9 @@ export default function NotificationsPage() {
 
 
 	// Filtrar cotizaciones que NO son carritos activos
-	const allQuotations = data?.allQuotations || [];
+	const allQuotations = data || [];
+
+	console.log(allQuotations)
 
 	// Estados que consideramos "notificaciones"
 	const notificationStatuses = [
@@ -95,7 +97,7 @@ export default function NotificationsPage() {
 							} else if (q.status === 'Solicitada') {
 								statusColor = 'bg-blue-100 text-blue-800';
 								statusIcon = '🕐';
-							} else if (q.status === 'cotizada') {
+							} else if (q.status === 'Cotizada') {
 								statusColor = 'bg-yellow-100 text-yellow-800';
 								statusIcon = '💰';
 							} else if (q.status === 'Completada') {

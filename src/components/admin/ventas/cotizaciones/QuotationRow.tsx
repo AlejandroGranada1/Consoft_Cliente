@@ -9,7 +9,6 @@ interface QuotationRowProps {
 }
 
 export default function QuotationRow({ onView, q }: QuotationRowProps) {
-    console.log(q)
 	return (
 		<div className='table-preset md:grid-cols-5'>
 			{/* Codigo */}

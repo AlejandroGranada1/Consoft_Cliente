@@ -86,7 +86,7 @@ export default function ProductDetailPage() {
 					onClick={() => router.back()}
 					className='flex items-center gap-2 text-sm text-gray-500 hover:text-[#8B5A2B] mb-10'>
 					<ArrowLeft size={16} />
-					Volver al catálogo
+					Volver a las referencias
 				</button>
 
 				<div className='grid grid-cols-1 md:grid-cols-2 gap-16'>

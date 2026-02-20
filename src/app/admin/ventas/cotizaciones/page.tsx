@@ -24,7 +24,7 @@ function Page() {
 
 	// 👉 Filtrado (por ID o cliente)
 	const filteredQuotations = allQuotations.filter(
-		(q) =>
+		(q: any) =>
 			q._id.toLowerCase().includes(filterText.toLowerCase()) ||
 			q.user.name.toLowerCase().includes(filterText.toLowerCase())
 	);
@@ -73,7 +73,7 @@ function Page() {
 
 				{/* listado con paginación */}
 				{currentQuotations.length > 0 ? (
-					currentQuotations.map((q) => (
+					currentQuotations.map((q: any) => (
 						<QuotationRow
 							key={q._id}
 							q={q}

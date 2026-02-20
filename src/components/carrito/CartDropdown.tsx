@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { X, ShoppingCart, Trash2 } from 'lucide-react';
-import { useDeleteCartItem, useMyCart } from '@/hooks/apiHooks';
+import { useRemoveItem, useMyCart } from '@/hooks/apiHooks';
 import { useState } from 'react';
 
 export default function CartDropdown({
@@ -13,13 +13,13 @@ export default function CartDropdown({
 	setIsOpen: (v: boolean) => void;
 }) {
 	const { data, isLoading, refetch } = useMyCart();
-	const deleteItem = useDeleteCartItem();
+	const deleteItem = useRemoveItem();
 	const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
 
 	if (!isOpen) return null;
 
 	// ✔ Tomamos el carrito activo desde la API
-	const activeCart = data?.quotations?.[0];
+	const activeCart = data;
 	const items = activeCart?.items || [];
 	const itemCount = items.length;
 	// En CartDropdown, justo después de obtener activeCart:

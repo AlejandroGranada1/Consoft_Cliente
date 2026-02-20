@@ -11,7 +11,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
 	const quotation = extraProps as any;
 	const items = quotation.items || [];
-
+	console.log(items)
 	const getImage = (url?: string) =>
 		url && url.trim() !== '' ? url : '/def_prod.png';
 
@@ -39,7 +39,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 		setPrices(priceInit);
 		setItemNotes(notesInit);
 		setAdminNotes(quotation.adminNotes || '');
-	}, [isOpen]);
+	}, [isOpen, items]);
 
 	/* -------------------- HANDLERS -------------------- */
 
@@ -112,15 +112,15 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 							key={item._id}
 							className='border rounded-lg p-4 bg-gray-50'>
 							<summary className='cursor-pointer font-semibold'>
-								{item.product?.name} (x{item.quantity})
+								{item.isCustom ? item.customDetails.name : item.product?.name} (x{item.quantity})
 							</summary>
 
 							<div className='mt-4 grid grid-cols-[90px_1fr_160px] gap-6'>
 								<div className='relative w-24 h-24 border rounded-lg overflow-hidden'>
 									<Image
-										src={getImage(item.product?.imageUrl)}
+										src={getImage(item.isCustom ? item.customDetails.referenceImage : item.product?.imageUrl)}
 										fill
-										alt={item.product?.name}
+										alt={item.isCustom ? item.customDetails.name : item.product?.name}
 										className='object-cover'
 									/>
 								</div>

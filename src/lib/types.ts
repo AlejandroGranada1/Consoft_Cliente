@@ -90,12 +90,12 @@ export interface Visit {
 	address: string;
 	status: string;
 	services: Visit[]; // Array of Service IDs
-	isGuest: boolean
+	isGuest: boolean;
 	guestInfo: {
-		email: string
-		name: string
-		phone: string
-	}
+		email: string;
+		name: string;
+		phone: string;
+	};
 }
 
 export interface OrderItem {
@@ -118,7 +118,7 @@ export interface Attachment {
 
 export interface Order {
 	_id: string | undefined;
-	user:  User | string; // User ID
+	user: User | string; // User ID
 	status: string; // e.g. "In process", "Completed"
 	address: string;
 	startedAt: string;
@@ -130,13 +130,13 @@ export interface Order {
 }
 
 export interface PedidoUI {
-  id: string;
-  nombre: string;
-  estado: string;
-  valor: string;
-  dias: string;
-  restante: number;
-  raw: Order;
+	id: string;
+	nombre: string;
+	estado: string;
+	valor: string;
+	dias: string;
+	restante: number;
+	raw: Order;
 }
 
 export type OrderWithPartialUser = Omit<Order, 'user'> & { user: string | Partial<User> };
@@ -178,13 +178,20 @@ export interface PaymentSummary {
 
 export type CartItem = {
 	_id?: string;
-	productId: Product | string;
+	productId?: Product | string;
 	quantity: number;
 	color: string;
 	size: string;
 	notes?: string;
 	price?: number;
 	total?: number;
+	isCustom?: boolean
+	customDetails?: {
+		name: string;
+		description: string;
+		woodType: string;
+		referenceImage: string | null; // Base64 de la imagen
+	};
 };
 
 export type QuotationsResponse = {
@@ -207,6 +214,13 @@ export type QuotationsResponse = {
 			color: string;
 			size: string;
 			adminNotes: string;
+			isCustom: boolean;
+			customDetails: {
+				name: string
+				description: string
+				referenceImage: string
+				woodType: string
+			}
 			_id: string;
 		}>;
 		createdAt: string;
@@ -217,9 +231,9 @@ export type QuotationsResponse = {
 	}[];
 };
 
-export type Quotation = QuotationsResponse["quotations"][number];
+export type Quotation = QuotationsResponse['quotations'][number];
 
-export type QuotationItem = QuotationsResponse['quotations'][number]['items'][number]
+export type QuotationItem = QuotationsResponse['quotations'][number]['items'][number];
 
 export interface ChatMessageSender {
 	_id: string;
@@ -235,12 +249,10 @@ export interface ChatMessage {
 	sentAt: string;
 }
 
-
 declare global {
-  interface Window {
-    google: any;
-  }
+	interface Window {
+		google: any;
+	}
 
-  const google: any;
+	const google: any;
 }
-

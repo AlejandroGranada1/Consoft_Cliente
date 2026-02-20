@@ -133,9 +133,10 @@ export default function ProductCard({
               rounded-lg
               hover:bg-[#5C3317]
               transition
+              cursor-pointer
             "
           >
-            Ver detalle
+            Cotizar
           </button>
         </div>
       </div>

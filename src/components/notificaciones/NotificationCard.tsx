@@ -1,6 +1,6 @@
 'use client';
 
-import { useUserDesicion } from '@/hooks/apiHooks';
+import { useDecision } from '@/hooks/apiHooks';
 import { formatCOP } from '@/lib/formatCOP';
 import { formatDateForInput } from '@/lib/formatDate';
 import { QuotationItem } from '@/lib/types';
@@ -22,7 +22,7 @@ export default function NotificationCard({
 	items,
 	refetch,
 }: Props) {
-	const setDesicion = useUserDesicion();
+	const setDesicion = useDecision();
 
 	const rejectAlert = async () => {
 		const Swal = (await import('sweetalert2')).default;
@@ -37,7 +37,7 @@ export default function NotificationCard({
 		});
 
 		if (result.isConfirmed) {
-			await setDesicion.mutateAsync({ quotationId: _id, decision: 'reject' });
+			await setDesicion.mutateAsync({ quotationId: _id, decision: 'rejected' });
 			refetch?.();
 		}
 
@@ -59,7 +59,7 @@ export default function NotificationCard({
 		});
 
 		if (result.isConfirmed) {
-			await setDesicion.mutateAsync({ quotationId: _id, decision: 'accept' });
+			await setDesicion.mutateAsync({ quotationId: _id, decision: 'accepted' });
 			refetch?.();
 		}
 
@@ -86,25 +86,26 @@ export default function NotificationCard({
 			{/* ───── PRODUCTOS ───── */}
 			<div className="space-y-4">
 				{items.map(item => {
+					console.log(item)
 					const unitPrice = (item as any).price ?? 0;
 					const subtotal = unitPrice * item.quantity;
 
 					return (
 						<div
-							key={item.product._id}
+							key={item.adminNotes}
 							className="flex gap-4 border rounded-lg p-4 bg-gray-50"
 						>
 							{/* Imagen */}
 							<img
-								src={item.product.imageUrl || '/placeholder.png'}
-								alt={item.product.name}
+								src={item.isCustom ? item.customDetails.referenceImage : item.product.imageUrl || '/placeholder.png'}
+								alt={item.isCustom ? item.customDetails.name : item.product.name}
 								className="w-20 h-20 rounded-lg object-cover border"
 							/>
 
 							{/* Info */}
 							<div className="flex-1 space-y-1">
 								<p className="font-medium text-[#1E293B]">
-									{item.product.name}
+									{item.isCustom ? item.customDetails.name : item.product.name}
 								</p>
 
 								<p className="text-sm text-gray-600">
