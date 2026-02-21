@@ -30,7 +30,6 @@ export default function ScheduleSection() {
 	const [userPhone, setUserPhone] = useState('');
 	const [userAddress, setUserAddress] = useState('');
 
-
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -65,7 +64,7 @@ export default function ScheduleSection() {
 		}
 
 		const basePayload = {
-			visitDate: format(date, "yyyy-MM-dd"),
+			visitDate: format(date, 'yyyy-MM-dd'),
 			visitTime: time,
 			address: userAddress.trim(),
 			services: [service],
@@ -81,7 +80,7 @@ export default function ScheduleSection() {
 					userPhone: userPhone.trim(),
 				};
 
-		console.log(payload)
+		console.log(payload);
 
 		const result = await showAlert({
 			title: '¿Confirmar visita?',
@@ -141,7 +140,7 @@ export default function ScheduleSection() {
 			await showAlert({
 				icon: 'error',
 				title: 'Error',
-				text: `${error.status == 409 && "Esta hora no esta disponible, por favor elige otra."}`,
+				text: `${error.status == 409 && 'Esta hora no esta disponible, por favor elige otra.'}`,
 			});
 			console.error(error);
 		} finally {
@@ -219,9 +218,11 @@ export default function ScheduleSection() {
 					</div>
 				)}
 
-				<ServiceSelector
-					value={service}
-					onSelect={setService}
+				<FormField
+					label=''
+					placeholder='Descripción opcional...'
+					value={description}
+					onChange={(e) => setDescription(e.target.value)}
 				/>
 
 				<Calendar
@@ -231,13 +232,6 @@ export default function ScheduleSection() {
 				<TimePicker
 					selectedTime={time}
 					onSelect={setTime}
-				/>
-
-				<FormField
-					label=''
-					placeholder='Descripción opcional...'
-					value={description}
-					onChange={(e) => setDescription(e.target.value)}
 				/>
 
 				<button
