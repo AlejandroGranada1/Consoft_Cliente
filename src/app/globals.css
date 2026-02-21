@@ -83,3 +83,9 @@ html::-webkit-scrollbar {
 .swal2-progress-bar {
 	background-color: var(--color-green) !important;
 }
+
+/* Sobreescribe cualquier bg en páginas hijas */
+.client-layout section,
+.client-layout main {
+  background-color: #F5ECD7  !important;
+}

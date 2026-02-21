@@ -9,7 +9,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 	return (
 		<CartProvider>
 			<Navbar />
-			<main className='flex-1'>{children}</main>
+			<main className='flex-1 client-layout'>{children}</main>
 			<footer>
 				<Footer/>
 			</footer>
