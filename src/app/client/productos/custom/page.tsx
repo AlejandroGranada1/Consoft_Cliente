@@ -122,16 +122,29 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : ''}
 			Swal.fire({
 				title: '¡Solicitud enviada!',
 				html: `
-				<p>Tu producto personalizado ha sido agregado al carrito.</p>
-				<p class="text-sm text-gray-600 mt-2">
-					Nos pondremos en contacto contigo para confirmar detalles y cotización.
-				</p>
-			`,
+    <p>Tu producto personalizado ha sido agregado al carrito.</p>
+    <p class="text-sm text-gray-600 mt-2">
+        Nos pondremos en contacto contigo para confirmar detalles y cotización.
+    </p>
+`,
 				icon: 'success',
 				confirmButtonColor: '#8B5A2B',
 			});
 
-			router.push('/client/carrito');
+			// Limpiar formulario
+			setFormData({
+				productName: '',
+				description: '',
+				dimensions: '',
+				color: '',
+				woodType: '',
+				customWoodType: '',
+				quantity: 1,
+				referenceImage: null,
+			});
+			setImagePreview(null);
+
+			router.push('/client/productos/custom');
 		} catch (error: any) {
 			Swal.fire({
 				title: 'Error',
