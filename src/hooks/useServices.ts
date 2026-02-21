@@ -13,11 +13,13 @@ export const useGetServices = () => {
 	});
 };
 
-export const useAddService = () => {
+export const useUpdateService = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async (newService: { nombre: string; email: string }) => {
-			const { data } = await api.post('/api/services', newService);
+		mutationFn: async ({ _id, formData }: { _id: string; formData: FormData }) => {
+			const { data } = await api.put(`/api/services/${_id}`, formData, {
+				headers: { 'Content-Type': 'multipart/form-data' },
+			});
 			return data;
 		},
 		onSuccess: () => {
@@ -26,11 +28,12 @@ export const useAddService = () => {
 	});
 };
 
-export const useUpdateService = () => {
+export const useAddService = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: async ({ _id, ...rest }: Service) => {
-			const { data } = await api.put(`/api/services/${_id}`, rest);
+		mutationFn: async (formData: FormData) => {
+			const { data } = await api.post('/api/services', formData, {
+			});
 			return data;
 		},
 		onSuccess: () => {

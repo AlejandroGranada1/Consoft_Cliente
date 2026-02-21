@@ -4,14 +4,11 @@ import { Service } from '@/lib/types';
 import CreateServiceModal from '@/components/admin/servicios/servicios/CreateService';
 import EditServiceModal from '@/components/admin/servicios/servicios/EditService';
 import ServiceDetailsModal from '@/components/admin/servicios/servicios/ServiceDetails';
-import { deleteElement } from '@/components/admin/global/alerts';
-import api from '@/components/Global/axios';
-import PaginatedList from '@/components/Global/Pagination';
 import React, { useEffect, useState } from 'react';
-
-import { useGetServices } from '@/hooks/apiHooks';
+import { useDeleteService, useGetServices } from '@/hooks/apiHooks';
 import ServiceRow from '@/components/admin/servicios/servicios/ServiceRow';
 import Pagination from '@/components/Global/Pagination';
+import Swal from 'sweetalert2';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
@@ -19,28 +16,46 @@ function Page() {
 	const [editModal, setEditModal] = useState(false);
 	const [service, setService] = useState<Service>();
 	const [filterText, setFilterText] = useState('');
-
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 5;
 
-	const { data, refetch } = useGetServices();
+	const { data } = useGetServices();
+	const deleteService = useDeleteService();
 	const services = data?.data || [];
 
 	const filteredServices = services.filter(
 		(s: Service) =>
 			s.name.toLowerCase().includes(filterText.toLowerCase()) ||
-			s.description?.toLowerCase().includes(filterText.toLowerCase())
+			s.description?.toLowerCase().includes(filterText.toLowerCase()),
 	);
 
 	const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
 	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const currentServices = filteredServices.slice(startIndex, endIndex);
+	const currentServices = filteredServices.slice(startIndex, startIndex + itemsPerPage);
 
-	// Resetear a página 1 cuando cambia el filtro
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [filterText]);
+	useEffect(() => { setCurrentPage(1); }, [filterText]);
+
+	const handleDeleteService = async (serviceToDelete: Service) => {
+		const result = await Swal.fire({
+			title: '¿Eliminar servicio?',
+			text: `"${serviceToDelete.name}" será eliminado permanentemente`,
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonColor: '#c0392b',
+			cancelButtonColor: '#6b7280',
+			confirmButtonText: 'Sí, eliminar',
+			cancelButtonText: 'Cancelar',
+		});
+
+		if (!result.isConfirmed) return;
+
+		try {
+			await deleteService.mutateAsync(serviceToDelete._id!);
+			Swal.fire('Eliminado', 'El servicio fue eliminado correctamente', 'success');
+		} catch {
+			Swal.fire('Error', 'No se pudo eliminar el servicio', 'error');
+		}
+	};
 
 	return (
 		<div className='px-4 md:px-20'>
@@ -63,18 +78,14 @@ function Page() {
 
 					<button
 						onClick={() => setCreateModal(true)}
-						className='flex items-center justify-center py-2 px-6 md:px-10 border border-brown rounded-lg cursor-pointer text-brown w-full md:w-fit'>
-						<Plus
-							size={25}
-							className='mr-2'
-						/>{' '}
+						className='flex items-center justify-center py-2 px-6 md:px-10 border border-brown rounded-lg cursor-pointer text-brown w-full md:w-fit hover:bg-brown hover:text-white transition'>
+						<Plus size={25} className='mr-2' />
 						Agregar Nuevo Servicio
 					</button>
 				</div>
 			</header>
 
 			<section className='w-full mx-auto mt-6 flex flex-col justify-between border-t border-gray'>
-				{/* Encabezado desktop */}
 				<div className='hidden md:grid grid-cols-4 place-items-center py-6 font-semibold'>
 					<p>Servicio</p>
 					<p>Descripción</p>
@@ -82,28 +93,20 @@ function Page() {
 					<p>Acciones</p>
 				</div>
 
-				{/* Listado con paginación */}
 				{currentServices.length > 0 ? (
-					currentServices.map((service: Service) => (
+					currentServices.map((s: Service) => (
 						<ServiceRow
-							key={service._id}
-							service={service}
-							onDelete={() => {}}
-							onView={() => {
-								setDetailsModal(true);
-								setService(service);
-							}}
-							onEdit={() => {
-								setEditModal(true);
-								setService(service);
-							}}
+							key={s._id}
+							service={s}
+							onDelete={() => handleDeleteService(s)}
+							onView={() => { setDetailsModal(true); setService(s); }}
+							onEdit={() => { setEditModal(true); setService(s); }}
 						/>
 					))
 				) : (
-					<div className='text-center py-8 text-gray-500'>
-						No hay servicios para mostrar
-					</div>
+					<div className='text-center py-8 text-gray-500'>No hay servicios para mostrar</div>
 				)}
+
 				{totalPages > 1 && (
 					<Pagination
 						count={totalPages}
@@ -114,23 +117,9 @@ function Page() {
 				)}
 			</section>
 
-			{/* Modales */}
-			<CreateServiceModal
-				isOpen={createModal}
-				onClose={() => setCreateModal(false)}
-				updateList={refetch}
-			/>
-			<EditServiceModal
-				isOpen={editModal}
-				onClose={() => setEditModal(false)}
-				extraProps={service}
-				updateList={refetch}
-			/>
-			<ServiceDetailsModal
-				isOpen={detailsModal}
-				onClose={() => setDetailsModal(false)}
-				extraProps={service}
-			/>
+			<CreateServiceModal isOpen={createModal} onClose={() => setCreateModal(false)} />
+			<EditServiceModal isOpen={editModal} onClose={() => setEditModal(false)} extraProps={service} />
+			<ServiceDetailsModal isOpen={detailsModal} onClose={() => setDetailsModal(false)} extraProps={service} />
 		</div>
 	);
 }

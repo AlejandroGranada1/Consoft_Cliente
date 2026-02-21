@@ -12,6 +12,7 @@ import { useMyCart } from '@/hooks/useQuotations';
 export default function UserMenu() {
 	const [openCart, setOpenCart] = useState(false);
 	const [openMenu, setOpenMenu] = useState(false);
+	const { data: cart, isLoading, refetch } = useMyCart();
 	const { user } = useUser();
 	const logout = useLogout();
 
@@ -25,7 +26,6 @@ export default function UserMenu() {
 		);
 	}
 
-	const { data: cart, isLoading, refetch } = useMyCart();
 
 	const items = cart?.items || [];
 

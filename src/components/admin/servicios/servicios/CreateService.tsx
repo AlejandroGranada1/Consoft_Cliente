@@ -1,155 +1,156 @@
 'use client';
-import { X } from 'lucide-react';
+import { X, ImagePlus, Tag, FileText } from 'lucide-react';
 import { DefaultModalProps, Service } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+import { useAddService } from '@/hooks/apiHooks';
 
-import { createElement } from '../../global/alerts';
+const initialState: Service = { _id: undefined, name: '', description: '', imageUrl: '', status: true };
 
-const initialState: Service = {
-  _id: undefined,
-  name: '',
-  description: '',
-  imageUrl: '',
-  status: true,
-};
+function CreateServiceModal({ isOpen, onClose }: DefaultModalProps<Service>) {
+	const [serviceData, setServiceData] = useState<Service>(initialState);
+	const [imageFile, setImageFile] = useState<File | null>(null);
+	const addService = useAddService();
 
-function CreateServiceModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Service>) {
-  const [serviceData, setServiceData] = useState<Service>(initialState);
+	useEffect(() => {
+		if (!isOpen) { setServiceData(initialState); setImageFile(null); }
+	}, [isOpen]);
 
-  /* -------- LIMPIAR MODAL AL CERRAR -------- */
-  useEffect(() => {
-    if (!isOpen) {
-      setServiceData(initialState);
-    }
-  }, [isOpen]);
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { name, value, files } = e.target;
+		if (name === 'imageUrl' && files?.[0]) {
+			setImageFile(files[0]);
+			setServiceData((prev) => ({ ...prev, imageUrl: URL.createObjectURL(files[0]) }));
+		} else {
+			setServiceData((prev) => ({ ...prev, [name]: value }));
+		}
+	};
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, files } = e.target;
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!serviceData.name.trim() || !serviceData.description?.trim())
+			return Swal.fire('Campos incompletos', 'Todos los campos son obligatorios', 'warning');
+		if (!imageFile)
+			return Swal.fire('Imagen requerida', 'Debes seleccionar una imagen', 'warning');
 
-    if (name === 'imageUrl' && files && files[0]) {
-      setServiceData((prev) => ({
-        ...prev,
-        imageUrl: URL.createObjectURL(files[0]),
-      }));
-    } else {
-      setServiceData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
+		const fd = new FormData();
+		fd.append('name', serviceData.name);
+		fd.append('description', serviceData.description ?? '');
+		fd.append('status', String(serviceData.status));
+		fd.append('image', imageFile);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+		try {
+			await addService.mutateAsync(fd);
+			Swal.fire({ icon: 'success', title: 'Servicio creado', timer: 1500, showConfirmButton: false });
+			setServiceData(initialState);
+			setImageFile(null);
+			onClose();
+		} catch {
+			Swal.fire('Error', 'No se pudo crear el servicio', 'error');
+		}
+	};
 
-    /* -------- VALIDACIONES -------- */
-    if (!serviceData.name.trim() || !serviceData.description?.trim()) {
-      return Swal.fire(
-        'Campos incompletos',
-        'Todos los campos son obligatorios',
-        'warning'
-      );
-    }
+	if (!isOpen) return null;
 
-    if (!serviceData.imageUrl) {
-      return Swal.fire(
-        'Imagen requerida',
-        'Debe seleccionar una imagen para el servicio',
-        'warning'
-      );
-    }
+	return (
+		<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4'>
+			<div className='bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col'>
 
-    await createElement('Servicio', '/api/services', serviceData, updateList);
-    console.log('Servicio creado:', serviceData);
+				{/* Header */}
+				<div className='flex items-center justify-between px-6 py-4 border-b border-gray-100'>
+					<h1 className='text-lg font-semibold text-gray-800'>Agregar Servicio</h1>
+					<button onClick={onClose} className='p-2 rounded-full hover:bg-gray-100 text-gray-500 transition'>
+						<X size={18} />
+					</button>
+				</div>
 
-    setServiceData(initialState);
-    onClose();
-  };
+				{/* Body */}
+				<div className='grid grid-cols-1 md:grid-cols-2 flex-1'>
+					<form onSubmit={handleSubmit} className='p-6 space-y-4'>
 
-  if (!isOpen) return null;
+						<div className='border border-gray-100 rounded-xl p-4 bg-gray-50'>
+							<h3 className='text-xs font-medium text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2'>
+								<Tag size={14} /> Nombre
+							</h3>
+							<input
+								name='name' type='text' value={serviceData.name} onChange={handleChange}
+								placeholder='Ej: Reparación de muebles'
+								className='w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#8B5A2B] focus:ring-1 focus:ring-[#8B5A2B] transition'
+							/>
+						</div>
 
-  return (
-    <div className='modal-bg'>
-      <div className='modal-frame w-[800px]'>
-        <header className='w-fit mx-auto'>
-          <button
-            onClick={onClose}
-            className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-            <X />
-          </button>
-          <h1 className='text-xl font-semibold mb-4'>Agregar Servicio</h1>
-        </header>
+						<div className='border border-gray-100 rounded-xl p-4 bg-gray-50'>
+							<h3 className='text-xs font-medium text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2'>
+								<FileText size={14} /> Descripción
+							</h3>
+							<input
+								name='description' type='text' value={serviceData.description} onChange={handleChange}
+								placeholder='Breve descripción del servicio'
+								className='w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#8B5A2B] focus:ring-1 focus:ring-[#8B5A2B] transition'
+							/>
+						</div>
 
-        <section className='grid grid-cols-2 gap-4'>
-          <form onSubmit={handleSubmit} className='flex flex-col justify-between gap-4'>
-            {/* Nombre */}
-            <div className='flex flex-col'>
-              <label htmlFor='name'>Servicio</label>
-              <input
-                id='name'
-                name='name'
-                type='text'
-                placeholder='Nombre del servicio'
-                value={serviceData.name}
-                onChange={handleChange}
-                className='border px-3 py-2 rounded-md'
-              />
-            </div>
+						<div className='border border-gray-100 rounded-xl p-4 bg-gray-50'>
+							<h3 className='text-xs font-medium text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2'>
+								<ImagePlus size={14} /> Imagen
+							</h3>
+							<label className='flex items-center gap-3 bg-white border border-dashed border-gray-300 rounded-lg px-4 py-2.5 cursor-pointer hover:border-[#8B5A2B] transition'>
+								<ImagePlus size={16} className='text-gray-400 shrink-0' />
+								<span className='text-sm text-gray-500 truncate'>
+									{imageFile ? imageFile.name : 'Seleccionar imagen'}
+								</span>
+								<input name='imageUrl' type='file' accept='image/*' onChange={handleChange} className='hidden' />
+							</label>
+						</div>
 
-            {/* Descripción */}
-            <div className='flex flex-col mt-4'>
-              <label htmlFor='description'>Descripción</label>
-              <input
-                id='description'
-                name='description'
-                type='text'
-                placeholder='Descripción del servicio'
-                value={serviceData.description}
-                onChange={handleChange}
-                className='border px-3 py-2 rounded-md'
-              />
-            </div>
+						<div className='border border-gray-100 rounded-xl p-4 bg-gray-50'>
+							<h3 className='text-xs font-medium text-gray-500 uppercase tracking-wider mb-3'>Estado</h3>
+							<button
+								type='button'
+								onClick={() => setServiceData((prev) => ({ ...prev, status: !prev.status }))}
+								className='flex items-center gap-3'>
+								<div className={`relative w-11 h-6 rounded-full transition-colors ${serviceData.status ? 'bg-green-500' : 'bg-gray-300'}`}>
+									<span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${serviceData.status ? 'translate-x-5' : ''}`} />
+								</div>
+								<span className={`text-sm font-medium ${serviceData.status ? 'text-green-600' : 'text-gray-400'}`}>
+									{serviceData.status ? 'Activo' : 'Inactivo'}
+								</span>
+							</button>
+						</div>
+					</form>
 
-            {/* Imagen */}
-            <div className='flex flex-col mt-4'>
-              <label htmlFor='imageUrl'>Imagen</label>
-              <input
-                id='imageUrl'
-                name='imageUrl'
-                type='file'
-                onChange={handleChange}
-                className='border px-3 py-2 rounded-md'
-              />
-            </div>
+					{/* Preview */}
+					<div className='bg-gray-50 border-l border-gray-100 flex flex-col items-center justify-center p-6'>
+						{serviceData.imageUrl ? (
+							<>
+								<img src={serviceData.imageUrl} alt='Preview' className='w-full max-h-56 object-contain rounded-xl shadow' />
+								<p className='text-xs text-gray-400 mt-3 flex items-center gap-1'>
+									<ImagePlus size={12} /> Vista previa
+								</p>
+							</>
+						) : (
+							<div className='flex flex-col items-center gap-2 text-gray-300'>
+								<ImagePlus size={48} />
+								<p className='text-sm'>Sin imagen seleccionada</p>
+							</div>
+						)}
+					</div>
+				</div>
 
-            {/* Botones */}
-            <div className='w-full flex justify-between mt-10'>
-              <button
-                type='button'
-                onClick={onClose}
-                className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
-                Cancelar
-              </button>
-              <button
-                type='submit'
-                className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-                Guardar
-              </button>
-            </div>
-          </form>
-
-          {/* Preview de la imagen */}
-          <div className='border rounded-lg flex items-center justify-center'>
-            {serviceData.imageUrl && (
-              <img
-                src={serviceData.imageUrl}
-                alt='Preview'
-                className='max-h-40 object-contain'
-              />
-            )}
-          </div>
-        </section>
-      </div>
-    </div>
-  );
+				{/* Footer */}
+				<div className='px-6 py-4 border-t border-gray-100 flex justify-between'>
+					<button type='button' onClick={onClose}
+						className='px-5 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition'>
+						Cancelar
+					</button>
+					<button type='submit' form='create-service-form' onClick={handleSubmit as any} disabled={addService.isPending}
+						className='px-5 py-2 rounded-lg bg-[#8B5A2B] text-white text-sm hover:bg-[#6d4420] transition disabled:opacity-50'>
+						{addService.isPending ? 'Guardando...' : 'Crear servicio'}
+					</button>
+				</div>
+			</div>
+		</div>
+	);
 }
 
 export default CreateServiceModal;
