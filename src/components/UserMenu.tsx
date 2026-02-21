@@ -47,7 +47,7 @@ export default function UserMenu() {
 						className='menu-item'>
 						{items.length > 0 && (
 							<span className='relative rounded-full px-1 text-xs bottom-3 left-10 bg-red-500 text-white'>
-								{items.length}
+								{items.length > 9 ? "9+" : items.length}
 							</span>
 						)}
 						<ShoppingCart size={18} />
