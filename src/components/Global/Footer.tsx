@@ -32,7 +32,7 @@ export default function Footer() {
                 href="/client/productos"
                 className="hover:text-white transition-colors"
               >
-                Productos
+                Referencias de productos
               </Link>
             </li>
             <li>
@@ -40,12 +40,12 @@ export default function Footer() {
                 href="/client/servicios"
                 className="hover:text-white transition-colors"
               >
-                Ventas
+                Servicios
               </Link>
             </li>
             <li>
               <Link
-                href="/client/agendarvisita"
+                href="/client/agendarcita"
                 className="hover:text-white transition-colors"
               >
                 Agendar Visita
@@ -60,17 +60,17 @@ export default function Footer() {
 
           <div className="space-y-3 text-sm text-white/80">
             <a
-              href="https://wa.me/573000000000"
+              href="https://wa.me/573054579487"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 hover:text-white transition-colors"
             >
               <Phone size={18} />
-              <span>WhatsApp: +57 300 000 0000</span>
+              <span>WhatsApp: +57 305 4579487</span>
             </a>
 
             <a
-              href="https://instagram.com/consoft"
+              href="https://instagram.com/conforstilo"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 hover:text-white transition-colors"
