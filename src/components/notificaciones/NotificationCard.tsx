@@ -64,7 +64,8 @@ export default function NotificationCard({
 		}
 
 		await Swal.fire({
-			title: '¡Gracias por tu respuesta!',
+			title: 'Aceptaste la cotización',
+			html: "Se asignó tu cotizacion a un pedido, estaremos trabajando en ello",
 			icon: 'success',
 			confirmButtonColor: '#8B5A2B',
 		});
