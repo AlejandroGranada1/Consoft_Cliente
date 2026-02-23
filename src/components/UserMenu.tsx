@@ -7,12 +7,14 @@ import { Role } from '@/lib/types';
 import { useLogout } from '@/hooks/useAuth';
 import CartDropdown from './carrito/CartDropdown';
 import { useState } from 'react';
-import { useMyCart } from '@/hooks/useQuotations';
+import { useMyCart, useMyQuotations } from '@/hooks/useQuotations';
 
 export default function UserMenu() {
 	const [openCart, setOpenCart] = useState(false);
 	const [openMenu, setOpenMenu] = useState(false);
 	const { data: cart, isLoading, refetch } = useMyCart();
+	const { data } = useMyQuotations();
+
 	const { user } = useUser();
 	const logout = useLogout();
 
@@ -26,8 +28,21 @@ export default function UserMenu() {
 		);
 	}
 
-
 	const items = cart?.items || [];
+	const allQuotations = data || [];
+
+	const notificationStatuses = [
+		'Solicitada',
+		'Cotizada',
+		'Aprobada',
+		'Rechazada',
+		'Completada',
+		'Revisada',
+	];
+
+	const notifications = allQuotations.filter(
+		(q: any) => notificationStatuses.includes(q.status) && q.status !== 'Carrito',
+	);
 
 	return (
 		<div className='relative'>
@@ -47,7 +62,7 @@ export default function UserMenu() {
 						className='menu-item'>
 						{items.length > 0 && (
 							<span className='relative rounded-full px-1 text-xs bottom-3 left-10 bg-red-500 text-white'>
-								{items.length > 9 ? "9+" : items.length}
+								{items.length > 9 ? '9+' : items.length}
 							</span>
 						)}
 						<ShoppingCart size={18} />
@@ -65,6 +80,11 @@ export default function UserMenu() {
 						className='menu-item'>
 						<Mail size={18} />
 						<span className='text-sm'>Notificaciones</span>
+						{notifications.length > 0 && (
+							<span className='relative rounded-full px-1 text-xs bottom-3 bg-red-500 text-white'>
+								{notifications.length > 9 ? '9+' : notifications.length}
+							</span>
+						)}
 					</Link>
 
 					{(user.role as Role)?.name === 'Administrador' && (
