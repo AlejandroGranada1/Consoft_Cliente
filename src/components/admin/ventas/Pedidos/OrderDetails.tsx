@@ -58,9 +58,9 @@ function OrderDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 	};
 
 	return (
-		<div className='modal-bg'>
-			<div className='modal-frame w-[900px] p-6'>
-				<header className='relative mb-6'>
+	<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
+			<div className='modal-frame w-full max-w-[920px] flex flex-col max-h-[92vh]'>
+				<header className='sticky top-0 z-10 px-6 py-4 border-b backdrop-blur-xs'>
 					<div className='absolute top-0 left-0 flex items-center gap-2'>
 						<button
 							onClick={onClose}
@@ -82,7 +82,7 @@ function OrderDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 					</p>
 				</header>
 
-				<section className='space-y-6'>
+				<section className='space-y-6 px-6'>
 					{/* Información principal */}
 					<div className='grid grid-cols-2 gap-6'>
 						{/* Información del cliente */}
