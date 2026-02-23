@@ -7,19 +7,17 @@ import {
 	MapPin,
 	Calendar,
 	Package,
-	DollarSign,
 	Upload,
 	Image as ImageIcon,
 } from 'lucide-react';
 import { DefaultModalProps, Order, Service, User as UserType } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
-import { useGetServices, useGetUsers } from '@/hooks/apiHooks';
-import { useUpdateOrder } from '@/hooks/apiHooks';
+import { useGetServices, useGetUsers, useUpdateOrder } from '@/hooks/apiHooks';
 import api from '@/components/Global/axios';
 
 interface EditOrderData {
 	_id: string;
-	user: string; // Solo ID
+	user: string;
 	status: string;
 	address: string;
 	startedAt: string;
@@ -31,14 +29,13 @@ interface EditOrderData {
 		progressImage?: File | null;
 		imagePreview?: string | null;
 		_id?: string;
-		existingImages?: string[]; // URLs de imágenes existentes
+		existingImages?: string[];
 	}>;
 	paymentStatus: string;
 	total: number;
 }
 
 function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Order>) {
-	// Hooks para datos
 	const { data: servicesData, isLoading: servicesLoading } = useGetServices();
 	const { data: usersData, isLoading: usersLoading } = useGetUsers();
 	const updateOrderMutation = useUpdateOrder();
@@ -46,7 +43,6 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 	const services = servicesData?.data || [];
 	const users = usersData?.users || [];
 
-	// Estado del formulario
 	const [orderData, setOrderData] = useState<EditOrderData>({
 		_id: '',
 		user: '',
@@ -60,271 +56,142 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
 	const [uploadingImages, setUploadingImages] = useState(false);
 
-	// Usuario seleccionado para mostrar información
 	const selectedUser = users.find((u: UserType) => u._id === orderData.user);
 
-	// Sincronizar datos cuando cambian las props
 	useEffect(() => {
-		if (extraProps) {
-			// Convertir user a string (ID) si es objeto
-			const userId =
-				typeof extraProps.user === 'object'
-					? (extraProps.user as UserType)._id
-					: (extraProps.user as string);
+		if (!extraProps) return;
 
-			// Procesar items para incluir imágenes existentes si las hay
-			const processedItems = (extraProps.items || []).map((item: any) => ({
-				id_servicio:
-					typeof item.id_servicio === 'object'
-						? (item.id_servicio as Service)._id
-						: item.id_servicio,
-				detalles: item.detalles || '',
-				valor: item.valor || 0,
-				progressImage: null,
-				imagePreview: null,
-				_id: item._id,
-				existingImages: item.images || [], // Asumiendo que las imágenes vienen en item.images
-			}));
+		const userId =
+			typeof extraProps.user === 'object'
+				? (extraProps.user as UserType)._id
+				: (extraProps.user as string);
 
-			setOrderData({
-				_id: extraProps._id || '',
-				user: userId!,
-				status: extraProps.status || 'En proceso',
-				address: extraProps.address || '',
-				startedAt: extraProps.startedAt
-					? new Date(extraProps.startedAt).toISOString().split('T')[0]
-					: new Date().toISOString().split('T')[0],
-				deliveredAt: extraProps.deliveredAt
-					? new Date(extraProps.deliveredAt).toISOString().split('T')[0]
-					: undefined,
-				items: processedItems,
-				paymentStatus: extraProps.paymentStatus || 'Pendiente',
-				total: (extraProps.items || []).reduce(
-					(sum: number, item: any) => sum + (item.valor || 0),
-					0
-				),
-			});
-		}
+		const processedItems = (extraProps.items || []).map((item: any) => ({
+			id_servicio:
+				typeof item.id_servicio === 'object'
+					? (item.id_servicio as Service)._id
+					: item.id_servicio,
+			detalles: item.detalles || '',
+			valor: item.valor || 0,
+			progressImage: null,
+			imagePreview: null,
+			_id: item._id,
+			existingImages: item.images || [],
+		}));
+
+		setOrderData({
+			_id: extraProps._id || '',
+			user: userId!,
+			status: extraProps.status || 'En proceso',
+			address: extraProps.address || '',
+			startedAt: extraProps.startedAt
+				? new Date(extraProps.startedAt).toISOString().split('T')[0]
+				: new Date().toISOString().split('T')[0],
+			deliveredAt: extraProps.deliveredAt
+				? new Date(extraProps.deliveredAt).toISOString().split('T')[0]
+				: undefined,
+			items: processedItems,
+			paymentStatus: extraProps.paymentStatus || 'Pendiente',
+			total: processedItems.reduce((s: number, i: any) => s + i.valor, 0),
+		});
 	}, [extraProps]);
 
-	// Calcular total
-	const total = orderData.items.reduce((sum, item) => sum + (item.valor || 0), 0);
+	const total = orderData.items.reduce((s, i) => s + (i.valor || 0), 0);
 
-	// Cambiar inputs generales
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = e.target;
-		setOrderData((prev) => ({
-			...prev,
-			[name]: value,
-			// Auto-completar dirección si se cambia el usuario
-			...(name === 'user' && selectedUser?.address ? { address: selectedUser.address } : {}),
-		}));
+		setOrderData((p) => ({ ...p, [name]: value }));
 	};
 
-	// Cambiar valores de los servicios
 	const handleItemChange = (
 		index: number,
 		field: 'id_servicio' | 'detalles' | 'valor',
-		value: string | number
+		value: string | number,
 	) => {
 		const newItems = [...orderData.items];
 
 		if (field === 'id_servicio') {
-			// Auto-completar detalles si hay un servicio con descripción
-			const selectedService = services.find((s: Service) => s._id === value);
-			if (selectedService) {
+			const s = services.find((x: Service) => x._id === value);
+			if (s)
 				newItems[index] = {
 					...newItems[index],
-					id_servicio: selectedService._id,
-					detalles: selectedService.description || newItems[index].detalles,
-					valor: selectedService.price || newItems[index].valor,
+					id_servicio: s._id,
+					detalles: s.description || '',
+					valor: s.price || 0,
 				};
-			} else {
-				newItems[index] = { ...newItems[index], [field]: value as string };
-			}
-		} else if (field === 'valor') {
-			newItems[index] = { ...newItems[index], [field]: Number(value) };
-		} else {
-			newItems[index] = { ...newItems[index], [field]: value as string };
-		}
+		} else if (field === 'valor')
+			newItems[index] = { ...newItems[index], valor: Number(value) };
+		else newItems[index] = { ...newItems[index], detalles: value as string };
 
-		setOrderData((prev) => ({
-			...prev,
-			items: newItems,
-		}));
+		setOrderData((p) => ({ ...p, items: newItems }));
 	};
 
-	// Manejar imagen de progreso
 	const handleImageChange = (index: number, file: File | null) => {
 		const newItems = [...orderData.items];
-
-		if (file) {
-			const previewUrl = URL.createObjectURL(file);
+		if (file)
 			newItems[index] = {
 				...newItems[index],
 				progressImage: file,
-				imagePreview: previewUrl,
+				imagePreview: URL.createObjectURL(file),
 			};
-		} else {
-			newItems[index] = {
-				...newItems[index],
-				progressImage: null,
-				imagePreview: null,
-			};
-		}
-
-		setOrderData((prev) => ({ ...prev, items: newItems }));
+		else newItems[index] = { ...newItems[index], progressImage: null, imagePreview: null };
+		setOrderData((p) => ({ ...p, items: newItems }));
 	};
 
-	// Agregar servicio
-	const addItem = () => {
-		setOrderData((prev) => ({
-			...prev,
-			items: [
-				...prev.items,
-				{
-					id_servicio: '',
-					detalles: '',
-					valor: 0,
-					progressImage: null,
-					imagePreview: null,
-				},
-			],
+	const addItem = () =>
+		setOrderData((p) => ({
+			...p,
+			items: [...p.items, { id_servicio: '', detalles: '', valor: 0 }],
 		}));
-	};
+	const removeItem = (i: number) =>
+		setOrderData((p) => ({ ...p, items: p.items.filter((_, x) => x !== i) }));
 
-	// Eliminar servicio
-	const removeItem = (index: number) => {
-		setOrderData((prev) => ({
-			...prev,
-			items: prev.items.filter((_, i) => i !== index),
-		}));
-	};
-
-	// Subir imágenes por separado
 	const uploadImages = async (orderId: string) => {
-		const imagesToUpload = orderData.items
-			.filter((item) => item.progressImage instanceof File)
-			.map((item) => ({
-				file: item.progressImage as File,
-				itemId: item._id || '',
-			}));
-
-		if (imagesToUpload.length === 0) return;
-
+		const imgs = orderData.items.filter((i) => i.progressImage instanceof File);
+		if (!imgs.length) return;
 		setUploadingImages(true);
-
 		try {
-			for (const { file, itemId } of imagesToUpload) {
-				const formData = new FormData();
-				formData.append('product_images', file);
-				if (itemId) {
-					formData.append('item_id', itemId);
-				}
-
-				await api.post(`/api/orders/${orderId}/attachments`, formData, {
-					headers: { 'Content-Type': 'multipart/form-data' },
-				});
+			for (const i of imgs) {
+				const fd = new FormData();
+				fd.append('product_images', i.progressImage as File);
+				await api.post(`/api/orders/${orderId}/attachments`, fd);
 			}
-
-			console.log('Imágenes subidas exitosamente');
-		} catch (error) {
-			console.error('Error subiendo imágenes:', error);
-			throw new Error('Error al subir las imágenes');
 		} finally {
 			setUploadingImages(false);
 		}
 	};
 
-	// Enviar formulario
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (!orderData._id) return;
 
-		if (!orderData._id) {
-			alert('Error: No se encontró el ID del pedido');
-			return;
-		}
+		await updateOrderMutation.mutateAsync({
+			id: orderData._id,
+			data: { ...orderData, total },
+		});
 
-		if (!orderData.user) {
-			alert('Por favor selecciona un cliente');
-			return;
-		}
-
-		if (orderData.items.length === 0) {
-			alert('El pedido debe tener al menos un servicio');
-			return;
-		}
-
-		try {
-			// 1. Preparar datos para actualizar (sin imágenes)
-			const orderToUpdate = {
-				user: orderData.user,
-				address: orderData.address,
-				startedAt: orderData.startedAt,
-				deliveredAt: orderData.deliveredAt || undefined,
-				items: orderData.items.map((item) => ({
-					id_servicio: item.id_servicio,
-					detalles: item.detalles,
-					valor: item.valor,
-					...(item._id && { _id: item._id }),
-				})),
-				total: total,
-				status: orderData.status,
-				paymentStatus: orderData.paymentStatus,
-			};
-
-			// 2. Actualizar pedido (datos básicos)
-			await updateOrderMutation.mutateAsync({
-				id: orderData._id,
-				data: orderToUpdate,
-			});
-
-			// 3. Subir imágenes por separado al endpoint específico
-			await uploadImages(orderData._id);
-
-			// 4. Cerrar modal y actualizar
-			onClose();
-			if (updateList) updateList();
-
-			alert('Pedido actualizado exitosamente ✅');
-		} catch (error: any) {
-			console.error('Error al actualizar pedido:', error);
-			const errorMessage = error.response?.data?.message || 'Error al actualizar el pedido';
-			alert(`Error: ${errorMessage}`);
-		}
+		await uploadImages(orderData._id);
+		onClose();
+		updateList?.();
 	};
-
-	// Limpiar URLs de preview cuando se desmonte
-	useEffect(() => {
-		return () => {
-			orderData.items.forEach((item) => {
-				if (item.imagePreview) {
-					URL.revokeObjectURL(item.imagePreview);
-				}
-			});
-		};
-	}, [orderData.items]);
 
 	if (!isOpen) return null;
 
 	return (
-		<div className='modal-bg'>
-			<div className='modal-frame w-[900px] p-6'>
-				<header className='relative mb-6'>
+		<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
+			<div className='modal-frame w-full max-w-[920px] flex flex-col max-h-[92vh]'>
+				<header className='sticky top-0 z-10 px-6 py-4 border-b backdrop-blur-xs'>
 					<button
 						onClick={onClose}
-						className='absolute top-0 left-0 p-1 text-gray-500 hover:text-black cursor-pointer hover:bg-gray-100 rounded-full'>
+						className='absolute top-0 left-0 p-5 text-gray-500 hover:bg-gray-100 rounded-full'>
 						<X size={20} />
 					</button>
-					<h1 className='text-2xl font-bold text-center text-gray-800'>Editar Pedido</h1>
-					<p className='text-center text-gray-600 text-sm mt-1'>
-						ID: #{orderData._id?.slice(-8).toUpperCase() || 'N/A'}
-					</p>
+					<h1 className='text-2xl font-bold text-center'>Editar Pedido</h1>
 				</header>
 
 				<form
 					onSubmit={handleSubmit}
-					className='space-y-6'>
+					className='space-y-6 p-6'>
 					{/* Información principal */}
 					<div className='grid grid-cols-2 gap-6'>
 						{/* Selección de cliente */}
@@ -481,7 +348,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 							<div className='space-y-4 max-h-80 overflow-y-auto p-2'>
 								{orderData.items.map((item, idx) => {
 									const itemService = services.find(
-										(s: Service) => s._id === item.id_servicio
+										(s: Service) => s._id === item.id_servicio,
 									);
 
 									return (
@@ -500,7 +367,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 															handleItemChange(
 																idx,
 																'id_servicio',
-																e.target.value
+																e.target.value,
 															)
 														}
 														className='w-full border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brown'
@@ -524,7 +391,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 														<p className='text-xs text-gray-500 mt-1'>
 															{itemService.description?.substring(
 																0,
-																50
+																50,
 															)}
 															...
 														</p>
@@ -545,7 +412,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 															handleItemChange(
 																idx,
 																'valor',
-																e.target.value
+																e.target.value,
 															)
 														}
 														className='w-full border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brown'
@@ -573,7 +440,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 															handleItemChange(
 																idx,
 																'detalles',
-																e.target.value
+																e.target.value,
 															)
 														}
 														className='w-full border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brown h-16 resize-none'
@@ -624,7 +491,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 																				{imgIdx + 1}
 																			</span>
 																		</div>
-																	)
+																	),
 																)}
 															</div>
 														</div>
@@ -740,6 +607,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 						</button>
 					</div>
 				</form>
+
 			</div>
 		</div>
 	);
