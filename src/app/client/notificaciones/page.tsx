@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import NotificationCard from '@/components/notificaciones/NotificationCard';
 import EmptyState from '@/components/notificaciones/EmptyState';
-import {  useMyQuotations } from '@/hooks/apiHooks';
+import { useMyQuotations } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 
 export default function NotificationsPage() {
@@ -30,13 +30,8 @@ export default function NotificationsPage() {
 		}
 	}, [user, router, loading]);
 
-
-
-
 	// Filtrar cotizaciones que NO son carritos activos
 	const allQuotations = data || [];
-
-	console.log(allQuotations)
 
 	// Estados que consideramos "notificaciones"
 	const notificationStatuses = [
@@ -49,11 +44,10 @@ export default function NotificationsPage() {
 	];
 
 	const notifications = allQuotations.filter(
-		(q: any) => notificationStatuses.includes(q.status) && q.status !== 'Carrito'
+		(q: any) => notificationStatuses.includes(q.status) && q.status !== 'Carrito',
 	);
 
-
-	console.log(notifications)
+	console.log(notifications);
 	/* seleccionar la primera automáticamente */
 	useEffect(() => {
 		if (!selectedId && notifications.length > 0) {
@@ -148,6 +142,7 @@ export default function NotificationsPage() {
 					<div className='md:col-span-2'>
 						{selectedQuote ? (
 							<NotificationCard
+								key={selectedQuote._id}
 								_id={selectedQuote._id}
 								createdAt={selectedQuote.createdAt}
 								totalEstimate={selectedQuote.totalEstimate ?? 0}
