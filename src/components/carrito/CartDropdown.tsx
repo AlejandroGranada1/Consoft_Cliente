@@ -146,7 +146,7 @@ export default function CartDropdown({
 						{items.map((item: any) => (
 							<div key={item._id} className='flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition'>
 								<img
-									src={item.product?.imageUrl?.trim() ? item.product.imageUrl : '/def_prod.png'}
+									src={item.isCustom ? item.customDetails.referenceImage : item.product?.imageUrl?.trim() ? item.product.imageUrl : '/def_prod.png'}
 									className='w-12 h-12 rounded-xl object-cover border border-gray-100 shrink-0'
 									alt={item.product?.name || 'Producto'}
 								/>
