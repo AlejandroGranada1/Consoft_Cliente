@@ -119,14 +119,15 @@ function Page() {
 			</header>
 
 			<section className="w-full mx-auto mt-6 flex flex-col justify-between border-t border-gray">
-				{/* Encabezado tabla - solo en desktop */}
-				<div className="hidden md:grid grid-cols-6 place-items-center py-6 font-semibold">
-					<p>Usuario</p>
-					<p>Correo</p>
-					<p>Rol</p>
-					<p>Fecha de Registro</p>
-					<p>Estado</p>
-					<p>Acciones</p>
+				{/* Encabezado tabla - solo en desktop - AHORA CON 7 COLUMNAS */}
+				<div className="hidden md:grid grid-cols-[56px_1.2fr_2fr_1.2fr_1fr_0.8fr_1fr] gap-4 py-6 font-semibold text-gray-700 border-b border-gray-200">
+					<div className="text-center"></div>
+					<div className="text-left">Usuario</div>
+					<div className="text-left">Correo</div>
+					<div className="text-left">Rol</div>
+					<div className="text-left">Fecha Registro</div>
+					<div className="text-left">Estado</div>
+					<div className="text-center">Acciones</div>
 				</div>
 
 				{/* Listado de usuarios */}
