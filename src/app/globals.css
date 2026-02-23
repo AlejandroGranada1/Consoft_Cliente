@@ -15,7 +15,7 @@
 	}
 
 	.modal-frame {
-		@apply bg-white p-6 rounded-xl relative shadow-lg max-h-[90vh] overflow-auto;
+		@apply bg-white rounded-xl relative shadow-lg max-h-[90vh] overflow-auto;
 	}
 
 	.input {
