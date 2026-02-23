@@ -33,7 +33,7 @@ export default function ScheduleSection() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!date || !time || !service || !userAddress) {
+		if (!date || !time || !userAddress) {
 			await showAlert({
 				icon: 'warning',
 				title: 'Campos incompletos',
@@ -97,7 +97,6 @@ export default function ScheduleSection() {
 			}
 
           <p><strong>Dirección:</strong> ${userAddress}</p>
-          <p><strong>Servicio:</strong> ${service}</p>
           <p><strong>Fecha:</strong> ${date.toLocaleDateString()}</p>
           <p><strong>Hora:</strong> ${time}</p>
         </div>
