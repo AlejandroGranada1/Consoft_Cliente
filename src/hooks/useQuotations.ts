@@ -30,6 +30,20 @@ export const useMyCart = () => {
 	});
 };
 
+export const useAdminCreateQuotation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({ userId, adminNotes }: { userId: string; adminNotes: string }) => {
+			const { data } = await api.post('/api/quotations/admin/create', { userId, adminNotes });
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['quotations'] });
+			queryClient.invalidateQueries({ queryKey: ['allCarts'] });
+		},
+	});
+};
+
 /* =========================
    ADD ITEM
 ========================= */
@@ -169,11 +183,10 @@ export const useMyQuotations = () => {
 export const useDecision = () => {
 	return useMutation({
 		mutationFn: async ({ quotationId, decision }: any) => {
-			console.log(decision)
-			const { data } = await api.post(
-				`/api/quotations/${quotationId}/decision`,
-				{ decision }
-			);
+			console.log(decision);
+			const { data } = await api.post(`/api/quotations/${quotationId}/decision`, {
+				decision,
+			});
 			return data;
 		},
 	});
