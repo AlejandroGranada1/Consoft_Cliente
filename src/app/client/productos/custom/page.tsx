@@ -18,7 +18,6 @@ const AVAILABLE_COLORS = [
 	{ name: 'Verde oliva', value: 'verde_oliva', hex: '#556B2F' },
 ];
 
-const WOOD_TYPES = ['Roble', 'Nogal', 'Pino', 'Cedro', 'Caoba', 'Cerezo', 'Otro (especificar)'];
 
 export default function CustomProductPage() {
 	const router = useRouter();
@@ -263,7 +262,7 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : ''}
 								onChange={(e) =>
 									setFormData({ ...formData, description: e.target.value })
 								}
-								placeholder='Describe el mueble que necesitas, su uso, estilo, etc.'
+								placeholder='Describe el mueble que necesitas, material, tela, etc.'
 								rows={4}
 								className='w-full border rounded-lg px-4 py-3 focus:outline-none focus:border-[#8B5A2B] resize-none'
 								required
@@ -289,40 +288,6 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : ''}
 							<p className='text-xs text-gray-500 mt-1'>
 								Especifica las medidas que necesitas
 							</p>
-						</div>
-
-						{/* Tipo de madera */}
-						<div>
-							<label className='text-xs uppercase tracking-widest font-medium block mb-2'>
-								Tipo de madera
-							</label>
-							<select
-								value={formData.woodType}
-								onChange={(e) =>
-									setFormData({ ...formData, woodType: e.target.value })
-								}
-								className='w-full border rounded-lg px-4 py-3 focus:outline-none focus:border-[#8B5A2B]'>
-								<option value=''>Selecciona un tipo (opcional)</option>
-								{WOOD_TYPES.map((wood) => (
-									<option
-										key={wood}
-										value={wood}>
-										{wood}
-									</option>
-								))}
-							</select>
-
-							{formData.woodType === 'Otro (especificar)' && (
-								<input
-									type='text'
-									value={formData.customWoodType}
-									onChange={(e) =>
-										setFormData({ ...formData, customWoodType: e.target.value })
-									}
-									placeholder='Especifica el tipo de madera'
-									className='w-full border rounded-lg px-4 py-3 focus:outline-none focus:border-[#8B5A2B] mt-2'
-								/>
-							)}
 						</div>
 
 						{/* Color */}
