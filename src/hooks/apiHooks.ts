@@ -6,3 +6,4 @@ export * from './useUsers';
 export * from './useServices';
 export * from './useVisits';
 export * from './useAuth';
+export * from './useDashboard';

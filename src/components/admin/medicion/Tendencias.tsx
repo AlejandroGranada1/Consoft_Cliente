@@ -1,70 +1,119 @@
 'use client';
-import { UserPlus, TrendingUp, Star, BarChart3 } from 'lucide-react';
 
+import { UserPlus, DollarSign, ShoppingCart } from 'lucide-react';
+import { useDashboard } from '@/hooks/useDashboard';
+
+function calculateGrowth(current: number, previous: number) {
+	if (!previous) return 0;
+	return ((current - previous) / previous) * 100;
+}
 
 export default function GrowthTrends() {
+	const { data, isLoading, isError } = useDashboard();
+
+	if (isLoading) {
+		return (
+			<div className='bg-white border border-[#e8ddd4] rounded-xl p-6'>
+				<p className='text-sm text-[#8a7060]'>Cargando métricas...</p>
+			</div>
+		);
+	}
+
+	if (isError || !data) {
+		return (
+			<div className='bg-white border border-[#e8ddd4] rounded-xl p-6'>
+				<p className='text-sm text-red-400'>Error cargando dashboard</p>
+			</div>
+		);
+	}
+
+	const monthly = data.series.monthly;
+	const lastMonth = monthly[monthly.length - 1];
+	const previousMonth = monthly[monthly.length - 2];
+
+	const salesGrowth = calculateGrowth(lastMonth?.sales ?? 0, previousMonth?.sales ?? 0);
+	const revenueGrowth = calculateGrowth(lastMonth?.revenue ?? 0, previousMonth?.revenue ?? 0);
+
+	// Normalizamos totalUsers a un % relativo (máx 100) para la barra
+	const usersBarPct = Math.min((data.summary.totalUsers / 500) * 100, 100);
+
 	const metrics = [
 		{
 			id: 1,
 			name: 'Usuarios Registrados',
-			value: 56,
-			icon: <UserPlus className='text-green-500 text-lg' />,
-			classes: 'border-green-200 bg-green-50',
-			color: 'green',
+			// El valor real que mostramos en texto
+			displayValue: data.summary.totalUsers.toLocaleString(),
+			// El % que ocupa la barra (0-100)
+			barPct: usersBarPct,
+			icon: <UserPlus size={18} />,
+			iconColor: 'text-[#5e7a3c]',
+			rowBg: 'bg-[#eef5e4]',
+			barColor: 'bg-[#8ab85e]',
+			suffix: ' usuarios',
 		},
 		{
 			id: 2,
-			name: 'Tasa de Conversión',
-			value: 25,
-			icon: <TrendingUp className='text-blue-500 text-lg' />,
-			classes: 'border-blue-200 bg-blue-50',
-			color: 'blue',
+			name: 'Ventas',
+			displayValue: salesGrowth.toFixed(1) + '%',
+			barPct: Math.min(Math.abs(salesGrowth), 100),
+			icon: <ShoppingCart size={18} />,
+			iconColor: 'text-[#3c5e8a]',
+			rowBg: 'bg-[#e4eef5]',
+			barColor: 'bg-[#5e8ab8]',
+			suffix: '',
 		},
 		{
 			id: 3,
-			name: 'Satisfacción',
-			value: 6.8,
-			icon: <Star className='text-yellow-500 text-lg' />,
-			classes: 'border-yellow-200 bg-yellow-50',
-			color: 'yellow',
-		},
-		{
-			id: 4,
-			name: 'Usuarios Activos',
-			value: 23,
-			icon: <BarChart3 className='text-purple-500 text-lg' />,
-			classes: 'border-purple-200 bg-purple-50',
-			color: 'purple',
+			name: 'Ingresos',
+			displayValue: (revenueGrowth >= 0 ? '+' : '') + revenueGrowth.toFixed(1) + '%',
+			barPct: Math.min(Math.abs(revenueGrowth), 100),
+			icon: <DollarSign size={18} />,
+			iconColor: 'text-[#8a5e3c]',
+			rowBg: 'bg-[#f5ede4]',
+			barColor: 'bg-[#c8a882]',
+			suffix: '',
 		},
 	];
 
 	return (
-		<div className='bg-white rounded-xl shadow p-6'>
-			<h2 className='text-lg font-semibold mb-1'>Tendencias de Crecimiento</h2>
-			<p className='text-sm text-gray-500 mb-4'>
+		<div className='bg-white border border-[#e8ddd4] rounded-xl p-6'>
+			{/* Encabezado */}
+			<h2 className='text-lg font-semibold text-[#3d2b1f] mb-1'>
+				Tendencias de Crecimiento
+			</h2>
+			<p className='text-sm text-[#8a7060] mb-5'>
 				Evolución de métricas clave en los últimos meses
 			</p>
 
+			{/* Filas de métricas */}
 			<div className='space-y-3'>
 				{metrics.map((metric) => (
 					<div
 						key={metric.id}
-						className={`flex items-center justify-between border rounded-xl p-2 px-3 ${metric.classes}`}>
-						<div className='flex items-center gap-2'>
+						className={`flex items-center gap-4 ${metric.rowBg} rounded-lg px-4 py-3`}
+					>
+						{/* Icono */}
+						<span className={`${metric.iconColor} shrink-0`}>
 							{metric.icon}
-							<span className='text-sm font-medium'>{metric.name}</span>
+						</span>
+
+						{/* Nombre — ancho fijo para que las barras queden alineadas */}
+						<span className='text-sm font-medium text-[#3d2b1f] w-44 shrink-0'>
+							{metric.name}
+						</span>
+
+						{/* Barra de progreso — ocupa el espacio restante */}
+						<div className='flex-1 bg-white/70 rounded-full h-2 overflow-hidden'>
+							<div
+								className={`h-full rounded-full ${metric.barColor} transition-all duration-500`}
+								style={{ width: `${metric.barPct}%` }}
+							/>
 						</div>
 
-						<div className='flex items-center gap-3 w-1/3'>
-							<meter
-								min={0}
-								max={100}
-								value={metric.value}
-								className={`w-full h-3 meter-${metric.color}`}></meter>
-							<span className='text-sm font-semibold text-gray-700'>
-								+{metric.value}%
-							</span>
-						</div>
+						{/* Valor numérico — ancho fijo a la derecha */}
+						<span className={`text-sm font-bold ${metric.iconColor} w-20 text-right shrink-0`}>
+							{metric.displayValue}
+						</span>
 					</div>
 				))}
 			</div>

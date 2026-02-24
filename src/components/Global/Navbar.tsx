@@ -1,65 +1,118 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import UserMenu from '../UserMenu';
-import { useState } from 'react';
-import CartDropdown from '../carrito/CartDropdown';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
+const NAV_LINKS = [
+  { href: '/client',             label: 'Inicio' },
+  { href: '/client/agendarcita', label: 'Agendar Cita' },
+  { href: '/client/productos',   label: 'Referencias' },
+  { href: '/client/servicios',   label: 'Servicios' },
+];
+
 export default function Navbar() {
-  const [openCart, setOpenCart] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [scrolled, setScrolled]     = useState(false);
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
+  const isHome = pathname === '/client' || pathname === '/client/agendarcita' || pathname === '/client/productos' || pathname === '/client/servicios' || pathname === '/client/perfil' || pathname === '/client/carrito' || pathname === '/client/pedidos' || pathname === '/client/notificaciones' || pathname.startsWith('/client/productos/' ) || pathname.startsWith('/client/auth/' ) || pathname.startsWith('/client/pagos/') || pathname.startsWith('/client/pagos/') || pathname.startsWith('/client/pedidos/') ;
+
+  useEffect(() => {
+    if (!isHome) return;
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isHome]);
+
+  const floating  = isHome && !scrolled;
 
   return (
-    <nav className="bg-white shadow-sm relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-        <Link href="/client" className="font-bold text-[#1E293B] sm:text-sm lg:text-2xl">
-          Confort <span className="text-[#5C3A21]">&</span> Estilo
-        </Link>
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300
+        ${floating
+          ? 'bg-transparent'
+          : 'bg-white border-b border-[#E8DDD4]'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
 
-        {/* Desktop */}
-        <div className="hidden md:flex gap-6 items-center text-[#1E293B]">
-          <Link href="/client" className={`relative pb-1 ${isActive('/client') && 'font-semibold'}`}>
-            Inicio {isActive('/client') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]"></span>}
+          {/* Logo */}
+          <Link
+            href="/client"
+            className={`font-serif text-xl font-bold shrink-0 transition-colors duration-300
+              ${floating ? 'text-white' : 'text-[#1C1208]'}`}
+          >
+            Confort <span className={floating ? 'text-[#C8A882]' : 'text-[#8B5E3C]'}>&</span> Estilo
           </Link>
-          <Link href="/client/agendarcita" className={`relative pb-1${isActive('/client/agendarcita') && 'font-semibold'}`}>
-            Agendar Cita {isActive('/client/agendarcita') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]"></span>}
-          </Link>
-          <Link href="/client/productos" className={`relative pb-1 ${isActive('/client/productos') && 'font-semibold'}`}>
-            Referencias{isActive('/client/productos') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]"></span>}
-          </Link>
-          <Link href="/client/servicios" className={`relative pb-1 ${isActive('/client/servicios') && 'font-semibold'}`}>
-            Servicios {isActive('/client/servicios') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#5C3A21]"></span>}
-          </Link>
-          <UserMenu />
-        </div>
 
-        {/* Mobile Hamburger */}
-        <div className="md:hidden flex items-center gap-2">
-          <button onClick={() => setMobileMenu(!mobileMenu)}>
-            {mobileMenu ? <X size={24} /> : <Menu size={24} />}
-          </button>
-          <div onClick={() => setOpenCart(!openCart)}>
-            <ShoppingCart size={24} className="text-[#1E293B]" />
+          {/* Desktop links */}
+          <div className="hidden md:flex items-center gap-1">
+            {NAV_LINKS.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`relative px-3 py-1.5 text-sm rounded-md transition-all duration-300
+                  ${floating
+                    ? `text-white/90 hover:text-white hover:bg-white/10 ${isActive(href) ? 'font-semibold text-white' : ''}`
+                    : `text-[#7A6555] hover:text-[#1C1208] hover:bg-[#F3EEE9] ${isActive(href) ? 'font-semibold text-[#1C1208]' : ''}`
+                  }`}
+              >
+                {label}
+                {isActive(href) && (
+                  <span className={`absolute bottom-0 left-3 right-3 h-0.5 rounded-full transition-colors duration-300
+                    ${floating ? 'bg-white' : 'bg-[#8B5E3C]'}`}
+                  />
+                )}
+              </Link>
+            ))}
           </div>
-        </div>
-      </div>
 
-      {/* Mobile Menu Drawer */}
-      {mobileMenu && (
-        <div className="md:hidden bg-white shadow-lg absolute w-full left-0 top-16 border-t border-gray-200 z-50">
-          <Link href="/client" className="block px-6 py-3 border-b" onClick={() => setMobileMenu(false)}>Inicio</Link>
-          <Link href="/client/agendarcita" className="block px-6 py-3 border-b" onClick={() => setMobileMenu(false)}>Agendar Cita</Link>
-          <Link href="/client/productos" className="block px-6 py-3 border-b" onClick={() => setMobileMenu(false)}>Productos</Link>
-          <Link href="/client/servicios" className="block px-6 py-3 border-b" onClick={() => setMobileMenu(false)}>Servicios</Link>
-          <div className="px-6 py-3 border-b"><UserMenu /></div>
-        </div>
-      )}
+          {/* Desktop — UserMenu con separador */}
+          <div className={`hidden md:flex items-center pl-4 border-l transition-colors duration-300
+            ${floating ? 'border-white/20' : 'border-[#E8DDD4]'}`}
+          >
+            <UserMenu floating={floating} />
+          </div>
 
-      {openCart && <CartDropdown isOpen={openCart} setIsOpen={setOpenCart} />}
-    </nav>
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileMenu(!mobileMenu)}
+            className={`md:hidden p-2 rounded-md transition-colors duration-300
+              ${floating ? 'text-white hover:bg-white/10' : 'text-[#7A6555] hover:bg-[#F3EEE9]'}`}
+          >
+            {mobileMenu ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+
+        {/* Mobile drawer */}
+        {mobileMenu && (
+          <div className="md:hidden absolute w-full left-0 top-16 bg-white border-t border-[#E8DDD4] shadow-lg">
+            {NAV_LINKS.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMobileMenu(false)}
+                className={`flex items-center px-6 py-3.5 text-sm border-b border-[#F3EEE9] transition-colors
+                  ${isActive(href)
+                    ? 'text-[#8B5E3C] font-semibold bg-[#FDF9F6]'
+                    : 'text-[#7A6555] hover:bg-[#FDF9F6] hover:text-[#1C1208]'
+                  }`}
+              >
+                {label}
+              </Link>
+            ))}
+            <div className="px-6 py-4">
+              <UserMenu floating={false} />
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Spacer solo en páginas que no son home */}
+      {!isHome && <div className="h-16" />}
+    </>
   );
 }

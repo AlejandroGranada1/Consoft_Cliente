@@ -5,30 +5,16 @@ import { useState } from 'react';
 import AuthLayout from '@/components/auth/AuthLayout';
 import AuthInput from '@/components/auth/AuthInput';
 import AuthButton from '@/components/auth/AuthButton';
+import PasswordInput from '@/components/auth/PasswordInput';
 import { useCreateUser } from '@/hooks/apiHooks';
 import Swal from 'sweetalert2';
+import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
   const registerUser = useCreateUser();
 
-  const [form, setForm] = useState({
-    email: '',
-    name: '',
-    password: '',
-    confirmPassword: '',
-  });
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  // 🔍 reglas SOLO visuales
-  const rules = {
-    length: form.password.length >= 8,
-    uppercase: /[A-Z]/.test(form.password),
-    number: /\d/.test(form.password),
-    special: /[^A-Za-z0-9]/.test(form.password),
-  };
+  const [form, setForm] = useState({ email: '', name: '', password: '', confirmPassword: '' });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,66 +23,41 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (
-      !form.email.trim() ||
-      !form.name.trim() ||
-      !form.password.trim() ||
-      !form.confirmPassword.trim()
-    ) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Campos incompletos',
-        text: 'Por favor completa todos los campos.',
-      });
+    if (!form.email.trim() || !form.name.trim() || !form.password.trim() || !form.confirmPassword.trim()) {
+      Swal.fire({ icon: 'warning', title: 'Campos incompletos', text: 'Por favor completa todos los campos.' });
       return;
     }
-
     if (form.password !== form.confirmPassword) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Las contraseñas no coinciden.',
-      });
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Las contraseñas no coinciden.' });
       return;
     }
 
     try {
-      const payload = {
-        name: form.name,
-        email: form.email,
-        password: form.password,
-      };
-
-      await registerUser.mutateAsync(payload);
-
-      Swal.fire({
-        title: 'Registro exitoso',
-        html: 'Por favor completa tu información de usuario para una mejor experiencia',
-        icon: 'success',
-        timer: 3000,
-        showConfirmButton: false,
-      });
-
+      await registerUser.mutateAsync({ name: form.name, email: form.email, password: form.password });
+      Swal.fire({ title: 'Registro exitoso', html: 'Por favor completa tu información de usuario para una mejor experiencia', icon: 'success', timer: 3000, showConfirmButton: false });
       router.push('/client/perfil');
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        'Error al registrar el usuario';
-
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Error al registrar el usuario';
       Swal.fire('Error', msg, 'error');
     }
   };
 
   return (
     <AuthLayout
-      title="Bienvenido a Confort & Estilo"
-      subtitle="Registro"
+      subtitle="Crear cuenta"
       illustration="/auth/Registrar.png"
+      footer={
+        <p className="text-center text-sm text-white/40">
+          ¿Ya tienes cuenta?{' '}
+          <Link href="/client/auth/login" className="text-[#C8A882] hover:text-white font-medium transition-colors">
+            Inicia sesión
+          </Link>
+        </p>
+      }
     >
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         <AuthInput
-          label="Correo Electrónico"
+          label="Correo electrónico"
           type="email"
           name="email"
           value={form.email}
@@ -105,7 +66,7 @@ export default function RegisterPage() {
         />
 
         <AuthInput
-          label="Nombre"
+          label="Nombre completo"
           type="text"
           name="name"
           value={form.name}
@@ -113,63 +74,30 @@ export default function RegisterPage() {
           onChange={handleChange}
         />
 
-        {/* PASSWORD */}
-        <div className="relative">
-          <AuthInput
-            label="Contraseña"
-            type={showPassword ? 'text' : 'password'}
-            name="password"
-            value={form.password}
-            placeholder="********"
-            onChange={handleChange}
-          />
+        <PasswordInput
+          label="Contraseña"
+          name="password"
+          value={form.password}
+          onChange={handleChange}
+          showRules={true}
+        />
 
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-10 text-sm"
-          >
-            {showPassword ? '🙈' : '👁️'}
-          </button>
-        </div>
+        <PasswordInput
+          label="Confirmar contraseña"
+          name="confirmPassword"
+          value={form.confirmPassword}
+          onChange={handleChange}
+          showRules={false}
+        />
 
-        {/* CONFIRM */}
-        <div className="relative">
-          <AuthInput
-            label="Confirmar Contraseña"
-            type={showConfirm ? 'text' : 'password'}
-            name="confirmPassword"
-            value={form.confirmPassword}
-            placeholder="********"
-            onChange={handleChange}
-          />
+        {/* Match indicator */}
+        {form.confirmPassword.length > 0 && (
+          <p className={`text-xs -mt-2 ${form.password === form.confirmPassword ? 'text-emerald-400' : 'text-red-400/80'}`}>
+            {form.password === form.confirmPassword ? '✓ Las contraseñas coinciden' : '✗ Las contraseñas no coinciden'}
+          </p>
+        )}
 
-          <button
-            type="button"
-            onClick={() => setShowConfirm(!showConfirm)}
-            className="absolute right-4 top-10 text-sm"
-          >
-            {showConfirm ? '🙈' : '👁️'}
-          </button>
-        </div>
-
-		        {/* REGLAS */}
-        <ul className="text-sm ml-1 space-y-1">
-          <li className={rules.length ? 'text-green-600' : 'text-gray-400'}>
-            ✔ Mínimo 8 caracteres
-          </li>
-          <li className={rules.uppercase ? 'text-green-600' : 'text-gray-400'}>
-            ✔ Una letra mayúscula
-          </li>
-          <li className={rules.number ? 'text-green-600' : 'text-gray-400'}>
-            ✔ Un número
-          </li>
-          <li className={rules.special ? 'text-green-600' : 'text-gray-400'}>
-            ✔ Un carácter especial
-          </li>
-        </ul>
-
-        <AuthButton text="Registrarme" type="submit" />
+        <AuthButton text="Registrarme" type="submit" loading={registerUser.isPending} />
       </form>
     </AuthLayout>
   );

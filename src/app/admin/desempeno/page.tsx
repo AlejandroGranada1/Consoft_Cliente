@@ -1,112 +1,117 @@
 'use client';
+
 import { BarChart3, DollarSign, Star, Users } from 'lucide-react';
 import Resumen from '@/components/admin/medicion/Resumen';
 import Satisfaccion from '@/components/admin/medicion/Satisfaccion';
-import Servicios from '@/components/admin/medicion/Servicios';
+import ServiciosPopulares from '@/components/admin/medicion/Servicios';
 import Tendencias from '@/components/admin/medicion/Tendencias';
+import { useDashboard } from '@/hooks/apiHooks';
 import React, { useState } from 'react';
 
+const TABS = [
+	{ id: 'resumen', label: 'Resumen' },
+	{ id: 'servicios', label: 'Servicios' },
+	{ id: 'satisfaccion', label: 'Satisfacción' },
+	{ id: 'tendencias', label: 'Tendencias' },
+];
 
-function page() {
+const SUMMARY_CARDS = (data: any) => [
+	{
+		label: 'Usuarios totales',
+		value: data.summary.totalUsers.toLocaleString(),
+		icon: <Users size={18} />,
+		color: 'text-[#8a5e3c]',
+		bg: 'bg-[#f5ede4]',
+	},
+	{
+		label: 'Ingresos totales',
+		value: `$${data.summary.totalRevenue.toLocaleString()}`,
+		icon: <DollarSign size={18} />,
+		color: 'text-[#8a5e3c]',
+		bg: 'bg-[#f5ede4]',
+	},
+	{
+		label: 'Ventas totales',
+		value: data.summary.totalSales,
+		icon: <BarChart3 size={18} />,
+		color: 'text-[#8a5e3c]',
+		bg: 'bg-[#f5ede4]',
+	},
+	{
+		label: 'Servicios Top',
+		value: data.topItems.services.length,
+		icon: <Star size={18} />,
+		color: 'text-[#8a5e3c]',
+		bg: 'bg-[#f5ede4]',
+	},
+];
+
+export default function Page() {
 	const [tab, setTab] = useState('resumen');
+	const { data, isLoading } = useDashboard({ limit: 5 });
+
+	if (isLoading)
+		return (
+			<div className='flex items-center justify-center h-60 text-[#8a7060]'>
+				Cargando métricas...
+			</div>
+		);
+	if (!data)
+		return (
+			<div className='flex items-center justify-center h-60 text-red-400'>
+				Error cargando dashboard
+			</div>
+		);
+
 	return (
-		<div>
-			<header className='flex flex-col h-85 justify-evenly px-20'>
-				<h1 className='text-2xl  text-brown'>MEDICIÓN Y DESEMPEÑO</h1>
-				<div className='grid grid-cols-4 place-items-center'>
-					<div className='border rounded-lg size-48 flex flex-col justify-between p-4'>
-						<h3 className='flex items-center gap-2'>
-							Usuarios totales <Users />
-						</h3>
-						<p>12,847</p>
-						<p className='text-xs text-gray'>Vs 8,234 registrados este mes</p>
-						<p className='text-xs text-green'>+56%</p>
-					</div>
+		<div className='min-h-screen bg-[#faf7f4]'>
+			{/* Header */}
+			<header className='px-8 pt-8 pb-6'>
+				<h1 className='text-2xl font-bold tracking-wide text-[#3d2b1f] mb-6'>
+					MEDICIÓN Y DESEMPEÑO
+				</h1>
 
-					<div className='border rounded-lg size-48 flex flex-col justify-between p-4'>
-						<h3 className='flex items-center gap-2'>
-							Ingresos totales <DollarSign />
-						</h3>
-						<p>$12,847,035</p>
-					</div>
-
-					<div className='border rounded-lg size-48 flex flex-col justify-between p-4'>
-						<h3 className='flex items-center gap-2'>
-							Calificacion Promedio{' '}
-							<Star
-								color={'#CACC62'}
-								size={50}
-							/>
-						</h3>
-						<p>4.8/5</p>
-						<p className='text-xs text-gray'>Basado en 1,456 reseñas</p>
-						<p className='text-xs text-green'>
-							+0.3% <span className='text-black'>desde el mes pasado</span>
-						</p>
-					</div>
-
-					<div className='border rounded-lg size-48 flex flex-col justify-between p-4'>
-						<h3 className='flex items-center gap-2'>
-							Tasa de conversión{' '}
-							<BarChart3
-								color='blue'
-								size={50}
-							/>
-						</h3>
-						<p>3.2%</p>
-						<p className='text-xs text-gray'>de visitas a pedidos</p>
-						<p className='text-xs text-green'>
-							+0.8% <span className='text-black'>desde el mes pasado</span>
-						</p>
-					</div>
+				{/* Summary cards */}
+				<div className='grid grid-cols-4 gap-4'>
+					{SUMMARY_CARDS(data).map((card) => (
+						<div
+							key={card.label}
+							className='bg-white border border-[#e8ddd4] rounded-xl p-4 hover:border-[#c8a882] transition-colors'>
+							<div className='flex items-center justify-between mb-3'>
+								<span className='text-sm text-[#8a7060]'>{card.label}</span>
+								<span className={`${card.bg} ${card.color} p-1.5 rounded-lg`}>
+									{card.icon}
+								</span>
+							</div>
+							<p className='text-2xl font-bold text-[#3d2b1f]'>{card.value}</p>
+						</div>
+					))}
 				</div>
 			</header>
 
-			<section>
-				<div className='p-6'>
-					{/* Chips de navegación */}
-					<div className='flex gap-4 mb-6'>
+			{/* Tab content */}
+			<section className='px-8 pb-8'>
+				{/* Tabs */}
+				<div className='flex gap-1 bg-[#f0e8df] p-1 rounded-xl w-fit mb-6'>
+					{TABS.map((t) => (
 						<button
-							onClick={() => setTab('resumen')}
-							className={`px-4 py-2 rounded-full ${
-								tab === 'resumen' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+							key={t.id}
+							onClick={() => setTab(t.id)}
+							className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+								tab === t.id
+									? 'bg-white text-[#8a5e3c] shadow-sm border border-[#e8ddd4]'
+									: 'text-[#8a7060] hover:text-[#3d2b1f]'
 							}`}>
-							Resumen General
+							{t.label}
 						</button>
-						<button
-							onClick={() => setTab('servicios')}
-							className={`px-4 py-2 rounded-full ${
-								tab === 'servicios' ? 'bg-blue-500 text-white' : 'bg-gray-200'
-							}`}>
-							Servicios Populares
-						</button>
-						<button
-							onClick={() => setTab('satisfaccion')}
-							className={`px-4 py-2 rounded-full ${
-								tab === 'satisfaccion' ? 'bg-blue-500 text-white' : 'bg-gray-200'
-							}`}>
-							Satisfacción
-						</button>
-						<button
-							onClick={() => setTab('tendencias')}
-							className={`px-4 py-2 rounded-full ${
-								tab === 'tendencias' ? 'bg-blue-500 text-white' : 'bg-gray-200'
-							}`}>
-							Tendencias
-						</button>
-					</div>
-
-					{/* Contenido dinámico */}
-					<div className='h-fit'>
-						{tab === 'resumen' && <Resumen />}
-						{tab === 'servicios' && <Servicios />}
-						{tab === 'satisfaccion' && <Satisfaccion />}
-						{tab === 'tendencias' && <Tendencias/>}
-					</div>
+					))}
 				</div>
+
+				{tab === 'resumen' && <Resumen />}
+				{tab === 'servicios' && <ServiciosPopulares />}
+				{tab === 'satisfaccion' && <Satisfaccion />}
+				{tab === 'tendencias' && <Tendencias />}
 			</section>
 		</div>
 	);
 }
-
-export default page;

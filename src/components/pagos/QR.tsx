@@ -5,7 +5,7 @@ interface QRProps {
 }
 
 function QR({ type }: QRProps) {
-	const src = type === 'Nequi' ? '/pagos/qrnequi.png' : '/pagos/qrbanco.png';
+	const src = type === 'Nequi' ? '/pagos/nequi.webp' : '/pagos/bancolombia.png';
 
 	return (
 		<Image

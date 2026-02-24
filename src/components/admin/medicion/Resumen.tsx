@@ -1,113 +1,57 @@
 'use client';
-import React from 'react';
 
-function Resumen() {
-	// Datos para Usuarios Totales vs Registrados
-	const usuariosData = [
-		{
-			mes: 'Enero 2024',
-			total: 12847,
-			registrados: 8234,
-			porcentaje: '64.1%',
-		},
-		{
-			mes: 'Diciembre 2023',
-			total: 11234,
-			registrados: 6789,
-			porcentaje: '60.4%',
-		},
-		{
-			mes: 'Noviembre 2023',
-			total: 9876,
-			registrados: 5432,
-			porcentaje: '55.0%',
-		},
-	];
+import { useDashboard } from '@/hooks/apiHooks';
+import { CalendarDays } from 'lucide-react';
 
-	// Datos para Métricas de Rendimiento
-	const rendimientoData = [
-		{
-			mes: 'Enero 2024',
-			pedidos: 156,
-			calificacion: 4.8,
-			conversion: '64.1%',
-		},
-		{
-			mes: 'Diciembre 2023',
-			pedidos: 134,
-			calificacion: 4.6,
-			conversion: '60.4%',
-		},
-		{
-			mes: 'Noviembre 2023',
-			pedidos: 128,
-			calificacion: 4.5,
-			conversion: '55.0%',
-		},
-	];
+export default function Resumen() {
+	const { data } = useDashboard();
+
+	if (!data) return null;
+
+	const maxRevenue = Math.max(...data.series.monthly.map((m) => m.revenue));
 
 	return (
-		<section className='grid grid-cols-2 gap-6 mt-6'>
-			{/* Usuarios Totales vs Registrados */}
-			<div className='border rounded-lg p-4 bg-white shadow'>
-				<h2 className='font-semibold text-lg'>Usuarios totales vs Registrados</h2>
-				<p className='text-sm text-gray-500 mb-4'>
-					Comparación mensual de usuarios totales y registrados
-				</p>
-
-				<div className='space-y-4'>
-					{usuariosData.map((item, idx) => (
-						<div key={idx}>
-							<p className='font-medium'>{item.mes}</p>
-							<div className='flex justify-between text-sm text-gray-600'>
-								<span>Total: {item.total.toLocaleString()}</span>
-								<span className='font-medium bg-gray-100 px-2 rounded'>
-									{item.porcentaje} registrados
-								</span>
-							</div>
-							<meter
-								min={0}
-								max={item.total}
-								value={item.registrados}
-								className='w-full h-2 mt-1 [&::-webkit-meter-bar]:bg-gray-200 [&::-webkit-meter-optimum-value]:bg-black rounded'></meter>
-							<p className='text-xs text-gray-500 mt-1'>
-								Registrados: {item.registrados.toLocaleString()}
-							</p>
-						</div>
-					))}
-				</div>
+		<section className='mt-6'>
+			<div className='mb-5'>
+				<h2 className='text-lg font-semibold text-[#3d2b1f]'>Ventas Mensuales</h2>
+				<p className='text-sm text-[#8a7060]'>Resumen de ventas e ingresos mes a mes</p>
 			</div>
 
-			{/* Métricas de Rendimiento */}
-			<div className='border rounded-lg p-4 bg-white shadow'>
-				<h2 className='font-semibold text-lg'>Métricas de Rendimiento</h2>
-				<p className='text-sm text-gray-500 mb-4'>
-					Indicadores clave de desempeño mensual
-				</p>
-
-				<div className='space-y-4'>
-					{rendimientoData.map((item, idx) => (
+			<div className='grid grid-cols-3 gap-4'>
+				{data.series.monthly.map((m) => {
+					const pct = Math.round((m.revenue / maxRevenue) * 100);
+					return (
 						<div
-							key={idx}
-							className='flex items-center justify-between border rounded p-3'>
-							<div>
-								<p className='font-medium'>{item.mes}</p>
-								<p className='text-sm text-gray-500'>
-									{item.pedidos} pedidos completados
-								</p>
+							key={m.period}
+							className='border border-[#e8ddd4] rounded-xl p-4 bg-white hover:border-[#c8a882] transition-colors group'>
+							<div className='flex items-center gap-2 mb-3'>
+								<CalendarDays size={14} className='text-[#c8a882]' />
+								<span className='text-sm font-semibold text-[#8a5e3c]'>{m.period}</span>
 							</div>
-							<div className='text-right'>
-								<p className='font-semibold'>⭐ {item.calificacion}</p>
-								<p className='text-xs text-gray-500'>
-									{item.conversion} conversión
-								</p>
+
+							<div className='space-y-1 mb-3'>
+								<div className='flex justify-between text-sm'>
+									<span className='text-[#8a7060]'>Ventas</span>
+									<span className='font-bold text-[#3d2b1f]'>{m.sales}</span>
+								</div>
+								<div className='flex justify-between text-sm'>
+									<span className='text-[#8a7060]'>Ingresos</span>
+									<span className='font-bold text-[#3d2b1f]'>
+										${m.revenue.toLocaleString()}
+									</span>
+								</div>
+							</div>
+
+							<div className='h-1.5 rounded-full bg-[#f0e8df] overflow-hidden'>
+								<div
+									className='h-full rounded-full bg-gradient-to-r from-[#c8a882] to-[#8a5e3c] group-hover:from-[#8a5e3c] group-hover:to-[#c8a882] transition-all'
+									style={{ width: `${pct}%` }}
+								/>
 							</div>
 						</div>
-					))}
-				</div>
+					);
+				})}
 			</div>
 		</section>
 	);
 }
-
-export default Resumen;

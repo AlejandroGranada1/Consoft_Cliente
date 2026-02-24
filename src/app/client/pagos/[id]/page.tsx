@@ -10,28 +10,25 @@ export default function PagoPage() {
 	const router = useRouter();
 	const { id: pedidoId } = useParams();
 	const sendPayment = useSendPayment();
-
 	const { user, loading } = useUser();
 
 	const [metodo, setMetodo] = useState<'Nequi' | 'Bancolombia' | null>(null);
 	const [tipoPago, setTipoPago] = useState<'abono' | 'final' | null>(null);
 	const [file, setFile] = useState<File | null>(null);
 	const [preview, setPreview] = useState<string | null>(null);
+	const [dragOver, setDragOver] = useState(false);
 
 	/* ───────── AUTH ───────── */
 	useEffect(() => {
 		if (loading) return;
-
 		if (!user) {
 			(async () => {
 				const Swal = (await import('sweetalert2')).default;
-
 				await Swal.fire({
 					icon: 'warning',
 					title: 'Inicia sesión',
 					text: 'Debes iniciar sesión para realizar un pago.',
 				});
-
 				router.push('/client/auth/login');
 			})();
 		}
@@ -40,39 +37,30 @@ export default function PagoPage() {
 	if (!user) return null;
 
 	/* ───────── FILE ───────── */
-	const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const f = e.target.files?.[0];
-		if (!f) return;
-
+	const handleFile = (f: File) => {
 		setFile(f);
 		setPreview(URL.createObjectURL(f));
+	};
+
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const f = e.target.files?.[0];
+		if (f) handleFile(f);
+	};
+
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		setDragOver(false);
+		const f = e.dataTransfer.files?.[0];
+		if (f && f.type.startsWith('image/')) handleFile(f);
 	};
 
 	/* ───────── CONFIRM ───────── */
 	const confirmarPago = async () => {
 		const Swal = (await import('sweetalert2')).default;
 
-		if (!metodo) {
-			return Swal.fire({
-				icon: 'warning',
-				title: 'Selecciona un método de pago',
-			});
-		}
-
-		if (!file) {
-			return Swal.fire({
-				icon: 'warning',
-				title: 'Falta el comprobante',
-				text: 'Debes subir el comprobante del pago.',
-			});
-		}
-
-		if (!tipoPago) {
-			return Swal.fire({
-				icon: 'warning',
-				title: 'Selecciona el tipo de pago',
-			});
-		}
+		if (!metodo) return Swal.fire({ icon: 'warning', title: 'Selecciona un método de pago' });
+		if (!file) return Swal.fire({ icon: 'warning', title: 'Falta el comprobante', text: 'Debes subir el comprobante del pago.' });
+		if (!tipoPago) return Swal.fire({ icon: 'warning', title: 'Selecciona el tipo de pago' });
 
 		const confirm = await Swal.fire({
 			title: '¿Confirmar pago?',
@@ -81,33 +69,20 @@ export default function PagoPage() {
 			showCancelButton: true,
 			confirmButtonText: 'Confirmar',
 			cancelButtonText: 'Cancelar',
-			reverseButtons: true, // ✅ confirmar a la derecha
+			reverseButtons: true,
 		});
 
 		if (!confirm.isConfirmed) return;
 
 		sendPayment.mutate(
-			{
-				orderId: pedidoId as string,
-				payment_image: file,
-				tipoPago,
-			},
+			{ orderId: pedidoId as string, payment_image: file, tipoPago },
 			{
 				onSuccess: async () => {
-					await Swal.fire({
-						icon: 'success',
-						title: 'Pago enviado',
-						text: 'Tu comprobante está en verificación.',
-					});
-
+					await Swal.fire({ icon: 'success', title: 'Pago enviado', text: 'Tu comprobante está en verificación.' });
 					router.push('/client/pedidos');
 				},
 				onError: () => {
-					Swal.fire({
-						icon: 'error',
-						title: 'Error al enviar el pago',
-						text: 'Intenta nuevamente.',
-					});
+					Swal.fire({ icon: 'error', title: 'Error al enviar el pago', text: 'Intenta nuevamente.' });
 				},
 			}
 		);
@@ -115,116 +90,252 @@ export default function PagoPage() {
 
 	/* ───────── UI ───────── */
 	return (
-		<main className="min-h-screen bg-white p-6 flex justify-center">
-			<div className="w-full max-w-xl space-y-8">
+		<main className="min-h-screen bg-[#111110] text-[#e8e0d5] px-24	py-30 flex justify-center">
+			<div className="w-full max-w-5xl flex flex-col gap-8">
 
-				{/* HEADER */}
+				{/* ── HEADER ── */}
 				<div className="flex items-center justify-between">
 					<button
 						onClick={() => router.back()}
-						className="px-4 py-2 rounded-full bg-[#8B5E3C] text-white text-sm hover:bg-[#6B4226] transition"
+						className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-[#b0a090] text-sm hover:border-[#8B5E3C] hover:text-[#e8d8c4] transition-colors"
 					>
+						<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+							<path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+						</svg>
 						Volver
 					</button>
 
-					<h1 className="text-xl font-semibold text-[#0F172A]">
+					<h1 className="font-serif text-xl font-medium text-[#f0e8d8] tracking-wide">
 						Realizar pago
 					</h1>
 
-					<div className="w-16" />
-				</div>
-
-				{/* MÉTODO */}
-				<div>
-					<p className="font-medium text-gray-700 mb-3">
-						Método de pago
-					</p>
-
-					<div className="grid grid-cols-2 gap-4">
-						{['Nequi', 'Bancolombia'].map(m => (
-							<button
-								key={m}
-								onClick={() => setMetodo(m as any)}
-								className={`p-4 rounded-xl border transition
-									${metodo === m
-										? 'border-[#8B5E3C] bg-[#F9F5F1]'
-										: 'border-gray-200 bg-white hover:bg-gray-50'
-									}`}
-							>
-								<p className="font-semibold text-[#0F172A]">
-									{m}
-								</p>
-							</button>
-						))}
-					</div>
-				</div>
-
-				{/* QR */}
-				{metodo && (
-					<div className="flex justify-center border border-gray-200 rounded-xl p-4">
-						<QR type={metodo} />
-					</div>
-				)}
-
-				{/* COMPROBANTE */}
-				<div>
-					<p className="font-medium text-gray-700 mb-2">
-						Comprobante
-					</p>
-
-					<div className="border border-gray-200 rounded-xl bg-white p-3">
-						{preview ? (
-							<img
-								src={preview}
-								alt="Comprobante"
-								className="w-full h-52 object-contain rounded-lg"
+					{/* Progress dots */}
+					<div className="flex gap-1.5 items-center">
+						{[!!metodo, !!file, !!tipoPago].map((done, i) => (
+							<span
+								key={i}
+								className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${done ? 'bg-[#8B5E3C]' : 'bg-white/10'}`}
 							/>
-						) : (
-							<div className="h-52 flex items-center justify-center text-gray-400">
-								Sin archivo seleccionado
-							</div>
-						)}
-					</div>
-
-					<input
-						type="file"
-						accept="image/*"
-						onChange={handleFile}
-						className="mt-3 w-full text-sm"
-					/>
-				</div>
-
-				{/* TIPO */}
-				<div>
-					<p className="font-medium text-gray-700 mb-3">
-						Tipo de pago
-					</p>
-
-					<div className="grid grid-cols-2 gap-4">
-						{['abono', 'final'].map(t => (
-							<button
-								key={t}
-								onClick={() => setTipoPago(t as any)}
-								className={`p-3 rounded-xl border transition
-									${tipoPago === t
-										? 'border-[#8B5E3C] bg-[#F9F5F1]'
-										: 'border-gray-200 bg-white hover:bg-gray-50'
-									}`}
-							>
-								{t === 'abono' ? 'Abono' : 'Pago final'}
-							</button>
 						))}
 					</div>
 				</div>
 
-				{/* CONFIRM */}
-				<div className="flex justify-end pt-4">
+				{/* ── STEP INDICATOR ── */}
+				<div className="flex items-center">
+					{[
+						{ num: 1, label: 'Método de pago', done: !!metodo },
+						{ num: 2, label: 'Comprobante', done: !!file },
+						{ num: 3, label: 'Tipo de pago', done: !!tipoPago },
+					].map((s, i, arr) => (
+						<>
+							<div key={s.num} className="flex items-center gap-2 shrink-0">
+								<div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium border transition-all duration-300
+									${s.done ? 'bg-[#8B5E3C] border-[#8B5E3C] text-white' : 'border-white/10 text-[#6b5b4e]'}`}>
+									{s.done ? (
+										<svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+											<path d="M2 6L5 9L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+										</svg>
+									) : s.num}
+								</div>
+								<span className={`text-xs transition-colors duration-300 ${s.done ? 'text-[#c4a882]' : 'text-[#6b5b4e]'}`}>
+									{s.label}
+								</span>
+							</div>
+							{i < arr.length - 1 && (
+								<div key={`line-${i}`} className="flex-1 h-px bg-white/5 mx-4" />
+							)}
+						</>
+					))}
+				</div>
+
+				<div className="h-px bg-white/5" />
+
+				{/* ── MAIN TWO-COLUMN GRID ── */}
+				<div className="grid grid-cols-2 gap-6 items-start">
+
+					{/* ── LEFT COLUMN: Método + QR ── */}
+					<div className="flex flex-col gap-4">
+
+						{/* Método label */}
+						<p className="text-[11px] font-medium tracking-widest uppercase text-[#8B5E3C]">
+							Método de pago
+						</p>
+
+						{/* Método cards — vertical stack inside left col */}
+						<div className="flex flex-col gap-3">
+							{[
+								{ id: 'Nequi', icon: '💜', sub: 'Transferencia instantánea' },
+								{ id: 'Bancolombia', icon: '🏦', sub: 'PSE / transferencia' },
+							].map(m => (
+								<button
+									key={m.id}
+									onClick={() => setMetodo(m.id as any)}
+									className={`relative flex items-center gap-4 px-5 py-4 rounded-xl border text-left transition-all duration-200
+										${metodo === m.id
+											? 'border-[#8B5E3C] bg-[#1e1c1a]'
+											: 'border-white/[0.07] bg-[#1a1917] hover:border-[#8B5E3C]/40 hover:bg-[#1e1c1a]'
+										}`}
+								>
+									{metodo === m.id && (
+										<span className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-[#8B5E3C] flex items-center justify-center">
+											<svg width="8" height="8" viewBox="0 0 12 12" fill="none">
+												<path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+											</svg>
+										</span>
+									)}
+									<span className="text-2xl">{m.icon}</span>
+									<div>
+										<p className="font-serif text-base font-medium text-[#e8e0d5]">{m.id}</p>
+										<p className="text-[11px] text-[#6b5b4e] mt-0.5">{m.sub}</p>
+									</div>
+								</button>
+							))}
+						</div>
+
+						{/* QR — aparece debajo de los métodos */}
+						<div className={`flex flex-col items-center gap-3 border rounded-2xl bg-[#1a1917] p-6 transition-all duration-300
+							${metodo ? 'border-white/[0.07] opacity-100' : 'border-dashed border-white/5 opacity-40'}`}>
+							{metodo ? (
+								<>
+									<QR type={metodo} />
+									<p className="text-xs text-[#6b5b4e] text-center">
+										Escanea con tu app de {metodo}
+									</p>
+								</>
+							) : (
+								<div className="h-32 flex flex-col items-center justify-center gap-2 text-[#3a3028]">
+									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="opacity-40">
+										<rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+										<rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+										<rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+										<path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3v3M14 21h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+									</svg>
+									<p className="text-xs">Selecciona un método</p>
+								</div>
+							)}
+						</div>
+
+					</div>
+
+					{/* ── RIGHT COLUMN: Comprobante + Tipo ── */}
+					<div className="flex flex-col gap-4">
+
+						{/* Comprobante label */}
+						<p className="text-[11px] font-medium tracking-widest uppercase text-[#8B5E3C]">
+							Comprobante de pago
+						</p>
+
+						{/* Drop zone */}
+						<div
+							className={`relative rounded-2xl border overflow-hidden transition-all duration-200 cursor-pointer
+								${dragOver
+									? 'border-[#8B5E3C] bg-[#8B5E3C]/5'
+									: preview
+										? 'border-white/[0.07] bg-[#1a1917]'
+										: 'border-dashed border-white/10 bg-[#1a1917] hover:border-[#8B5E3C]/40'
+								}`}
+							onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+							onDragLeave={() => setDragOver(false)}
+							onDrop={handleDrop}
+						>
+							{preview ? (
+								<>
+									<img src={preview} alt="Comprobante" className="w-full h-44 object-contain block" />
+									<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#111110]/90 to-transparent px-4 py-3 flex items-center justify-between">
+										<span className="text-xs text-[#c4a882] truncate max-w-[160px]">{file?.name}</span>
+										<label className="text-[11px] text-[#8B5E3C] underline cursor-pointer">
+											Cambiar
+											<input type="file" accept="image/*" onChange={handleInputChange} className="hidden" />
+										</label>
+									</div>
+								</>
+							) : (
+								<>
+									<div className="h-44 flex flex-col items-center justify-center gap-2 text-[#4a3f35]">
+										<svg width="30" height="30" viewBox="0 0 24 24" fill="none" className="opacity-50">
+											<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#8B5E3C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+										</svg>
+										<p className="text-sm">Arrastra tu comprobante aquí</p>
+										<p className="text-xs text-[#3a3028]">o haz clic para seleccionar</p>
+									</div>
+									<input
+										type="file"
+										accept="image/*"
+										onChange={handleInputChange}
+										className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+									/>
+								</>
+							)}
+						</div>
+
+						{/* Tipo label */}
+						<p className="text-[11px] font-medium tracking-widest uppercase text-[#8B5E3C] mt-1">
+							Tipo de pago
+						</p>
+
+						{/* Tipo cards */}
+						<div className="flex flex-col gap-3">
+							{[
+								{ id: 'abono', name: 'Abono', desc: 'Pago parcial del pedido', tagClass: 'bg-[#8B5E3C]/15 text-[#c4945a]' },
+								{ id: 'final', name: 'Pago final', desc: 'Saldo total restante', tagClass: 'bg-green-900/20 text-green-400/70' },
+							].map(t => (
+								<button
+									key={t.id}
+									onClick={() => setTipoPago(t.id as any)}
+									className={`relative flex items-center gap-4 px-5 py-4 rounded-xl border text-left transition-all duration-200 overflow-hidden
+										${tipoPago === t.id
+											? 'border-[#8B5E3C] bg-[#1e1c1a]'
+											: 'border-white/[0.07] bg-[#1a1917] hover:border-[#8B5E3C]/40 hover:bg-[#1e1c1a]'
+										}`}
+								>
+									{tipoPago === t.id && (
+										<span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#8B5E3C] to-[#c4945a]" />
+									)}
+
+									<span className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center transition-all duration-200
+										${tipoPago === t.id ? 'border-[#8B5E3C] bg-[#8B5E3C]' : 'border-white/15'}`}>
+										{tipoPago === t.id && <span className="w-1.5 h-1.5 rounded-full bg-white block" />}
+									</span>
+
+									<div>
+										<span className={`inline-block text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded-full mb-1 ${t.tagClass}`}>
+											{t.id}
+										</span>
+										<p className="font-serif text-base font-medium text-[#e8e0d5]">{t.name}</p>
+										<p className="text-[11px] text-[#6b5b4e] mt-0.5">{t.desc}</p>
+									</div>
+								</button>
+							))}
+						</div>
+
+					</div>
+				</div>
+
+				{/* ── FOOTER ── */}
+				<div className="h-px bg-white/5" />
+
+				<div className="flex justify-end">
 					<button
 						onClick={confirmarPago}
 						disabled={sendPayment.isPending}
-						className="px-6 py-3 rounded-full bg-[#8B5E3C] text-white font-medium hover:bg-[#6B4226] disabled:opacity-50 transition"
+						className="flex items-center gap-2 px-7 py-3 rounded-full bg-gradient-to-br from-[#8B5E3C] to-[#a06840] text-white text-sm font-medium hover:opacity-90 hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 transition-all duration-200"
 					>
-						{sendPayment.isPending ? 'Enviando…' : 'Confirmar pago'}
+						{sendPayment.isPending ? (
+							<>
+								<svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+									<circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="3" />
+									<path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+								</svg>
+								Enviando…
+							</>
+						) : (
+							<>
+								Confirmar pago
+								<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+									<path d="M6 3L11 8L6 13" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+								</svg>
+							</>
+						)}
 					</button>
 				</div>
 

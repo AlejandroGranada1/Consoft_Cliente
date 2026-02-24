@@ -1,66 +1,70 @@
-"use client";
+'use client';
 
-import AuthLayout from "@/components/auth/AuthLayout";
-import AuthInput from "@/components/auth/AuthInput";
-import AuthButton from "@/components/auth/AuthButton";
-import { useState } from "react";
-import { useForgotPassword } from "@/hooks/apiHooks";
-import Swal from "sweetalert2";
+import AuthLayout from '@/components/auth/AuthLayout';
+import AuthInput from '@/components/auth/AuthInput';
+import AuthButton from '@/components/auth/AuthButton';
+import { useState } from 'react';
+import { useForgotPassword } from '@/hooks/apiHooks';
+import Swal from 'sweetalert2';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
-  const { mutate: forgotPassword, isSuccess, error } = useForgotPassword();
+  const [email, setEmail] = useState('');
+  const { mutate: forgotPassword, isPending, isSuccess, error } = useForgotPassword();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!email.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Correo requerido",
-        text: "Por favor ingresa tu correo electrónico.",
-      });
+      Swal.fire({ icon: 'warning', title: 'Correo requerido', text: 'Por favor ingresa tu correo electrónico.' });
       return;
     }
-
     forgotPassword(email);
   };
 
   return (
     <AuthLayout
-      title="Bienvenido a Confort & Estilo"
-      subtitle="Recupera tu contraseña"
+      subtitle="Recuperar contraseña"
       illustration="/auth/Recuperar.png"
+      footer={
+        <Link
+          href="/client/auth/login"
+          className="flex items-center justify-center gap-2 text-sm text-white/40 hover:text-[#C8A882] transition-colors group"
+        >
+          <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
+          Volver al inicio de sesión
+        </Link>
+      }
     >
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <p className="text-sm text-[#1E293B] mb-2">
-          Te enviaremos un enlace de recuperación a tu correo electrónico.
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <p className="text-sm text-white/50 leading-relaxed">
+          Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
         </p>
 
         <AuthInput
-          label="Correo"
+          label="Correo electrónico"
           type="email"
-          placeholder="correo@ejemplo.com"
+          placeholder="ejemplo@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        <AuthButton
-          text="Enviar"
-          type="submit"
-        />
+        <AuthButton text="Enviar enlace" type="submit" loading={isPending} />
 
         {isSuccess && (
-          <p className="text-sm text-center text-green-700">
-            Si el correo existe, se envió un enlace para restablecer la contraseña.
-          </p>
+          <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-3">
+            <p className="text-sm text-emerald-400 text-center">
+              Si el correo existe, recibirás un enlace para restablecer tu contraseña.
+            </p>
+          </div>
         )}
 
         {error && (
-          <p className="text-sm text-center text-red-700">
-            {(error as any)?.response?.data?.message ||
-              "Error al enviar la solicitud"}
-          </p>
+          <div className="rounded-xl border border-red-400/20 bg-red-400/5 px-4 py-3">
+            <p className="text-sm text-red-400 text-center">
+              {(error as any)?.response?.data?.message || 'Error al enviar la solicitud'}
+            </p>
+          </div>
         )}
       </form>
     </AuthLayout>

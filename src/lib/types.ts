@@ -256,3 +256,40 @@ declare global {
 
 	const google: any;
 }
+
+// Dashboard
+export interface DashboardSummary {
+	totalRevenue: number;
+	totalSales: number;
+	totalUsers: number;
+}
+
+export interface DashboardSeriesItem {
+	period: string;
+	revenue: number;
+	sales: number;
+}
+
+export interface DashboardTopItem {
+	id: string;
+	name: string;
+	quantity: number;
+}
+
+export interface DashboardResponse {
+	ok: boolean;
+	range: {
+		from: string;
+		to: string;
+	};
+	summary: DashboardSummary;
+	series: {
+		monthly: DashboardSeriesItem[];
+		quarterly: DashboardSeriesItem[];
+		semiannual: DashboardSeriesItem[];
+	};
+	topItems: {
+		products: DashboardTopItem[];
+		services: DashboardTopItem[];
+	};
+}
