@@ -60,7 +60,6 @@ export default function PagoPage() {
 
 		if (!metodo) return Swal.fire({ icon: 'warning', title: 'Selecciona un método de pago' });
 		if (!file) return Swal.fire({ icon: 'warning', title: 'Falta el comprobante', text: 'Debes subir el comprobante del pago.' });
-		if (!tipoPago) return Swal.fire({ icon: 'warning', title: 'Selecciona el tipo de pago' });
 
 		const confirm = await Swal.fire({
 			title: '¿Confirmar pago?',
@@ -75,7 +74,7 @@ export default function PagoPage() {
 		if (!confirm.isConfirmed) return;
 
 		sendPayment.mutate(
-			{ orderId: pedidoId as string, payment_image: file, tipoPago },
+			{ orderId: pedidoId as string, payment_image: file},
 			{
 				onSuccess: async () => {
 					await Swal.fire({ icon: 'success', title: 'Pago enviado', text: 'Tu comprobante está en verificación.' });
@@ -267,47 +266,6 @@ export default function PagoPage() {
 								</>
 							)}
 						</div>
-
-						{/* Tipo label */}
-						<p className="text-[11px] font-medium tracking-widest uppercase text-[#8B5E3C] mt-1">
-							Tipo de pago
-						</p>
-
-						{/* Tipo cards */}
-						<div className="flex flex-col gap-3">
-							{[
-								{ id: 'abono', name: 'Abono', desc: 'Pago parcial del pedido', tagClass: 'bg-[#8B5E3C]/15 text-[#c4945a]' },
-								{ id: 'final', name: 'Pago final', desc: 'Saldo total restante', tagClass: 'bg-green-900/20 text-green-400/70' },
-							].map(t => (
-								<button
-									key={t.id}
-									onClick={() => setTipoPago(t.id as any)}
-									className={`relative flex items-center gap-4 px-5 py-4 rounded-xl border text-left transition-all duration-200 overflow-hidden
-										${tipoPago === t.id
-											? 'border-[#8B5E3C] bg-[#1e1c1a]'
-											: 'border-white/[0.07] bg-[#1a1917] hover:border-[#8B5E3C]/40 hover:bg-[#1e1c1a]'
-										}`}
-								>
-									{tipoPago === t.id && (
-										<span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#8B5E3C] to-[#c4945a]" />
-									)}
-
-									<span className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center transition-all duration-200
-										${tipoPago === t.id ? 'border-[#8B5E3C] bg-[#8B5E3C]' : 'border-white/15'}`}>
-										{tipoPago === t.id && <span className="w-1.5 h-1.5 rounded-full bg-white block" />}
-									</span>
-
-									<div>
-										<span className={`inline-block text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded-full mb-1 ${t.tagClass}`}>
-											{t.id}
-										</span>
-										<p className="font-serif text-base font-medium text-[#e8e0d5]">{t.name}</p>
-										<p className="text-[11px] text-[#6b5b4e] mt-0.5">{t.desc}</p>
-									</div>
-								</button>
-							))}
-						</div>
-
 					</div>
 				</div>
 

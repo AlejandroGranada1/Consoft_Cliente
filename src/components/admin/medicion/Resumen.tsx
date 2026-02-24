@@ -1,50 +1,63 @@
 'use client';
 
-import { useDashboard } from '@/hooks/apiHooks';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, TrendingUp, DollarSign, ShoppingBag } from 'lucide-react';
 
-export default function Resumen() {
-	const { data } = useDashboard();
-
+export default function Resumen({ data }: { data: any }) {
 	if (!data) return null;
 
-	const maxRevenue = Math.max(...data.series.monthly.map((m) => m.revenue));
+	const maxRevenue = Math.max(...data.series.monthly.map((m: any) => m.revenue));
 
 	return (
-		<section className='mt-6'>
-			<div className='mb-5'>
-				<h2 className='text-lg font-semibold text-[#3d2b1f]'>Ventas Mensuales</h2>
-				<p className='text-sm text-[#8a7060]'>Resumen de ventas e ingresos mes a mes</p>
+		<section className="space-y-6">
+			<div>
+				<h2 className="text-lg font-medium text-white">Ventas Mensuales</h2>
+				<p className="text-sm text-white/40 mt-1">Resumen de ventas e ingresos mes a mes</p>
 			</div>
 
-			<div className='grid grid-cols-3 gap-4'>
-				{data.series.monthly.map((m) => {
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{data.series.monthly.map((m: any) => {
 					const pct = Math.round((m.revenue / maxRevenue) * 100);
 					return (
 						<div
 							key={m.period}
-							className='border border-[#e8ddd4] rounded-xl p-4 bg-white hover:border-[#c8a882] transition-colors group'>
-							<div className='flex items-center gap-2 mb-3'>
-								<CalendarDays size={14} className='text-[#c8a882]' />
-								<span className='text-sm font-semibold text-[#8a5e3c]'>{m.period}</span>
+							className="rounded-xl border border-white/10 bg-white/5 p-5
+								hover:border-[#C8A882]/30 hover:bg-white/8
+								transition-all duration-200 group">
+							<div className="flex items-center justify-between mb-4">
+								<div className="flex items-center gap-2">
+									<CalendarDays size={14} className="text-[#C8A882]" />
+									<span className="text-sm font-medium text-white">{m.period}</span>
+								</div>
+								<div className="flex items-center gap-1 text-xs text-white/40">
+									<TrendingUp size={12} />
+									<span>{pct}% del máximo</span>
+								</div>
 							</div>
 
-							<div className='space-y-1 mb-3'>
-								<div className='flex justify-between text-sm'>
-									<span className='text-[#8a7060]'>Ventas</span>
-									<span className='font-bold text-[#3d2b1f]'>{m.sales}</span>
+							<div className="grid grid-cols-2 gap-4 mb-4">
+								<div className="space-y-1">
+									<div className="flex items-center gap-1.5 text-xs text-white/40">
+										<ShoppingBag size={12} />
+										<span>Ventas</span>
+									</div>
+									<p className="text-lg font-bold text-white">{m.sales}</p>
 								</div>
-								<div className='flex justify-between text-sm'>
-									<span className='text-[#8a7060]'>Ingresos</span>
-									<span className='font-bold text-[#3d2b1f]'>
+								<div className="space-y-1">
+									<div className="flex items-center gap-1.5 text-xs text-white/40">
+										<DollarSign size={12} />
+										<span>Ingresos</span>
+									</div>
+									<p className="text-lg font-bold text-[#C8A882]">
 										${m.revenue.toLocaleString()}
-									</span>
+									</p>
 								</div>
 							</div>
 
-							<div className='h-1.5 rounded-full bg-[#f0e8df] overflow-hidden'>
+							{/* Barra de progreso */}
+							<div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
 								<div
-									className='h-full rounded-full bg-gradient-to-r from-[#c8a882] to-[#8a5e3c] group-hover:from-[#8a5e3c] group-hover:to-[#c8a882] transition-all'
+									className="h-full rounded-full bg-gradient-to-r from-[#C8A882] to-[#8B5E3C] 
+										group-hover:opacity-80 transition-all"
 									style={{ width: `${pct}%` }}
 								/>
 							</div>

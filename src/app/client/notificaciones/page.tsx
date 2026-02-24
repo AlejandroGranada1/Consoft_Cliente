@@ -140,7 +140,7 @@ export default function NotificationsPage() {
 									<div className="flex justify-between items-start gap-2">
 										<div className="flex flex-col gap-0.5 min-w-0">
 											<p className={`text-sm font-medium truncate ${isActive ? 'text-[#f0e8d8]' : 'text-[#c4b8a8]'}`}>
-												Cotización #{q._id.slice(-5)}
+												Cotización #{q._id.slice(-6)}
 											</p>
 											<p className="text-[11px] text-[#6b5b4e]">
 												{q.items.length} {q.items.length === 1 ? 'producto' : 'productos'}

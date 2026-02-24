@@ -1,31 +1,14 @@
 'use client';
 
-import { UserPlus, DollarSign, ShoppingCart } from 'lucide-react';
-import { useDashboard } from '@/hooks/useDashboard';
+import { UserPlus, DollarSign, ShoppingCart, TrendingUp, TrendingDown } from 'lucide-react';
 
 function calculateGrowth(current: number, previous: number) {
 	if (!previous) return 0;
 	return ((current - previous) / previous) * 100;
 }
 
-export default function GrowthTrends() {
-	const { data, isLoading, isError } = useDashboard();
-
-	if (isLoading) {
-		return (
-			<div className='bg-white border border-[#e8ddd4] rounded-xl p-6'>
-				<p className='text-sm text-[#8a7060]'>Cargando métricas...</p>
-			</div>
-		);
-	}
-
-	if (isError || !data) {
-		return (
-			<div className='bg-white border border-[#e8ddd4] rounded-xl p-6'>
-				<p className='text-sm text-red-400'>Error cargando dashboard</p>
-			</div>
-		);
-	}
+export default function Tendencias({ data }: { data: any }) {
+	if (!data) return null;
 
 	const monthly = data.series.monthly;
 	const lastMonth = monthly[monthly.length - 1];
@@ -36,87 +19,106 @@ export default function GrowthTrends() {
 
 	// Normalizamos totalUsers a un % relativo (máx 100) para la barra
 	const usersBarPct = Math.min((data.summary.totalUsers / 500) * 100, 100);
+	const salesBarPct = Math.min(Math.abs(salesGrowth), 100);
+	const revenueBarPct = Math.min(Math.abs(revenueGrowth), 100);
 
 	const metrics = [
 		{
 			id: 1,
 			name: 'Usuarios Registrados',
-			// El valor real que mostramos en texto
 			displayValue: data.summary.totalUsers.toLocaleString(),
-			// El % que ocupa la barra (0-100)
 			barPct: usersBarPct,
 			icon: <UserPlus size={18} />,
-			iconColor: 'text-[#5e7a3c]',
-			rowBg: 'bg-[#eef5e4]',
-			barColor: 'bg-[#8ab85e]',
+			iconColor: 'text-[#C8A882]',
+			rowBg: 'bg-[#C8A882]/5',
+			barColor: 'bg-gradient-to-r from-[#C8A882] to-[#8B5E3C]',
 			suffix: ' usuarios',
+			growth: null,
 		},
 		{
 			id: 2,
-			name: 'Ventas',
-			displayValue: salesGrowth.toFixed(1) + '%',
-			barPct: Math.min(Math.abs(salesGrowth), 100),
+			name: 'Crecimiento en Ventas',
+			displayValue: (salesGrowth >= 0 ? '+' : '') + salesGrowth.toFixed(1) + '%',
+			barPct: salesBarPct,
 			icon: <ShoppingCart size={18} />,
-			iconColor: 'text-[#3c5e8a]',
-			rowBg: 'bg-[#e4eef5]',
-			barColor: 'bg-[#5e8ab8]',
+			iconColor: salesGrowth >= 0 ? 'text-green-400' : 'text-red-400',
+			rowBg: salesGrowth >= 0 ? 'bg-green-500/5' : 'bg-red-500/5',
+			barColor: salesGrowth >= 0 
+				? 'bg-gradient-to-r from-green-500 to-emerald-500'
+				: 'bg-gradient-to-r from-red-500 to-orange-500',
 			suffix: '',
+			growth: salesGrowth,
 		},
 		{
 			id: 3,
-			name: 'Ingresos',
+			name: 'Crecimiento en Ingresos',
 			displayValue: (revenueGrowth >= 0 ? '+' : '') + revenueGrowth.toFixed(1) + '%',
-			barPct: Math.min(Math.abs(revenueGrowth), 100),
+			barPct: revenueBarPct,
 			icon: <DollarSign size={18} />,
-			iconColor: 'text-[#8a5e3c]',
-			rowBg: 'bg-[#f5ede4]',
-			barColor: 'bg-[#c8a882]',
+			iconColor: revenueGrowth >= 0 ? 'text-green-400' : 'text-red-400',
+			rowBg: revenueGrowth >= 0 ? 'bg-green-500/5' : 'bg-red-500/5',
+			barColor: revenueGrowth >= 0
+				? 'bg-gradient-to-r from-green-500 to-emerald-500'
+				: 'bg-gradient-to-r from-red-500 to-orange-500',
 			suffix: '',
+			growth: revenueGrowth,
 		},
 	];
 
 	return (
-		<div className='bg-white border border-[#e8ddd4] rounded-xl p-6'>
+		<div className="rounded-xl border border-white/10 bg-white/5 p-6">
 			{/* Encabezado */}
-			<h2 className='text-lg font-semibold text-[#3d2b1f] mb-1'>
-				Tendencias de Crecimiento
-			</h2>
-			<p className='text-sm text-[#8a7060] mb-5'>
-				Evolución de métricas clave en los últimos meses
-			</p>
+			<div className="mb-6">
+				<h2 className="text-lg font-medium text-white">Tendencias de Crecimiento</h2>
+				<p className="text-sm text-white/40 mt-1">
+					Evolución de métricas clave en los últimos meses
+				</p>
+			</div>
 
 			{/* Filas de métricas */}
-			<div className='space-y-3'>
+			<div className="space-y-3">
 				{metrics.map((metric) => (
 					<div
 						key={metric.id}
-						className={`flex items-center gap-4 ${metric.rowBg} rounded-lg px-4 py-3`}
+						className={`flex items-center gap-4 ${metric.rowBg} rounded-xl px-4 py-3 border border-white/5`}
 					>
 						{/* Icono */}
 						<span className={`${metric.iconColor} shrink-0`}>
 							{metric.icon}
 						</span>
 
-						{/* Nombre — ancho fijo para que las barras queden alineadas */}
-						<span className='text-sm font-medium text-[#3d2b1f] w-44 shrink-0'>
+						{/* Nombre */}
+						<span className="text-sm font-medium text-white w-44 shrink-0">
 							{metric.name}
 						</span>
 
-						{/* Barra de progreso — ocupa el espacio restante */}
-						<div className='flex-1 bg-white/70 rounded-full h-2 overflow-hidden'>
+						{/* Barra de progreso */}
+						<div className="flex-1 bg-white/10 rounded-full h-2 overflow-hidden">
 							<div
 								className={`h-full rounded-full ${metric.barColor} transition-all duration-500`}
 								style={{ width: `${metric.barPct}%` }}
 							/>
 						</div>
 
-						{/* Valor numérico — ancho fijo a la derecha */}
-						<span className={`text-sm font-bold ${metric.iconColor} w-20 text-right shrink-0`}>
-							{metric.displayValue}
-						</span>
+						{/* Valor y tendencia */}
+						<div className="flex items-center gap-2 w-28 justify-end shrink-0">
+							{metric.growth !== null && (
+								metric.growth >= 0 
+									? <TrendingUp size={14} className="text-green-400" />
+									: <TrendingDown size={14} className="text-red-400" />
+							)}
+							<span className={`text-sm font-bold ${metric.iconColor}`}>
+								{metric.displayValue}
+							</span>
+						</div>
 					</div>
 				))}
 			</div>
+
+			{/* Nota al pie */}
+			<p className="text-xs text-white/20 text-center mt-4">
+				Basado en datos de los últimos {monthly.length} meses
+			</p>
 		</div>
 	);
 }

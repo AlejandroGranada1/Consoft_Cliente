@@ -89,9 +89,8 @@ export interface Visit {
 	visitDate: Date; // ISO date string
 	address: string;
 	status: string;
-	services: Visit[]; // Array of Service IDs
-	isGuest: boolean;
-	guestInfo: {
+	isGuest?: boolean;
+	guestInfo?: {
 		email: string;
 		name: string;
 		phone: string;
@@ -151,6 +150,7 @@ export interface Sale {
 		_id: string;
 		name: string;
 	};
+	payments: Payment[]
 }
 
 export interface PaymentDetails {

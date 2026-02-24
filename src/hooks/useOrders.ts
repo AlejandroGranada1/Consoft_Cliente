@@ -76,12 +76,10 @@ export const useSendPayment = () => {
 		mutationFn: async (data: {
 			orderId: string;
 			payment_image: File;
-			tipoPago: 'abono' | 'final';
 		}) => {
 			const formData = new FormData();
 			formData.append('payment_image', data.payment_image);
 			formData.append('status', 'pendiente');
-			formData.append('method', data.tipoPago);
 			formData.append('orderId', data.orderId);
 
 			const res = await api.post(`/api/orders/${data.orderId}/payments/ocr`, formData, {

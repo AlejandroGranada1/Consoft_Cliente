@@ -10,12 +10,14 @@ import {
 	Calendar, 
 	CheckCircle, 
 	AlertCircle,
-	ArrowLeft
+	ArrowLeft,
+	Save
 } from 'lucide-react';
 import { DefaultModalProps, Payment, PaymentDetails } from '@/lib/types';
 import api from '@/components/Global/axios';
 import React, { useState } from 'react';
 import { updateElement } from '../../global/alerts';
+import { formatDateForInput } from '@/lib/formatDate';
 
 function PaymentDetailsModal({
 	isOpen,
@@ -41,21 +43,39 @@ function PaymentDetailsModal({
 
 	const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const newStatus = e.target.value;
-
-		// Actualizar estado local
 		setPaymentData((prev) => ({ ...prev, status: newStatus }));
+	};
 
-		// Preparamos el objeto que la API espera
-		const payload = { ...paymentData, status: newStatus, paymentId: paymentData._id };
+	const handleSubmit = async () => {
+		const payload = { ...paymentData, status: paymentData.status, paymentId: paymentData._id };
 
 		setUpdating(true);
 		try {
 			await updateElement('Pago', `/api/payments/${order?._id}`, payload, updateList);
+			const Swal = (await import('sweetalert2')).default;
+			Swal.fire({
+				toast: true,
+				animation: false,
+				timerProgressBar: true,
+				showConfirmButton: false,
+				title: 'Estado actualizado exitosamente',
+				icon: 'success',
+				position: 'top-right',
+				timer: 1500,
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 			onClose();
 		} catch (err) {
 			console.error('Error al actualizar el pago', err);
 			const Swal = (await import('sweetalert2')).default;
-			Swal.fire('Error', 'No se pudo actualizar el estado del pago', 'error');
+			Swal.fire({
+				title: 'Error',
+				text: 'No se pudo actualizar el estado del pago',
+				icon: 'error',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		} finally {
 			setUpdating(false);
 		}
@@ -64,218 +84,230 @@ function PaymentDetailsModal({
 	const getStatusBadge = (status: string) => {
 		switch(status) {
 			case 'Aprobado':
-				return <span className='bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1'><CheckCircle size={14} /> Aprobado</span>;
+				return <span className='bg-green-500/10 text-green-400 border border-green-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'><CheckCircle size={12} /> Aprobado</span>;
 			case 'En revision':
-				return <span className='bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1'><AlertCircle size={14} /> En revisión</span>;
+				return <span className='bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'><AlertCircle size={12} /> En revisión</span>;
+			case 'Rechazado':
+				return <span className='bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'><AlertCircle size={12} /> Rechazado</span>;
 			default:
-				return <span className='bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium'>{status}</span>;
+				return <span className='bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full text-xs font-medium'>{status}</span>;
 		}
 	};
 
+	const formatCurrency = (value: number) => {
+		return `$${value.toLocaleString('es-CO')} COP`;
+	};
+
+	const formatDate = (date: string) => {
+		return new Date(date).toLocaleDateString('es-CO', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	};
+
 	return (
-		<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
-			<div className='modal-frame w-full max-w-[800px] flex flex-col max-h-[92vh]'>
+		<div className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+			
+			<div className="w-full max-w-[800px] rounded-2xl border border-white/10
+				shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
+				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
 				
-				<header className='sticky top-0 z-10 px-6 py-4 border-b backdrop-blur-xs'>
+				{/* Header */}
+				<header className="relative px-6 py-5 border-b border-white/10">
 					<button
 						onClick={onClose}
-						className='absolute top-0 left-0 p-5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors'>
-						<X size={20} />
+						className="absolute right-4 top-1/2 -translate-y-1/2
+							p-2 rounded-lg text-white/40 hover:text-white/70
+							hover:bg-white/5 transition-all duration-200">
+						<X size={18} />
 					</button>
-					<h1 className='text-2xl font-bold text-center flex items-center justify-center gap-2'>
-						<CreditCard size={20} /> Detalles del Pago
-					</h1>
+					<h2 className="text-lg font-medium text-white text-center flex items-center justify-center gap-2">
+						<CreditCard size={18} className="text-[#C8A882]" />
+						Detalles del Pago
+					</h2>
 				</header>
 
-				<div className='space-y-6 p-6 overflow-y-auto'>
+				<div className="p-6 overflow-y-auto space-y-6">
 					
-					{/* Cabecera con IDs */}
-					<div className='grid grid-cols-2 gap-6'>
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 flex items-center gap-2'>
-								<Hash size={16} />
+					{/* IDs */}
+					<div className="grid grid-cols-2 gap-4">
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 								ID Pago
 							</label>
-							<p className='border px-3 py-2 rounded-md bg-gray-50 text-gray-700 font-mono text-sm'>
+							<div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+								text-sm text-white/90 font-mono">
 								{payment?._id}
-							</p>
+							</div>
 						</div>
 
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 flex items-center gap-2'>
-								<Package size={16} />
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 								ID Pedido
 							</label>
-							<p className='border px-3 py-2 rounded-md bg-gray-50 text-gray-700 font-mono text-sm'>
+							<div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+								text-sm text-white/90 font-mono">
 								{order?._id}
-							</p>
+							</div>
 						</div>
 					</div>
 
-					{/* Información de montos */}
-					<div className='grid grid-cols-3 gap-6'>
+					{/* Montos */}
+					<div className="grid grid-cols-3 gap-4">
 						{/* Monto Total */}
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 flex items-center gap-2'>
-								<Coins size={16} />
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 								Monto Total
 							</label>
-							<p className='border px-3 py-2 rounded-md bg-gray-50 text-gray-700 font-semibold'>
-								{order?.total?.toLocaleString('es-CO', {
-									style: 'currency',
-									currency: 'COP',
-								})}
-							</p>
+							<div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+								text-sm text-white/90 font-medium">
+								{formatCurrency(order?.total || 0)}
+							</div>
 						</div>
 
 						{/* Valor del pago */}
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 flex items-center gap-2'>
-								<CreditCard size={16} />
-								Valor del pago
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
+								Valor Pagado
 							</label>
-							<p className='border px-3 py-2 rounded-md bg-green-50 text-green-700 font-semibold'>
-								{payment?.amount?.toLocaleString('es-CO', {
-									style: 'currency',
-									currency: 'COP',
-								})}
-							</p>
+							<div className="w-full rounded-xl border border-white/15 bg-[#C8A882]/10 px-4 py-3
+								text-sm text-[#C8A882] font-semibold">
+								{formatCurrency(payment?.amount || 0)}
+							</div>
 						</div>
 
 						{/* Valor pendiente */}
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 flex items-center gap-2'>
-								<Clock size={16} />
-								Valor pendiente
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
+								Valor Pendiente
 							</label>
-							<p className={`border px-3 py-2 rounded-md font-semibold ${
-								(order?.total! - payment?.amount!) > 0 
-									? 'bg-yellow-50 text-yellow-700' 
-									: 'bg-green-50 text-green-700'
-							}`}>
-								{(order?.total! - payment?.amount!)?.toLocaleString('es-CO', {
-									style: 'currency',
-									currency: 'COP',
-								})}
-							</p>
+							<div className={`w-full rounded-xl border border-white/15 px-4 py-3
+								text-sm font-semibold
+								${(order?.total! - payment?.amount!) > 0 
+									? 'bg-yellow-500/10 text-yellow-400' 
+									: 'bg-green-500/10 text-green-400'
+								}`}>
+								{formatCurrency(order?.total! - payment?.amount!)}
+							</div>
 						</div>
 					</div>
 
-					{/* Información adicional */}
-					<div className='grid grid-cols-2 gap-6'>
-						{/* Metodo */}
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 flex items-center gap-2'>
-								<CreditCard size={16} />
+					{/* Método y Estado */}
+					<div className="grid grid-cols-2 gap-4">
+						{/* Método */}
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 								Método de pago
 							</label>
-							<p className='border px-3 py-2 rounded-md bg-gray-50 text-gray-700'>
+							<div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+								text-sm text-white/90">
 								{payment?.method === 'cash' && 'Efectivo'}
 								{payment?.method === 'card' && 'Tarjeta de crédito/débito'}
 								{payment?.method === 'transfer' && 'Transferencia bancaria'}
 								{payment?.method === 'other' && 'Otro'}
 								{!['cash', 'card', 'transfer', 'other'].includes(payment?.method || '') && payment?.method}
-							</p>
+							</div>
 						</div>
 
-						{/* Estado del pago */}
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 flex items-center gap-2'>
-								<AlertCircle size={16} />
+						{/* Estado */}
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 								Estado del pago
 							</label>
-							<div className='flex items-center gap-3'>
+							<div className="flex gap-3">
 								<select
-									className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown flex-1'
-									value={payment?.status}
+									value={paymentData.status}
 									onChange={handleChange}
+									className="flex-1 rounded-xl border border-white/15 bg-white/5 px-4 py-3
+										text-sm text-white
+										focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+										transition-all duration-200 appearance-none"
 									disabled={updating}>
-									<option value='Aprobado'>Aprobado</option>
-									<option value='En revision'>En revisión</option>
-									<option value='Pendiente'>Pendiente</option>
-									<option value='Rechazado'>Rechazado</option>
+									<option value="Aprobado" className="bg-[#1e1e1c]">Aprobado</option>
+									<option value="En revision" className="bg-[#1e1e1c]">En revisión</option>
+									<option value="Pendiente" className="bg-[#1e1e1c]">Pendiente</option>
+									<option value="Rechazado" className="bg-[#1e1e1c]">Rechazado</option>
 								</select>
-								{updating && (
-									<span className='animate-spin rounded-full h-5 w-5 border-b-2 border-brown'></span>
-								)}
 							</div>
 						</div>
 					</div>
 
 					{/* Fecha de pago */}
-					<div className='flex flex-col'>
-						<label className='font-medium mb-1 flex items-center gap-2'>
-							<Calendar size={16} />
+					<div className="space-y-2">
+						<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 							Fecha de pago
 						</label>
-						<p className='border px-3 py-2 rounded-md bg-gray-50 text-gray-700'>
-							{payment?.paidAt
-								? new Date(payment.paidAt).toLocaleDateString('es-CO', {
-									year: 'numeric',
-									month: 'long',
-									day: 'numeric',
-									hour: '2-digit',
-									minute: '2-digit'
-								})
-								: '-'}
-						</p>
+						<div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+							text-sm text-white/70">
+							{payment?.paidAt ? formatDateForInput(payment.paidAt) : '-'}
+						</div>
 					</div>
 
-					{/* Resumen del pago */}
-					<div className='p-4 bg-gray-50 rounded-lg border'>
-						<div className='flex justify-between items-center'>
-							<div>
-								<span className='font-semibold text-lg'>Resumen del pago:</span>
-								<p className='text-sm text-gray-600 mt-1'>
-									Pago #{payment?._id?.slice(-6)} para pedido #{order?._id?.slice(-6)}
-								</p>
-							</div>
-							<div className='text-right'>
-								{getStatusBadge(payment?.status || '')}
-							</div>
+					{/* Resumen */}
+					<div className="p-4 rounded-xl border border-white/10 bg-white/5">
+						<div className="flex justify-between items-center mb-3">
+							<p className="text-sm font-medium text-white">Resumen del pago</p>
+							{getStatusBadge(paymentData.status)}
 						</div>
-						<div className='grid grid-cols-3 gap-4 mt-3 text-sm'>
+						<div className="grid grid-cols-3 gap-4 text-xs">
 							<div>
-								<span className='text-gray-500'>Método:</span>
-								<p className='font-medium'>
-									{payment?.method === 'cash' && 'Efectivo'}
-									{payment?.method === 'card' && 'Tarjeta'}
-									{payment?.method === 'transfer' && 'Transferencia'}
-									{payment?.method === 'other' && 'Otro'}
-								</p>
+								<p className="text-white/40">Pago #</p>
+								<p className="text-white/90 font-mono mt-1">{payment?._id.slice(-6)}</p>
 							</div>
 							<div>
-								<span className='text-gray-500'>Pagado:</span>
-								<p className='font-medium text-green-600'>
-									{payment?.amount?.toLocaleString('es-CO', {
-										style: 'currency',
-										currency: 'COP',
-									})}
-								</p>
+								<p className="text-white/40">Pedido #</p>
+								<p className="text-white/90 font-mono mt-1">{order?._id.slice(-6)}</p>
 							</div>
 							<div>
-								<span className='text-gray-500'>Pendiente:</span>
-								<p className={`font-medium ${
-									(order?.total! - payment?.amount!) > 0 ? 'text-yellow-600' : 'text-green-600'
-								}`}>
-									{(order?.total! - payment?.amount!)?.toLocaleString('es-CO', {
-										style: 'currency',
-										currency: 'COP',
-									})}
-								</p>
+								<p className="text-white/40">Método</p>
+								<p className="text-white/90 mt-1 capitalize">{payment?.method}</p>
 							</div>
 						</div>
 					</div>
 
-					{/* Botón de volver */}
-					<div className='flex justify-center pt-4 border-t'>
+					{/* Botones */}
+					<div className="flex justify-end gap-3 pt-4 border-t border-white/10">
 						<button
-							type='button'
+							type="button"
 							onClick={onClose}
-							className='px-8 py-2 border border-brown rounded-md text-brown hover:bg-brown hover:text-white transition-colors flex items-center gap-2'>
-							<ArrowLeft size={16} />
-							Volver
+							className="px-5 py-2.5 rounded-lg
+								border border-white/15 bg-white/5
+								text-white/70 text-sm
+								hover:bg-white/10 hover:text-white
+								transition-all duration-200
+								flex items-center gap-2">
+							<ArrowLeft size={14} />
+							Cerrar
 						</button>
+						{paymentData.status !== payment?.status && (
+							<button
+								type="button"
+								onClick={handleSubmit}
+								disabled={updating}
+								className="px-5 py-2.5 rounded-lg
+									bg-[#8B5E3C] hover:bg-[#6F452A]
+									text-white text-sm font-medium
+									shadow-lg shadow-[#8B5E3C]/20
+									disabled:opacity-50 disabled:cursor-not-allowed
+									flex items-center gap-2
+									transition-all duration-200">
+								{updating ? (
+									<>
+										<span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+										Guardando...
+									</>
+								) : (
+									<>
+										<Save size={14} />
+										Guardar Cambios
+									</>
+								)}
+							</button>
+						)}
 					</div>
 				</div>
 			</div>

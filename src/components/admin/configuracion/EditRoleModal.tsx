@@ -1,19 +1,17 @@
-import { X, Shield, Package, Check, User, Info, Save } from 'lucide-react';
+'use client';
+
+import { X, Shield, Package, Check, User, Info, Save, Lock } from 'lucide-react';
 import { DefaultModalProps, GroupPermission, Permission, Role } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { useGetPermissions, useUpdateRole } from '@/hooks/apiHooks';
 
-const initialState: Role | null = null;
-
 function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Role>) {
-	const [roleData, setRoleData] = useState<Role | null>(initialState);
-
+	const [roleData, setRoleData] = useState<Role | null>(null);
 	const { data } = useGetPermissions();
 	const permissions = (data?.permisos as GroupPermission[]) || [];
 	const updateRole = useUpdateRole();
 
-	// 📌 Cargar datos
 	useEffect(() => {
 		if (isOpen && extraProps) {
 			setRoleData({
@@ -30,15 +28,12 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 
 	if (!isOpen || !roleData) return null;
 
-	// 🧼 Cerrar modal correctamente
 	const handleClose = () => {
-		setRoleData(initialState);
+		setRoleData(null);
 		onClose();
 	};
 
-	// 📌 Helpers
-	const isPermissionSelected = (_id: string) =>
-		roleData.permissions.some((p) => p._id === _id);
+	const isPermissionSelected = (_id: string) => roleData.permissions.some((p) => p._id === _id);
 
 	const isGroupSelected = (module: string) => {
 		const grupo = permissions.find((g) => g.module === module);
@@ -53,7 +48,6 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 		return selectedCount > 0 && selectedCount < grupo.permissions.length;
 	};
 
-	// 📌 Toggle permisos
 	const togglePermission = (permission: Permission) => {
 		setRoleData((prev) => {
 			if (!prev) return null;
@@ -83,7 +77,7 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 			}
 
 			const newPerms = grupo.permissions.filter(
-				(p) => !prev.permissions.some((up) => up._id === p._id)
+				(p) => !prev.permissions.some((up) => up._id === p._id),
 			);
 
 			return {
@@ -93,7 +87,6 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 		});
 	};
 
-	// 📌 Inputs
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, type, value, checked } = e.target;
 		setRoleData((prev) =>
@@ -101,27 +94,34 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 				? {
 						...prev,
 						[name]: type === 'checkbox' ? checked : value,
-				  }
-				: null
+					}
+				: null,
 		);
 	};
 
-	// 📌 Guardar
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!roleData) return;
 
 		if (!roleData.name.trim()) {
-			Swal.fire('Campo requerido', 'El nombre del rol es obligatorio', 'warning');
+			Swal.fire({
+				title: 'Campo requerido',
+				text: 'El nombre del rol es obligatorio',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 			return;
 		}
 
 		if (!roleData.permissions.length) {
-			Swal.fire(
-				'Permisos requeridos',
-				'Debes seleccionar al menos un permiso',
-				'warning'
-			);
+			Swal.fire({
+				title: 'Permisos requeridos',
+				text: 'Debes seleccionar al menos un permiso',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 			return;
 		}
 
@@ -135,197 +135,277 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 			};
 
 			await updateRole.mutateAsync(sentData);
+
+			Swal.fire({
+				toast: true,
+				animation: false,
+				timerProgressBar: true,
+				showConfirmButton: false,
+				title: 'Rol actualizado exitosamente',
+				icon: 'success',
+				position: 'top-right',
+				timer: 1500,
+				background: '#1e1e1c',
+				color: '#fff',
+			});
+
 			updateList?.();
 			handleClose();
 		} catch (err) {
-			Swal.fire('Error', 'No se pudo actualizar el rol', 'error');
+			Swal.fire({
+				title: 'Error',
+				text: 'No se pudo actualizar el rol',
+				icon: 'error',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		}
 	};
 
+	const formatDate = (date: string | Date) => {
+		return new Date(date).toLocaleDateString('es-CO', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric',
+		});
+	};
+
 	return (
-		<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
-			<div className='modal-frame w-full max-w-[720px] flex flex-col max-h-[92vh]'>
-				
-				<header className='sticky top-0 z-10 px-6 py-4 border-b backdrop-blur-xs'>
+		<div
+			className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+			<div
+				className='w-full max-w-[720px] rounded-2xl border border-white/10
+        shadow-[0_8px_32px_rgba(0,0,0,0.3)]
+        flex flex-col max-h-[90vh]'
+				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
+				{/* Header */}
+				<header className='relative px-6 py-5 border-b border-white/10'>
 					<button
 						onClick={handleClose}
-						className='absolute top-0 left-0 p-5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors'>
-						<X size={20} />
+						className='absolute left-4 top-1/2 -translate-y-1/2
+              p-2 rounded-lg text-white/40 hover:text-white/70
+              hover:bg-white/5 transition-all duration-200'>
+						<X size={18} />
 					</button>
-					<h1 className='text-2xl font-bold text-center flex items-center justify-center gap-2'>
-						<Shield size={20} /> Editar Rol
-					</h1>
+					<h2 className='text-lg font-medium text-white text-center flex items-center justify-center gap-2'>
+						<Shield
+							size={18}
+							className='text-[#C8A882]'
+						/>
+						Editar rol
+					</h2>
 				</header>
 
-				<form onSubmit={handleSubmit} className='space-y-6 p-6 overflow-y-auto'>
-
-					{/* Información principal del rol */}
-					<div className='grid grid-cols-2 gap-6'>
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 flex items-center gap-2'>
-								<User size={16} />
-								Nombre *
+				<form
+					onSubmit={handleSubmit}
+					className='p-6 overflow-y-auto space-y-6'>
+					{/* Información básica */}
+					<div className='grid grid-cols-2 gap-4'>
+						<div className='space-y-2'>
+							<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+								Nombre del rol *
 							</label>
 							<input
 								name='name'
-								type='text'
-								placeholder='Ej: Administrador'
 								value={roleData.name}
 								onChange={handleChange}
-								className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown'
+								placeholder='Ej: Administrador'
+								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                  text-sm text-white placeholder:text-white/30
+                  focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                  transition-all duration-200'
 							/>
 						</div>
 
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 flex items-center gap-2'>
-								<Info size={16} />
+						<div className='space-y-2'>
+							<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
 								Estado
 							</label>
-							<div className='flex items-center h-10'>
-								<label className='flex items-center gap-2 cursor-pointer'>
-									<input
-										name='status'
-										type='checkbox'
-										checked={roleData.status}
-										onChange={handleChange}
-										className='rounded border-gray-300 text-brown focus:ring-brown focus:ring-1'
-									/>
-									<span className={`px-3 py-1 rounded-full text-sm font-medium ${
-										roleData.status
-											? 'bg-green-100 text-green-700'
-											: 'bg-red-100 text-red-700'
-									}`}>
-										{roleData.status ? 'Activo' : 'Inactivo'}
-									</span>
-								</label>
-							</div>
+							<label className='flex items-center gap-3 cursor-pointer h-12'>
+								<input
+									name='status'
+									type='checkbox'
+									checked={roleData.status}
+									onChange={handleChange}
+									className='w-4 h-4 rounded border-white/30
+                    bg-white/5 text-[#C8A882]
+                    focus:ring-[#C8A882] focus:ring-1 focus:ring-offset-0'
+								/>
+								<span
+									className={`px-3 py-1.5 rounded-full text-xs font-medium
+                  ${
+						roleData.status
+							? 'bg-green-500/10 text-green-400 border border-green-500/20'
+							: 'bg-red-500/10 text-red-400 border border-red-500/20'
+					}`}>
+									{roleData.status ? 'Activo' : 'Inactivo'}
+								</span>
+							</label>
 						</div>
 					</div>
 
 					{/* Descripción */}
-					<div className='flex flex-col'>
-						<label className='font-medium mb-1 flex items-center gap-2'>
-							<DescriptionIcon size={16} />
+					<div className='space-y-2'>
+						<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
 							Descripción
 						</label>
 						<input
 							name='description'
-							type='text'
-							placeholder='Breve descripción del rol'
 							value={roleData.description}
 							onChange={handleChange}
-							className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown'
+							placeholder='Breve descripción del rol'
+							className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                text-sm text-white placeholder:text-white/30
+                focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                transition-all duration-200'
 						/>
 					</div>
 
-					{/* Metadata adicional */}
-					<div className='grid grid-cols-2 gap-6'>
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 text-xs text-gray-500'>
+					{/* Metadata - solo lectura */}
+					<div className='grid grid-cols-2 gap-4'>
+						<div className='space-y-2'>
+							<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
 								Fecha de creación
 							</label>
-							<p className='text-sm'>
-								{roleData.createdAt 
-									? new Date(roleData.createdAt).toLocaleDateString('es-CO', {
-										year: 'numeric',
-										month: 'long',
-										day: 'numeric'
-									})
+							<p className='text-sm text-white/60'>
+								{roleData.createdAt
+									? formatDate(roleData.createdAt)
 									: 'No disponible'}
 							</p>
 						</div>
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1 text-xs text-gray-500'>
+
+						<div className='space-y-2'>
+							<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
 								Usuarios asignados
 							</label>
-							<p className='text-sm'>
-								{roleData.usersCount || 0} usuario{(roleData.usersCount || 0) !== 1 ? 's' : ''}
+							<p className='text-sm text-white/60'>
+								{roleData.usersCount || 0} usuario
+								{(roleData.usersCount || 0) !== 1 ? 's' : ''}
 							</p>
 						</div>
 					</div>
 
-					{/* Sección de permisos */}
-					<div className='border rounded-lg p-4'>
-						<div className='flex justify-between items-center mb-4'>
-							<h3 className='font-semibold text-lg flex items-center gap-2'>
-								<Package size={18} />
+					{/* Permisos */}
+					<div className='space-y-4'>
+						<div className='flex items-center justify-between'>
+							<h3 className='text-sm font-medium text-white/70 flex items-center gap-2'>
+								<Lock
+									size={14}
+									className='text-[#C8A882]'
+								/>
 								Permisos ({roleData.permissions.length})
 							</h3>
 							{roleData.permissions.length > 0 && (
-								<span className='text-sm text-gray-500'>
-									{permissions.length} módulo{permissions.length !== 1 ? 's' : ''} disponible{permissions.length !== 1 ? 's' : ''}
+								<span className='text-xs text-white/40'>
+									{
+										Array.from(
+											new Set(roleData.permissions.map((p) => p.module)),
+										).length
+									}{' '}
+									módulos
 								</span>
 							)}
 						</div>
 
 						{permissions.length === 0 ? (
-							<div className='text-center py-8 text-gray-500 bg-gray-50 rounded-lg'>
-								No hay permisos disponibles.
+							<div className='text-center py-12 rounded-xl border border-white/10 bg-white/5'>
+								<Package
+									size={32}
+									className='mx-auto text-white/20 mb-2'
+								/>
+								<p className='text-white/40 text-sm'>No hay permisos disponibles</p>
 							</div>
 						) : (
-							<div className='space-y-4 max-h-80 overflow-y-auto p-1'>
+							<div className='space-y-3 max-h-80 overflow-y-auto pr-2'>
 								{permissions.map((group) => {
 									const groupSelected = isGroupSelected(group.module);
-									const groupPartiallySelected = isGroupPartiallySelected(group.module);
-									const selectedCount = group.permissions.filter(
-										(p) => isPermissionSelected(p._id)
+									const groupPartiallySelected = isGroupPartiallySelected(
+										group.module,
+									);
+									const selectedCount = group.permissions.filter((p) =>
+										isPermissionSelected(p._id),
 									).length;
 
 									return (
-										<div key={group.module} className='bg-gray-50 p-4 rounded-lg border'>
+										<div
+											key={group.module}
+											className='rounded-xl border border-white/10 bg-white/5 p-4'>
 											<div className='flex items-center justify-between mb-3'>
-												<label className='font-semibold flex items-center gap-2 cursor-pointer'>
+												<label className='flex items-center gap-2 cursor-pointer'>
 													<input
 														type='checkbox'
 														checked={groupSelected}
 														onChange={() => toggleGroup(group.module)}
-														className='rounded border-gray-300 text-brown focus:ring-brown focus:ring-1'
 														ref={(input) => {
 															if (input && groupPartiallySelected) {
 																input.indeterminate = true;
 															}
 														}}
+														className='w-4 h-4 rounded border-white/30
+                              bg-white/5 text-[#C8A882]
+                              focus:ring-[#C8A882] focus:ring-1 focus:ring-offset-0
+                              transition-colors'
 													/>
-													<span className='text-base'>{group.module}</span>
+													<span className='text-sm font-medium text-white'>
+														{group.module}
+													</span>
 												</label>
+
 												{groupPartiallySelected && (
-													<span className='text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full'>
+													<span
+														className='text-[10px] px-2 py-1 rounded-full
+                            bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'>
 														Parcial
 													</span>
 												)}
 												{groupSelected && (
-													<span className='text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center gap-1'>
-														<Check size={12} /> Todos
+													<span
+														className='text-[10px] px-2 py-1 rounded-full
+                            bg-green-500/10 text-green-400 border border-green-500/20
+                            flex items-center gap-1'>
+														<Check size={10} /> Todos
 													</span>
 												)}
 											</div>
 
-											<div className='grid grid-cols-2 gap-3 ml-6'>
+											<div className='grid grid-cols-2 gap-2 ml-6'>
 												{group.permissions.map((permission) => (
 													<label
 														key={permission._id}
-														className='flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-100 p-1 rounded transition-colors'>
+														className='flex items-center gap-2 cursor-pointer
+                              p-2 rounded-lg hover:bg-white/5 transition-colors'>
 														<input
 															type='checkbox'
-															checked={isPermissionSelected(permission._id)}
-															onChange={() => togglePermission(permission)}
-															className='rounded border-gray-300 text-brown focus:ring-brown focus:ring-1'
+															checked={isPermissionSelected(
+																permission._id,
+															)}
+															onChange={() =>
+																togglePermission(permission)
+															}
+															className='w-3.5 h-3.5 rounded border-white/30
+                                bg-white/5 text-[#C8A882]
+                                focus:ring-[#C8A882] focus:ring-1 focus:ring-offset-0'
 														/>
-														<span className='text-gray-700'>
+														<span className='text-xs text-white/70'>
 															{permission.action === 'view' && 'Ver'}
-															{permission.action === 'create' && 'Crear'}
-															{permission.action === 'update' && 'Actualizar'}
-															{permission.action === 'delete' && 'Eliminar'}
-															{!['view', 'create', 'update', 'delete'].includes(permission.action) && permission.action}
+															{permission.action === 'create' &&
+																'Crear'}
+															{permission.action === 'update' &&
+																'Editar'}
+															{permission.action === 'delete' &&
+																'Eliminar'}
 														</span>
 													</label>
 												))}
 											</div>
-											
-											{/* Contador de permisos seleccionados en el grupo */}
+
 											{selectedCount > 0 && (
-												<div className='mt-2 text-xs text-gray-500 border-t pt-2'>
-													{selectedCount} de {group.permissions.length} permisos seleccionados
+												<div className='mt-2 pt-2 border-t border-white/10'>
+													<p className='text-[10px] text-white/30'>
+														{selectedCount} de{' '}
+														{group.permissions.length} seleccionados
+													</p>
 												</div>
 											)}
 										</div>
@@ -337,48 +417,67 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 
 					{/* Resumen */}
 					{roleData.permissions.length > 0 && (
-						<div className='p-4 bg-gray-50 rounded-lg border'>
+						<div className='p-4 rounded-xl border border-white/10 bg-white/5'>
 							<div className='flex justify-between items-center'>
 								<div>
-									<span className='font-semibold text-lg'>Resumen de cambios:</span>
-									<p className='text-sm text-gray-600'>
-										{roleData.permissions.length} permiso{roleData.permissions.length !== 1 ? 's' : ''} asignado{roleData.permissions.length !== 1 ? 's' : ''}
+									<p className='text-sm font-medium text-white'>
+										Resumen de cambios
+									</p>
+									<p className='text-xs text-white/40 mt-1'>
+										{roleData.permissions.length} permiso
+										{roleData.permissions.length !== 1 ? 's' : ''} asignado
+										{roleData.permissions.length !== 1 ? 's' : ''}
 									</p>
 								</div>
-								<div className='text-right'>
-									<span className='text-sm font-medium text-brown bg-brown/10 px-3 py-1 rounded-full'>
-										{Array.from(new Set(roleData.permissions.map(p => p.module))).length} módulo{Array.from(new Set(roleData.permissions.map(p => p.module))).length !== 1 ? 's' : ''}
-									</span>
-								</div>
+								<span
+									className='text-xs px-3 py-1.5 rounded-full
+                  bg-[#C8A882]/10 text-[#C8A882] border border-[#C8A882]/20'>
+									{
+										Array.from(
+											new Set(roleData.permissions.map((p) => p.module)),
+										).length
+									}{' '}
+									módulos
+								</span>
 							</div>
 						</div>
 					)}
 
 					{/* Botones */}
-					<div className='flex justify-between pt-4 border-t'>
+					<div className='flex justify-end gap-3 pt-4 border-t border-white/10'>
 						<button
 							type='button'
 							onClick={handleClose}
-							className='px-6 py-2 border border-gray-400 rounded-md text-gray-600 hover:bg-gray-100 transition-colors'>
+							className='px-5 py-2.5 rounded-lg
+                border border-white/15 bg-white/5
+                text-white/70 text-sm
+                hover:bg-white/10 hover:text-white
+                transition-all duration-200'>
 							Cancelar
 						</button>
 						<button
 							type='submit'
-							disabled={updateRole.isPending || !roleData.name.trim() || roleData.permissions.length === 0}
-							className={`px-6 py-2 border border-brown rounded-md transition-colors flex items-center gap-2 ${
-								updateRole.isPending || !roleData.name.trim() || roleData.permissions.length === 0
-									? 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-500'
-									: 'text-brown hover:bg-brown hover:text-white'
-							}`}>
+							disabled={
+								updateRole.isPending ||
+								!roleData.name.trim() ||
+								roleData.permissions.length === 0
+							}
+							className='px-5 py-2.5 rounded-lg
+                bg-[#8B5E3C] hover:bg-[#6F452A]
+                text-white text-sm font-medium
+                shadow-lg shadow-[#8B5E3C]/20
+                disabled:opacity-50 disabled:cursor-not-allowed
+                flex items-center gap-2
+                transition-all duration-200'>
 							{updateRole.isPending ? (
 								<>
-									<span className='animate-spin rounded-full h-4 w-4 border-b-2 border-current'></span>
+									<span className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></span>
 									Guardando...
 								</>
 							) : (
 								<>
-									<Save size={16} />
-									Guardar Cambios
+									<Save size={14} />
+									Guardar cambios
 								</>
 							)}
 						</button>
@@ -388,12 +487,5 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 		</div>
 	);
 }
-
-// Icono personalizado para descripción (no disponible en lucide-react de forma directa)
-const DescriptionIcon = ({ size }: { size: number }) => (
-	<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-		<path d="M4 6h16M4 12h16M4 18h7"/>
-	</svg>
-);
 
 export default EditRoleModal;

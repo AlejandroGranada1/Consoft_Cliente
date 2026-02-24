@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Eye, EyeOff, User, Lock, Camera, Check, X } from 'lucide-react';
-import { useGetProfile, useUpdateUser, useChangePassword } from '@/hooks/apiHooks';
+import { Eye, EyeOff, User, Lock, Camera, Check, X, Heart } from 'lucide-react';
+import { useGetProfile, useUpdateUser, useChangePassword, useGetUserById } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import { useRouter } from 'next/navigation';
+import ProductCard from '@/components/productos/ProductCard';
 
 function DarkInput({
   value, onChange, placeholder, readOnly, type = 'text',
@@ -75,18 +76,24 @@ export default function ProfilePage() {
   const { user, loading } = useUser();
 
   const { data, isLoading } = useGetProfile();
-  const updateUser    = useUpdateUser();
+  const updateUser = useUpdateUser();
   const changePassword = useChangePassword();
   const dbUser = data?.user;
 
+  // Obtener datos completos del usuario con favoritos
+  const { data: userData, refetch: refetchUser } = useGetUserById(user?.id ?? '');
+  const userWithFavorites = userData?.data;
+
   const [form, setForm] = useState({ name: '', email: '', document: '', address: '', phone: '' });
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
-  const [profileFile, setProfileFile]       = useState<File | null>(null);
+  const [profileFile, setProfileFile] = useState<File | null>(null);
 
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [showCurrent, setShowCurrent]   = useState(false);
-  const [showNew, setShowNew]           = useState(false);
-  const [showConfirm, setShowConfirm]   = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile' o 'favorites'
 
   useEffect(() => {
     if (loading) return;
@@ -139,10 +146,10 @@ export default function ProfilePage() {
     if (passwordForm.currentPassword === passwordForm.newPassword)
       return Swal.fire({ icon: 'error', title: 'Contraseña inválida', text: 'La nueva contraseña no puede ser igual a la actual' });
 
-    const hasUpper   = /[A-Z]/.test(passwordForm.newPassword);
-    const hasNumber  = /\d/.test(passwordForm.newPassword);
+    const hasUpper = /[A-Z]/.test(passwordForm.newPassword);
+    const hasNumber = /\d/.test(passwordForm.newPassword);
     const hasSpecial = /[^A-Za-z0-9]/.test(passwordForm.newPassword);
-    const validLen   = passwordForm.newPassword.length >= 8;
+    const validLen = passwordForm.newPassword.length >= 8;
 
     if (!hasUpper || !hasNumber || !hasSpecial || !validLen)
       return Swal.fire({ icon: 'error', title: 'Contraseña débil', html: '<ul class="text-left ml-4"><li>• Una letra mayúscula</li><li>• Un número</li><li>• Un carácter especial</li><li>• Mínimo 8 caracteres</li></ul>' });
@@ -160,9 +167,9 @@ export default function ProfilePage() {
   if (!user) return null;
 
   const pwRules = [
-    { ok: passwordForm.newPassword.length >= 8,          text: 'Mínimo 8 caracteres' },
-    { ok: /[A-Z]/.test(passwordForm.newPassword),         text: 'Una mayúscula' },
-    { ok: /\d/.test(passwordForm.newPassword),            text: 'Un número' },
+    { ok: passwordForm.newPassword.length >= 8, text: 'Mínimo 8 caracteres' },
+    { ok: /[A-Z]/.test(passwordForm.newPassword), text: 'Una mayúscula' },
+    { ok: /\d/.test(passwordForm.newPassword), text: 'Un número' },
     { ok: /[^A-Za-z0-9]/.test(passwordForm.newPassword), text: 'Un carácter especial' },
   ];
 
@@ -194,166 +201,252 @@ export default function ProfilePage() {
           <h1 className="font-serif text-white text-2xl mt-1">Mi perfil</h1>
         </div>
 
-        {/* ── INFORMACIÓN PERSONAL ── */}
-        <div className="rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-          style={{ backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' }}
-        >
-          {/* Header */}
-          <div className="flex items-center gap-2.5 px-6 py-4 border-b border-white/8">
-            <User size={13} className="text-[#C8A882]" />
-            <h2 className="text-[11px] font-medium text-white/50 uppercase tracking-wider">
-              Información personal
-            </h2>
-          </div>
+        {/* Tabs de navegación */}
+        <div className="flex gap-1 border-b border-white/10 pb-1">
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`px-5 py-2.5 text-sm font-medium transition-all relative rounded-t-lg ${
+              activeTab === 'profile'
+                ? 'text-[#C8A882] border-b-2 border-[#C8A882] -mb-[5px]'
+                : 'text-white/40 hover:text-white/60'
+            }`}
+          >
+            Información personal
+          </button>
+          <button
+            onClick={() => setActiveTab('favorites')}
+            className={`px-5 py-2.5 text-sm font-medium transition-all relative rounded-t-lg flex items-center gap-2 ${
+              activeTab === 'favorites'
+                ? 'text-[#C8A882] border-b-2 border-[#C8A882] -mb-[5px]'
+                : 'text-white/40 hover:text-white/60'
+            }`}
+          >
+            <Heart size={15} />
+            Mis favoritos
+            {userWithFavorites?.favorites?.length > 0 && (
+              <span className="ml-1 bg-[#C8A882] text-[#1e1e1c] text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
+                {userWithFavorites.favorites.length}
+              </span>
+            )}
+          </button>
+        </div>
 
-          <div className="grid md:grid-cols-3">
-            {/* Avatar */}
-            <div className="border-b md:border-b-0 md:border-r border-white/8 flex flex-col items-center justify-center p-8 gap-4">
-              <div className="relative">
-                <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-white/15 shadow-lg">
-                  <Image
-                    src={profilePreview || '/default-user.png'}
-                    alt="Perfil"
-                    width={112}
-                    height={112}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-                <label className="absolute bottom-0 right-0 bg-[#8B5E3C] hover:bg-[#6F452A] text-white p-2 rounded-full cursor-pointer transition shadow-lg">
-                  <Camera size={13} />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) { setProfileFile(file); setProfilePreview(URL.createObjectURL(file)); }
-                    }}
-                  />
-                </label>
+        {/* Contenido según tab activo */}
+        {activeTab === 'profile' ? (
+          <>
+            {/* ── INFORMACIÓN PERSONAL ── */}
+            <div className="rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+              style={{ backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' }}
+            >
+              {/* Header */}
+              <div className="flex items-center gap-2.5 px-6 py-4 border-b border-white/8">
+                <User size={13} className="text-[#C8A882]" />
+                <h2 className="text-[11px] font-medium text-white/50 uppercase tracking-wider">
+                  Información personal
+                </h2>
               </div>
-              <div className="text-center">
-                <p className="font-medium text-white text-sm">{form.name || 'Sin nombre'}</p>
-                <p className="text-xs text-white/35 mt-0.5">{form.email}</p>
-              </div>
-            </div>
 
-            {/* Campos */}
-            <div className="md:col-span-2 p-6 space-y-5">
-              <div className="grid md:grid-cols-2 gap-4">
-                {[
-                  { key: 'name',     label: 'Nombre completo' },
-                  { key: 'document', label: 'Documento' },
-                  { key: 'address',  label: 'Dirección' },
-                  { key: 'phone',    label: 'Teléfono' },
-                ].map((f) => (
-                  <div key={f.key} className="space-y-2">
-                    <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
-                      {f.label}
+              <div className="grid md:grid-cols-3">
+                {/* Avatar */}
+                <div className="border-b md:border-b-0 md:border-r border-white/8 flex flex-col items-center justify-center p-8 gap-4">
+                  <div className="relative">
+                    <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-white/15 shadow-lg">
+                      <Image
+                        src={profilePreview || '/default-user.png'}
+                        alt="Perfil"
+                        width={112}
+                        height={112}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    <label className="absolute bottom-0 right-0 bg-[#8B5E3C] hover:bg-[#6F452A] text-white p-2 rounded-full cursor-pointer transition shadow-lg">
+                      <Camera size={13} />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) { setProfileFile(file); setProfilePreview(URL.createObjectURL(file)); }
+                        }}
+                      />
                     </label>
-                    <DarkInput
-                      value={(form as any)[f.key]}
-                      onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                      placeholder={f.label}
-                    />
                   </div>
-                ))}
+                  <div className="text-center">
+                    <p className="font-medium text-white text-sm">{form.name || 'Sin nombre'}</p>
+                    <p className="text-xs text-white/35 mt-0.5">{form.email}</p>
+                  </div>
+                </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
-                    Correo electrónico
-                  </label>
-                  <DarkInput value={form.email} readOnly />
+                {/* Campos */}
+                <div className="md:col-span-2 p-6 space-y-5">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {[
+                      { key: 'name', label: 'Nombre completo' },
+                      { key: 'document', label: 'Documento' },
+                      { key: 'address', label: 'Dirección' },
+                      { key: 'phone', label: 'Teléfono' },
+                    ].map((f) => (
+                      <div key={f.key} className="space-y-2">
+                        <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
+                          {f.label}
+                        </label>
+                        <DarkInput
+                          value={(form as any)[f.key]}
+                          onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                          placeholder={f.label}
+                        />
+                      </div>
+                    ))}
+
+                    <div className="space-y-2">
+                      <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
+                        Correo electrónico
+                      </label>
+                      <DarkInput value={form.email} readOnly />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-1">
+                    <button
+                      onClick={handleUpdateProfile}
+                      disabled={updateUser.isPending}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl
+                        bg-[#8B5E3C] hover:bg-[#6F452A] text-white text-sm font-medium
+                        shadow-lg shadow-[#8B5E3C]/20 transition-all duration-200
+                        disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {updateUser.isPending ? 'Guardando...' : 'Guardar cambios'}
+                    </button>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <div className="flex justify-end pt-1">
-                <button
-                  onClick={handleUpdateProfile}
-                  disabled={updateUser.isPending}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl
-                    bg-[#8B5E3C] hover:bg-[#6F452A] text-white text-sm font-medium
-                    shadow-lg shadow-[#8B5E3C]/20 transition-all duration-200
-                    disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {updateUser.isPending ? 'Guardando...' : 'Guardar cambios'}
-                </button>
+            {/* ── SEGURIDAD ── */}
+            <div className="rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+              style={{ backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' }}
+            >
+              <div className="flex items-center gap-2.5 px-6 py-4 border-b border-white/8">
+                <Lock size={13} className="text-[#C8A882]" />
+                <h2 className="text-[11px] font-medium text-white/50 uppercase tracking-wider">
+                  Seguridad
+                </h2>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* ── SEGURIDAD ── */}
-        <div className="rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-          style={{ backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' }}
-        >
-          <div className="flex items-center gap-2.5 px-6 py-4 border-b border-white/8">
-            <Lock size={13} className="text-[#C8A882]" />
-            <h2 className="text-[11px] font-medium text-white/50 uppercase tracking-wider">
-              Seguridad
-            </h2>
-          </div>
+              <div className="p-6 space-y-5">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <PasswordField
+                    label="Contraseña actual"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                    show={showCurrent}
+                    onToggle={() => setShowCurrent(!showCurrent)}
+                  />
+                  <PasswordField
+                    label="Nueva contraseña"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    show={showNew}
+                    onToggle={() => setShowNew(!showNew)}
+                  />
+                  <PasswordField
+                    label="Confirmar contraseña"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                    show={showConfirm}
+                    onToggle={() => setShowConfirm(!showConfirm)}
+                  />
+                </div>
 
-          <div className="p-6 space-y-5">
-            <div className="grid md:grid-cols-3 gap-4">
-              <PasswordField
-                label="Contraseña actual"
-                value={passwordForm.currentPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                show={showCurrent}
-                onToggle={() => setShowCurrent(!showCurrent)}
-              />
-              <PasswordField
-                label="Nueva contraseña"
-                value={passwordForm.newPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                show={showNew}
-                onToggle={() => setShowNew(!showNew)}
-              />
-              <PasswordField
-                label="Confirmar contraseña"
-                value={passwordForm.confirmPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                show={showConfirm}
-                onToggle={() => setShowConfirm(!showConfirm)}
-              />
-            </div>
-
-            {/* Reglas de contraseña */}
-            {passwordForm.newPassword.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {pwRules.map(({ ok, text }) => (
-                  <div key={text} className={`flex items-center gap-1.5 text-[11px] transition-colors ${ok ? 'text-emerald-400' : 'text-white/30'}`}>
-                    {ok ? <Check size={11} className="shrink-0" /> : <X size={11} className="shrink-0" />}
-                    {text}
+                {/* Reglas de contraseña */}
+                {passwordForm.newPassword.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {pwRules.map(({ ok, text }) => (
+                      <div key={text} className={`flex items-center gap-1.5 text-[11px] transition-colors ${ok ? 'text-emerald-400' : 'text-white/30'}`}>
+                        {ok ? <Check size={11} className="shrink-0" /> : <X size={11} className="shrink-0" />}
+                        {text}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
+
+                {/* Match indicator */}
+                {passwordForm.confirmPassword.length > 0 && (
+                  <p className={`text-xs ${passwordForm.newPassword === passwordForm.confirmPassword ? 'text-emerald-400' : 'text-red-400/80'}`}>
+                    {passwordForm.newPassword === passwordForm.confirmPassword ? '✓ Las contraseñas coinciden' : '✗ Las contraseñas no coinciden'}
+                  </p>
+                )}
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={changePassword.isPending}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl
+                      bg-white/8 hover:bg-white/12 border border-white/15 hover:border-white/25
+                      text-white text-sm font-medium
+                      transition-all duration-200
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Lock size={13} />
+                    {changePassword.isPending ? 'Actualizando...' : 'Actualizar contraseña'}
+                  </button>
+                </div>
               </div>
-            )}
+            </div>
+          </>
+        ) : (
+          /* ── FAVORITOS ── */
+          <div className="rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+            style={{ backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' }}
+          >
+            <div className="flex items-center gap-2.5 px-6 py-4 border-b border-white/8">
+              <Heart size={13} className="text-[#C8A882]" />
+              <h2 className="text-[11px] font-medium text-white/50 uppercase tracking-wider">
+                Mis productos favoritos
+              </h2>
+            </div>
 
-            {/* Match indicator */}
-            {passwordForm.confirmPassword.length > 0 && (
-              <p className={`text-xs ${passwordForm.newPassword === passwordForm.confirmPassword ? 'text-emerald-400' : 'text-red-400/80'}`}>
-                {passwordForm.newPassword === passwordForm.confirmPassword ? '✓ Las contraseñas coinciden' : '✗ Las contraseñas no coinciden'}
-              </p>
-            )}
-
-            <div className="flex justify-end pt-1">
-              <button
-                onClick={handleChangePassword}
-                disabled={changePassword.isPending}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl
-                  bg-white/8 hover:bg-white/12 border border-white/15 hover:border-white/25
-                  text-white text-sm font-medium
-                  transition-all duration-200
-                  disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Lock size={13} />
-                {changePassword.isPending ? 'Actualizando...' : 'Actualizar contraseña'}
-              </button>
+            <div className="p-6">
+              {!userWithFavorites?.favorites || userWithFavorites.favorites.length === 0 ? (
+                <div className="text-center py-16 px-4">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/5 border border-white/10 mb-5">
+                    <Heart size={30} className="text-white/20" />
+                  </div>
+                  <h3 className="text-lg font-medium text-white/80 mb-2">No tienes favoritos</h3>
+                  <p className="text-sm text-white/30 mb-6 max-w-sm mx-auto">
+                    Explora nuestros productos y guarda tus favoritos para verlos aquí
+                  </p>
+                  <button
+                    onClick={() => router.push('/productos')}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
+                      bg-[#8B5E3C] hover:bg-[#6F452A] text-white text-sm font-medium
+                      shadow-lg shadow-[#8B5E3C]/20 transition-all duration-200"
+                  >
+                    Ver productos
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-white/40 mb-5">
+                    Tienes {userWithFavorites.favorites.length} producto{userWithFavorites.favorites.length !== 1 ? 's' : ''} guardado{userWithFavorites.favorites.length !== 1 ? 's' : ''} como favorito{userWithFavorites.favorites.length !== 1 ? 's' : ''}
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {userWithFavorites.favorites.map((product: any) => (
+                      <ProductCard
+                        key={product._id}
+                        id={product._id}
+                        name={product.name}
+                        image={product.imageUrl || product.images?.[0] || '/default-product.jpg'}
+                        refetch={refetchUser}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
-        </div>
+        )}
 
       </div>
     </div>

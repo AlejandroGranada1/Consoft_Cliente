@@ -40,7 +40,6 @@ function EditProductModal({
 	const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 	const [hasChanges, setHasChanges] = useState(false);
 
-	/* 🔹 Prellenar datos */
 	useEffect(() => {
 		if (extraProps && isOpen) {
 			setFormData({
@@ -56,7 +55,6 @@ function EditProductModal({
 		}
 	}, [extraProps, isOpen]);
 
-	/* 🔹 Limpiar modal al cerrar */
 	useEffect(() => {
 		if (!isOpen) {
 			setFormData(initialState);
@@ -65,7 +63,6 @@ function EditProductModal({
 		}
 	}, [isOpen]);
 
-	/* 🔹 Cargar categorías */
 	useEffect(() => {
 		const fetchCategories = async () => {
 			setIsLoadingCategories(true);
@@ -74,7 +71,13 @@ function EditProductModal({
 				setCategories(res.data.categories);
 			} catch (err) {
 				console.error('Error al cargar categorías', err);
-				Swal.fire('Error', 'No se pudieron cargar las categorías', 'error');
+				Swal.fire({
+					title: 'Error',
+					text: 'No se pudieron cargar las categorías',
+					icon: 'error',
+					background: '#1e1e1c',
+					color: '#fff',
+				});
 			} finally {
 				setIsLoadingCategories(false);
 			}
@@ -83,7 +86,6 @@ function EditProductModal({
 		if (isOpen) fetchCategories();
 	}, [isOpen]);
 
-	// Detectar cambios
 	useEffect(() => {
 		if (!extraProps || !formData._id) return;
 		
@@ -123,21 +125,24 @@ function EditProductModal({
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		/* 🔹 VALIDACIONES (igual patrón) */
 		if (!formData.name.trim() || !formData.description.trim()) {
-			return Swal.fire(
-				'Campos incompletos',
-				'Nombre y descripción son obligatorios',
-				'warning'
-			);
+			return Swal.fire({
+				title: 'Campos incompletos',
+				text: 'Nombre y descripción son obligatorios',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		}
 
 		if (!formData.category) {
-			return Swal.fire(
-				'Categoría requerida',
-				'Debe seleccionar una categoría',
-				'warning'
-			);
+			return Swal.fire({
+				title: 'Categoría requerida',
+				text: 'Debe seleccionar una categoría',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		}
 
 		setIsPending(true);
@@ -152,11 +157,16 @@ function EditProductModal({
 
 			if (confirm) {
 				Swal.fire({
+					toast: true,
+					animation: false,
+					timerProgressBar: true,
+					showConfirmButton: false,
+					title: 'Producto actualizado exitosamente',
 					icon: 'success',
-					title: 'Producto actualizado',
-					text: 'Los cambios han sido guardados correctamente',
+					position: 'top-right',
 					timer: 1500,
-					showConfirmButton: false
+					background: '#1e1e1c',
+					color: '#fff',
 				});
 				
 				onClose();
@@ -164,7 +174,13 @@ function EditProductModal({
 			}
 		} catch (err) {
 			console.error('Error al actualizar producto', err);
-			Swal.fire('Error', 'No se pudo actualizar el producto', 'error');
+			Swal.fire({
+				title: 'Error',
+				text: 'No se pudo actualizar el producto',
+				icon: 'error',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		} finally {
 			setIsPending(false);
 		}
@@ -173,62 +189,72 @@ function EditProductModal({
 	if (!isOpen) return null;
 
 	return (
-		<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
-			<div className='modal-frame w-full max-w-3xl flex flex-col max-h-[92vh]'>
+		<div className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+			
+			<div className="w-full max-w-3xl rounded-2xl border border-white/10
+				shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
+				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
 				
-				<header className='sticky top-0 z-10 px-6 py-4 border-b backdrop-blur-xs'>
+				{/* Header */}
+				<header className="relative px-6 py-5 border-b border-white/10">
 					<button
 						onClick={onClose}
-						className='absolute top-0 left-0 p-5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors'>
-						<X size={20} />
+						className="absolute right-4 top-1/2 -translate-y-1/2
+							p-2 rounded-lg text-white/40 hover:text-white/70
+							hover:bg-white/5 transition-all duration-200">
+						<X size={18} />
 					</button>
-					<h1 className='text-2xl font-bold text-center flex items-center justify-center gap-2'>
-						<Package size={20} /> Editar Producto
-					</h1>
+					<h2 className="text-lg font-medium text-white text-center flex items-center justify-center gap-2">
+						<Package size={18} className="text-[#C8A882]" />
+						Editar producto
+					</h2>
 				</header>
 
-				<form onSubmit={handleSubmit} className='grid grid-cols-2 gap-6 p-6 overflow-y-auto'>
+				<form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6 p-6 overflow-y-auto">
 					
 					{/* Columna izquierda - Formulario */}
-					<div className='space-y-5'>
+					<div className="space-y-5">
 						
 						{/* Nombre */}
-						<div className='border rounded-lg p-4 bg-gray-50'>
-							<h3 className='font-semibold mb-3 flex items-center gap-2'>
-								<Tag size={16} />
-								Nombre *
-							</h3>
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
+								Nombre del producto *
+							</label>
 							<input
-								id='name'
-								name='name'
-								type='text'
-								placeholder='Ej: Mesa de comedor'
+								name="name"
+								type="text"
+								placeholder="Ej: Mesa de comedor"
 								value={formData.name}
 								onChange={handleChange}
-								className='w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown bg-white'
+								className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+									text-sm text-white placeholder:text-white/30
+									focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+									transition-all duration-200"
 								required
 							/>
 						</div>
 
 						{/* Categoría */}
-						<div className='border rounded-lg p-4 bg-gray-50'>
-							<h3 className='font-semibold mb-3 flex items-center gap-2'>
-								<FolderTree size={16} />
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 								Categoría *
-							</h3>
+							</label>
 							<select
-								id='category'
-								name='category'
+								name="category"
 								value={formData.category}
 								onChange={handleChange}
-								className='w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown bg-white'
+								className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+									text-sm text-white
+									focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+									transition-all duration-200 appearance-none"
 								disabled={isLoadingCategories}
 								required>
-								<option value=''>
-									{isLoadingCategories ? 'Cargando categorías...' : 'Seleccione una categoría'}
+								<option value="" className="bg-[#1e1e1c]">
+									{isLoadingCategories ? 'Cargando...' : 'Seleccione una categoría'}
 								</option>
 								{categories.map((c) => (
-									<option key={c._id} value={c._id}>
+									<option key={c._id} value={c._id} className="bg-[#1e1e1c]">
 										{c.name}
 									</option>
 								))}
@@ -236,122 +262,114 @@ function EditProductModal({
 						</div>
 
 						{/* Descripción */}
-						<div className='border rounded-lg p-4 bg-gray-50'>
-							<h3 className='font-semibold mb-3 flex items-center gap-2'>
-								<FileText size={16} />
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 								Descripción *
-							</h3>
+							</label>
 							<input
-								id='description'
-								name='description'
-								type='text'
-								placeholder='Descripción del producto'
+								name="description"
+								type="text"
+								placeholder="Descripción del producto"
 								value={formData.description}
 								onChange={handleChange}
-								className='w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown bg-white'
+								className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+									text-sm text-white placeholder:text-white/30
+									focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+									transition-all duration-200"
 								required
 							/>
 						</div>
 
 						{/* Imagen */}
-						<div className='border rounded-lg p-4 bg-gray-50'>
-							<h3 className='font-semibold mb-3 flex items-center gap-2'>
-								<ImagePlus size={16} />
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 								Imagen
-							</h3>
-							<label className='flex items-center gap-3 border border-dashed border-gray-300 rounded-md px-3 py-2 cursor-pointer hover:border-brown transition bg-white'>
-								<ImagePlus size={18} className='text-gray-400' />
-								<span className='text-sm text-gray-600 truncate'>
+							</label>
+							<label className="flex items-center gap-3 border border-dashed border-white/15 rounded-xl px-4 py-3 cursor-pointer hover:border-[#C8A882]/50 transition bg-white/5">
+								<ImagePlus size={18} className="text-white/40" />
+								<span className="text-sm text-white/60 truncate">
 									{formData.imageFile ? formData.imageFile.name : 'Seleccionar nueva imagen (opcional)'}
 								</span>
 								<input
-									id='image'
-									type='file'
-									accept='image/*'
+									type="file"
+									accept="image/*"
 									onChange={handleFileChange}
-									className='hidden'
+									className="hidden"
 								/>
 							</label>
 							{!formData.imageFile && formData.imageUrl && (
-								<p className='text-xs text-gray-500 mt-2 flex items-center gap-1'>
+								<p className="text-xs text-white/30 mt-2 flex items-center gap-1">
 									<RefreshCw size={12} />
-									Se mantendrá la imagen actual si no seleccionas una nueva
+									Se mantendrá la imagen actual
 								</p>
 							)}
 						</div>
 
 						{/* Estado */}
-						<div className='border rounded-lg p-4 bg-gray-50'>
-							<h3 className='font-semibold mb-3 flex items-center gap-2'>
-								<ToggleLeft size={16} />
+						<div className="space-y-2">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 								Estado
-							</h3>
+							</label>
 							<button
-								type='button'
+								type="button"
 								onClick={() => setFormData((prev) => ({ ...prev, status: !prev.status }))}
-								className='flex items-center gap-3'>
-								<div className={`relative w-11 h-6 rounded-full transition-colors ${formData.status ? 'bg-green-500' : 'bg-gray-300'}`}>
+								className="flex items-center gap-3">
+								<div className={`relative w-11 h-6 rounded-full transition-colors ${formData.status ? 'bg-green-500/50' : 'bg-white/20'}`}>
 									<span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${formData.status ? 'translate-x-5' : ''}`} />
 								</div>
-								<span className={`text-sm font-medium ${formData.status ? 'text-green-600' : 'text-gray-500'}`}>
+								<span className={`text-sm font-medium ${formData.status ? 'text-green-400' : 'text-white/40'}`}>
 									{formData.status ? 'Activo' : 'Inactivo'}
 								</span>
 							</button>
-							<p className='text-xs text-gray-500 mt-2'>
-								Los productos inactivos no se muestran en el catálogo
-							</p>
 						</div>
 					</div>
 
 					{/* Columna derecha - Preview */}
-					<div className='bg-gray-50 border rounded-lg p-6 flex flex-col items-center justify-start'>
-						<h3 className='font-semibold mb-4 flex items-center gap-2 self-start'>
-							<Eye size={16} />
+					<div className="bg-white/5 border border-white/10 rounded-xl p-6 flex flex-col items-center justify-start">
+						<h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 self-start">
+							<Eye size={16} className="text-[#C8A882]" />
 							Vista previa
 						</h3>
 						
 						{formData.imageUrl ? (
-							<div className='w-full space-y-3'>
-								<div className='border rounded-lg overflow-hidden bg-white p-2 shadow-sm'>
+							<div className="w-full space-y-3">
+								<div className="rounded-xl border border-white/10 overflow-hidden bg-white/5 p-2">
 									<img
 										src={formData.imageUrl}
 										alt={formData.name}
-										className='w-full max-h-64 object-contain rounded-md'
+										className="w-full max-h-64 object-contain rounded-lg"
 									/>
 								</div>
-								<p className='text-xs text-gray-500 text-center'>
-									{formData.imageFile ? 'Nueva imagen seleccionada' : 'Imagen actual del producto'}
+								<p className="text-xs text-white/30 text-center">
+									{formData.imageFile ? 'Nueva imagen seleccionada' : 'Imagen actual'}
 								</p>
 								{formData.imageFile && (
-									<p className='text-xs text-green-600 text-center'>
+									<p className="text-xs text-green-400/70 text-center">
 										✓ Se reemplazará al guardar
 									</p>
 								)}
 								{formData.name && (
-									<p className='text-xs text-gray-600 text-center font-medium'>
+									<p className="text-xs text-white/40 text-center font-medium">
 										{formData.name}
 									</p>
 								)}
 							</div>
 						) : (
-							<div className='flex flex-col items-center justify-center h-64 text-gray-300 border-2 border-dashed border-gray-200 rounded-lg w-full'>
+							<div className="flex flex-col items-center justify-center h-64 text-white/20 border-2 border-dashed border-white/10 rounded-xl w-full">
 								<ImagePlus size={48} strokeWidth={1} />
-								<p className='text-sm mt-2'>Sin imagen</p>
-								<p className='text-xs text-center mt-1 max-w-[200px]'>
-									Selecciona una imagen para ver la vista previa
-								</p>
+								<p className="text-sm mt-2 text-white/30">Sin imagen</p>
 							</div>
 						)}
 					</div>
 
 					{/* Indicador de cambios sin guardar */}
 					{hasChanges && (
-						<div className='col-span-2 p-4 bg-yellow-50 rounded-lg border border-yellow-200'>
-							<div className='flex items-start gap-2'>
-								<AlertCircle size={16} className='text-yellow-600 shrink-0 mt-0.5' />
+						<div className="col-span-2 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+							<div className="flex items-start gap-2">
+								<AlertCircle size={16} className="text-yellow-400 shrink-0 mt-0.5" />
 								<div>
-									<span className='font-semibold text-sm text-yellow-800'>Cambios sin guardar</span>
-									<p className='text-xs text-yellow-700 mt-1'>
+									<span className="text-xs font-medium text-yellow-400">Cambios sin guardar</span>
+									<p className="text-[10px] text-yellow-400/70 mt-1">
 										Hay modificaciones que no se han guardado
 									</p>
 								</div>
@@ -360,29 +378,35 @@ function EditProductModal({
 					)}
 
 					{/* Botones - ocupan ambas columnas */}
-					<div className='col-span-2 flex justify-between pt-4 border-t'>
+					<div className="col-span-2 flex justify-end gap-3 pt-4 border-t border-white/10">
 						<button
-							type='button'
+							type="button"
 							onClick={onClose}
-							className='px-6 py-2 border border-gray-400 rounded-md text-gray-600 hover:bg-gray-100 transition-colors'>
+							className="px-5 py-2.5 rounded-lg
+								border border-white/15 bg-white/5
+								text-white/70 text-sm
+								hover:bg-white/10 hover:text-white
+								transition-all duration-200">
 							Cancelar
 						</button>
 						<button
-							type='submit'
+							type="submit"
 							disabled={isPending || !formData.name.trim() || !formData.description.trim() || !formData.category || !hasChanges}
-							className={`px-6 py-2 border border-brown rounded-md transition-colors flex items-center gap-2 ${
-								isPending || !formData.name.trim() || !formData.description.trim() || !formData.category || !hasChanges
-									? 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-500'
-									: 'text-brown hover:bg-brown hover:text-white'
-							}`}>
+							className="px-5 py-2.5 rounded-lg
+								bg-[#8B5E3C] hover:bg-[#6F452A]
+								text-white text-sm font-medium
+								shadow-lg shadow-[#8B5E3C]/20
+								disabled:opacity-50 disabled:cursor-not-allowed
+								flex items-center gap-2
+								transition-all duration-200">
 							{isPending ? (
 								<>
-									<span className='animate-spin rounded-full h-4 w-4 border-b-2 border-current'></span>
+									<span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
 									Guardando...
 								</>
 							) : (
 								<>
-									<Save size={16} />
+									<Save size={14} />
 									Guardar Cambios
 								</>
 							)}
