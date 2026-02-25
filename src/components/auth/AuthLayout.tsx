@@ -5,8 +5,8 @@ import Link from 'next/link';
 
 interface AuthLayoutProps {
   subtitle: string;
-  illustration: string;
-  children: ReactNode;
+  illustration?: string;
+  children?: ReactNode;
   footer?: ReactNode;
 }
 
