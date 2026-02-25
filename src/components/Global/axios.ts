@@ -4,7 +4,7 @@ const base_url = "https://consoft-api.onrender.com";
 const dev_url = "http://localhost:3001"
 
 const api = axios.create({
-    baseURL: dev_url,
+    baseURL: base_url,
     withCredentials: true,
 })  
 
