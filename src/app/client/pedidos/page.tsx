@@ -47,6 +47,8 @@ export default function PedidosPage() {
 
   const pedidos: PedidoUI[] = data ?? [];
 
+  console.log('Pedidos:', pedidos);
+
   const cardStyle = { backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' };
 
   return (
