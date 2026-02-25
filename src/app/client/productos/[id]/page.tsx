@@ -6,7 +6,7 @@ import { useGetProductById, useMyCart } from '@/hooks/apiHooks';
 import { useAddItemAutoCart } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import Image from 'next/image';
-import { ArrowLeft, ShieldCheck, Truck, Pencil, ShoppingCart, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Truck, Pencil, ShoppingCart, Minus, Plus, Paintbrush } from 'lucide-react';
 
 const AVAILABLE_COLORS = [
   { name: 'Nogal',       value: 'nogal',        hex: '#7B4A12' },
@@ -31,6 +31,11 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [color, setColor] = useState('');
   const [customSize, setCustomSize] = useState('');
+  
+  // Nuevos estados para personalización completa
+  const [customizeAll, setCustomizeAll] = useState(false);
+  const [customColor, setCustomColor] = useState('');
+  const [customMaterial, setCustomMaterial] = useState('');
 
   const changeQty = (delta: number) => setQuantity((q) => Math.max(1, q + delta));
 
@@ -42,17 +47,58 @@ export default function ProductDetailPage() {
       router.push('/client/auth/login');
       return;
     }
-    if (!color) {
-      Swal.fire({ title: 'Selecciona un color', icon: 'warning' });
-      return;
+
+    // Validaciones según el modo
+    if (customizeAll) {
+      if (!customColor.trim()) {
+        Swal.fire({ title: 'Describe el color deseado', icon: 'warning' });
+        return;
+      }
+      if (!customMaterial.trim()) {
+        Swal.fire({ title: 'Describe el material deseado', icon: 'warning' });
+        return;
+      }
+    } else {
+      if (!color) {
+        Swal.fire({ title: 'Selecciona un color', icon: 'warning' });
+        return;
+      }
+    }
+
+    // Construir el payload
+    const payload: any = { 
+      productId: product._id, 
+      quantity, 
+      size: customSize 
+    };
+
+    if (customizeAll) {
+      // Modo personalizado completo
+      payload.isCustom = true;
+      payload.customDetails = {
+        color: customColor,
+        material: customMaterial,
+        name: product.name
+      };
+      payload.color = 'Personalizado';
+    } else {
+      // Modo estándar
+      payload.color = color;
     }
 
     await addItemMutation.mutateAsync({
       quotationId: cartData?._id,
-      payload: { productId: product._id, quantity, color, size: customSize },
+      payload,
     });
 
-    Swal.fire({ title: 'Añadido al carrito', icon: 'success', timer: 1200, showConfirmButton: false });
+    Swal.fire({ 
+      title: customizeAll ? 'Personalización añadida' : 'Añadido al carrito', 
+      text: customizeAll ? 'Te contactaremos para confirmar detalles' : undefined,
+      icon: 'success', 
+      timer: 1500, 
+      showConfirmButton: false 
+    });
+    
     router.push('/client/productos');
   };
 
@@ -161,39 +207,105 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Colores */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">Color</span>
-                {color && (
-                  <span className="text-xs text-white/45">
-                    {AVAILABLE_COLORS.find(c => c.value === color)?.name}
+            {/* Opción de personalización completa */}
+            <div className="space-y-4 p-5 rounded-xl border border-[#C8A882]/20 bg-[#C8A882]/5">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => setCustomizeAll(!customizeAll)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    customizeAll ? 'bg-[#C8A882]' : 'bg-white/20'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                      customizeAll ? 'translate-x-5' : ''
+                    }`}
+                  />
+                </button>
+                <div className="flex items-center gap-2">
+                  <Paintbrush size={16} className="text-[#C8A882]" />
+                  <span className="text-sm font-medium text-white">
+                    Personalizar color y material
                   </span>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {AVAILABLE_COLORS.map((c) => (
-                  <button
-                    key={c.value}
-                    onClick={() => setColor(c.value)}
-                    title={c.name}
-                    className="relative w-9 h-9 rounded-full transition-transform duration-200 hover:scale-110"
-                    style={{ backgroundColor: c.hex }}
-                  >
-                    {/* Ring activo */}
-                    {color === c.value && (
-                      <span className="absolute inset-0 rounded-full ring-2 ring-[#C8A882] ring-offset-2 ring-offset-[#252320]" />
-                    )}
-                    {/* Ring hover */}
-                    {color !== c.value && (
-                      <span className="absolute inset-0 rounded-full ring-1 ring-white/20" />
-                    )}
-                  </button>
-                ))}
-              </div>
+                </div>
+              </label>
+              
+              <p className="text-xs text-white/40 pl-14">
+                Si no encuentras el color o el material que presentamos no se adecua a tus preferencias, actívalo y especifica tus preferencias.
+              </p>
             </div>
 
-            {/* Tamaño */}
+            {/* Selector de color o personalización */}
+            {customizeAll ? (
+              <div className="space-y-4">
+                {/* Color personalizado */}
+                <div className="space-y-2">
+                  <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">
+                    Color deseado *
+                  </span>
+                  <input
+                    value={customColor}
+                    onChange={(e) => setCustomColor(e.target.value)}
+                    placeholder="Ej: Verde esmeralda, Azul marino, Rojo vino..."
+                    className="w-full rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm
+                      px-4 py-3 text-sm text-white placeholder:text-white/30
+                      focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                      transition-all duration-200"
+                  />
+                </div>
+
+                {/* Material personalizado */}
+                <div className="space-y-2">
+                  <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">
+                    Material deseado *
+                  </span>
+                  <input
+                    value={customMaterial}
+                    onChange={(e) => setCustomMaterial(e.target.value)}
+                    placeholder="Ej: Roble macizo, Metal cepillado, Cuero genuino..."
+                    className="w-full rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm
+                      px-4 py-3 text-sm text-white placeholder:text-white/30
+                      focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                      transition-all duration-200"
+                  />
+                </div>
+              </div>
+            ) : (
+              /* Colores predefinidos */
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">Color</span>
+                  {color && (
+                    <span className="text-xs text-white/45">
+                      {AVAILABLE_COLORS.find(c => c.value === color)?.name}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {AVAILABLE_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => setColor(c.value)}
+                      title={c.name}
+                      className="relative w-9 h-9 rounded-full transition-transform duration-200 hover:scale-110"
+                      style={{ backgroundColor: c.hex }}
+                    >
+                      {/* Ring activo */}
+                      {color === c.value && (
+                        <span className="absolute inset-0 rounded-full ring-2 ring-[#C8A882] ring-offset-2 ring-offset-[#252320]" />
+                      )}
+                      {/* Ring hover */}
+                      {color !== c.value && (
+                        <span className="absolute inset-0 rounded-full ring-1 ring-white/20" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tamaño personalizado (siempre disponible) */}
             <div className="space-y-2">
               <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">
                 Tamaño personalizado <span className="normal-case text-white/30 text-[10px]">(opcional)</span>
@@ -222,7 +334,7 @@ export default function ProductDetailPage() {
                 hover:gap-3"
             >
               <ShoppingCart size={16} />
-              Agregar al carrito
+              {customizeAll ? 'Solicitar personalización' : 'Agregar al carrito'}
             </button>
 
             {/* Trust strip */}

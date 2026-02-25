@@ -57,11 +57,6 @@ export default function PaymentRow({ p, onView }: PaymentRowProps) {
 			<div className='hidden md:grid grid-cols-8 place-items-center py-3 px-4
 				rounded-xl border border-white/10 bg-white/5
 				hover:bg-white/8 transition-all duration-200'>
-				
-				{/* ID Pago */}
-				<p className="text-sm text-white/60 font-mono">
-					#{p.payment._id.slice(-6).toUpperCase()}
-				</p>
 
 				{/* ID Pedido */}
 				<p className="text-sm text-white/60 font-mono">
@@ -72,6 +67,7 @@ export default function PaymentRow({ p, onView }: PaymentRowProps) {
 				<p className="text-sm text-white/90 font-medium">
 					{formatCurrency(p.summary.total)}
 				</p>
+				
 
 				{/* Valor Pago */}
 				<p className="text-sm text-[#C8A882] font-semibold">
@@ -99,7 +95,6 @@ export default function PaymentRow({ p, onView }: PaymentRowProps) {
 						{p.payment.status}
 					</span>
 				</div>
-
 				{/* Acciones */}
 				<div className="flex items-center gap-2">
 					<button
@@ -110,6 +105,15 @@ export default function PaymentRow({ p, onView }: PaymentRowProps) {
 						<Eye size={16} />
 					</button>
 				</div>
+				<p className='px-4 py-3'>
+					{p.summary.payments.length === 1 && p.payment.amount < p.summary.total * 0.3 ? (
+						<span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-yellow-500/10 text-yellow-400 border-yellow-500/20 w-30'>
+							<AlertCircle size={10} />
+							pendiente abono
+						</span>
+					) : null}
+				</p>
+
 			</div>
 
 			{/* Versión Mobile */}

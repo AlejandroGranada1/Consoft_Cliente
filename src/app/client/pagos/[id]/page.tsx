@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useOcrReceipt, useSendPayment } from '@/hooks/apiHooks';
+import { useOcrReceipt, useSendPayment, useMyOrder } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import QR from '@/components/pagos/QR';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function PagoPage() {
 	const router = useRouter();
@@ -12,12 +13,23 @@ export default function PagoPage() {
 	const sendPayment = useSendPayment();
 	const { user, loading } = useUser();
 	const ocr = useOcrReceipt();
+	
+	// Obtener datos del pedido
+	const { data: orderData } = useMyOrder(pedidoId as string);
 
 	const [metodo, setMetodo] = useState<'Nequi' | 'Bancolombia' | null>(null);
 	const [tipoPago, setTipoPago] = useState<'abono' | 'final' | null>(null);
 	const [file, setFile] = useState<File | null>(null);
 	const [preview, setPreview] = useState<string | null>(null);
 	const [dragOver, setDragOver] = useState(false);
+
+	// Calcular información del abono
+	const totalPedido = orderData?.raw?.total || 0;
+	const pagosRealizados = orderData?.raw?.payments?.reduce((sum: number, p: any) => sum + (p.amount || 0), 0) || 0;
+	const abonoInicial = orderData?.raw?.initialPayment?.amount || 0;
+	const porcentajeAbono = totalPedido > 0 ? (abonoInicial / totalPedido) * 100 : 0;
+	const necesitaAbono = abonoInicial < totalPedido * 0.3;
+	const restanteTotal = totalPedido - pagosRealizados;
 
 	/* ───────── AUTH ───────── */
 	useEffect(() => {
@@ -76,32 +88,32 @@ export default function PagoPage() {
 
 		if (!confirm.isConfirmed) return;
 
-sendPayment.mutate(
-  {
-    orderId: pedidoId as string,
-    amount: ocr.data?.detectedAmount || 0,
-    receiptUrl: ocr.data?.receipt?.receiptUrl,
-    ocrText: ocr.data?.receipt?.ocrText,
-    method: metodo,
-  },
-  {
-    onSuccess: async () => {
-      await Swal.fire({
-        icon: 'success',
-        title: 'Pago enviado',
-        text: 'Tu comprobante está en verificación.',
-      });
-      router.push('/client/pedidos');
-    },
-    onError: (error: any) => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Error desconocido',
-      });
-    },
-  }
-);
+		sendPayment.mutate(
+			{
+				orderId: pedidoId as string,
+				amount: ocr.data?.detectedAmount || 0,
+				receiptUrl: ocr.data?.receipt?.receiptUrl,
+				ocrText: ocr.data?.receipt?.ocrText,
+				method: metodo,
+			},
+			{
+				onSuccess: async () => {
+					await Swal.fire({
+						icon: 'success',
+						title: 'Pago enviado',
+						text: 'Tu comprobante está en verificación.',
+					});
+					router.push('/client/pedidos');
+				},
+				onError: (error: any) => {
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						text: error.response?.data?.message || 'Error desconocido',
+					});
+				},
+			}
+		);
 	};
 
 	/* ───────── UI ───────── */
@@ -136,6 +148,25 @@ sendPayment.mutate(
 					</div>
 				</div>
 
+				{/* 🔥 BANNER DE ABONO INICIAL */}
+				{necesitaAbono && (
+					<div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-4 flex items-start gap-3">
+						<AlertCircle size={20} className="text-yellow-400 shrink-0 mt-0.5" />
+						<div>
+							<p className="text-sm font-medium text-yellow-400">Abono inicial pendiente</p>
+							<p className="text-xs text-white/60 mt-1">
+								Has abonado <span className="text-yellow-400 font-medium">${abonoInicial.toLocaleString('es-CO')}</span> ({porcentajeAbono.toFixed(0)}%).
+								Para iniciar producción necesitas completar el <span className="text-white/80 font-medium">30% (${(totalPedido * 0.3).toLocaleString('es-CO')})</span>.
+								{restanteTotal > 0 && (
+									<span className="block mt-1 text-white/40">
+										Saldo total pendiente: ${restanteTotal.toLocaleString('es-CO')}
+									</span>
+								)}
+							</p>
+						</div>
+					</div>
+				)}
+
 				{/* ── STEP INDICATOR ── */}
 				<div className="flex items-center">
 					{[
@@ -143,7 +174,7 @@ sendPayment.mutate(
 						{ num: 2, label: 'Comprobante', done: !!file },
 						{ num: 3, label: 'Tipo de pago', done: !!tipoPago },
 					].map((s, i, arr) => (
-						<>
+						<div key={s.num}>
 							<div key={s.num} className="flex items-center gap-2 shrink-0">
 								<div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium border transition-all duration-300
 									${s.done ? 'bg-[#8B5E3C] border-[#8B5E3C] text-white' : 'border-white/10 text-[#6b5b4e]'}`}>
@@ -160,7 +191,7 @@ sendPayment.mutate(
 							{i < arr.length - 1 && (
 								<div key={`line-${i}`} className="flex-1 h-px bg-white/5 mx-4" />
 							)}
-						</>
+						</div>
 					))}
 				</div>
 
@@ -360,6 +391,28 @@ sendPayment.mutate(
 													<path d="M8 5v3M8 10.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
 												</svg>
 												Cuando el pago sea aprobado, quedará un saldo pendiente de ${ocr.data.projected.restanteAfter.toLocaleString('es-CO')}
+											</div>
+										)}
+
+										{/* 🔥 Mensaje de abono si aplica */}
+										{necesitaAbono && ocr.data.detectedAmount > 0 && (
+											<div className="mt-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+												<p className="text-xs text-yellow-400 flex items-start gap-2">
+													<AlertCircle size={14} className="shrink-0 mt-0.5" />
+													<span>
+														<strong>Importante:</strong> Este pago será registrado como abono. 
+														{abonoInicial + ocr.data.detectedAmount >= totalPedido * 0.3 ? (
+															<span className="block mt-1 text-emerald-400">
+																✓ Con este pago alcanzarás el 30% y el pedido entrará en producción.
+															</span>
+														) : (
+															<span className="block mt-1">
+																Después de este pago, tu abono total será del {((abonoInicial + ocr.data.detectedAmount) / totalPedido * 100).toFixed(0)}%.
+																Faltan ${(totalPedido * 0.3 - (abonoInicial + ocr.data.detectedAmount)).toLocaleString('es-CO')} para el 30%.
+															</span>
+														)}
+													</span>
+												</p>
 											</div>
 										)}
 									</div>

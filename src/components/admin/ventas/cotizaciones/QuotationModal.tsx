@@ -23,27 +23,23 @@ import Swal from 'sweetalert2';
 import { formatCOP } from '@/lib/formatCOP';
 
 function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps) {
-	if (!isOpen || !extraProps) return null;
+	const setQuote = useSetQuote();
 
-	const quotation = extraProps as any;
-	const items = quotation.items || [];
-	
-	const getImage = (url?: string) =>
-		url && url.trim() !== '' ? url : '/def_prod.png';
-
-	/* -------------------- STATE -------------------- */
-
+	// Todos los hooks se ejecutan SIEMPRE, sin condiciones
 	const [prices, setPrices] = useState<{ [id: string]: number }>({});
 	const [itemNotes, setItemNotes] = useState<{ [id: string]: string }>({});
 	const [adminNotes, setAdminNotes] = useState('');
 	const [openItems, setOpenItems] = useState<{ [id: string]: boolean }>({});
 
-	const setQuote = useSetQuote();
+	const quotation = extraProps as any;
+	const items = quotation?.items || [];
+	
+	const getImage = (url?: string) =>
+		url && url.trim() !== '' ? url : '/def_prod.png';
 
-	/* -------------------- INIT -------------------- */
-
+	// Inicializar estados cuando cambian los props
 	useEffect(() => {
-		if (!isOpen) return;
+		if (!isOpen || !quotation) return;
 
 		const priceInit: any = {};
 		const notesInit: any = {};
@@ -59,10 +55,9 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 		setItemNotes(notesInit);
 		setOpenItems(openInit);
 		setAdminNotes(quotation.adminNotes || '');
-	}, [isOpen, items]);
+	}, [isOpen, quotation, items]);
 
-	/* -------------------- HANDLERS -------------------- */
-
+	// Handlers
 	const toggleItem = (id: string) => {
 		setOpenItems((prev) => ({ ...prev, [id]: !prev[id] }));
 	};
@@ -133,8 +128,6 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 		}
 	};
 
-
-
 	const formatDate = (date: string) => {
 		return new Date(date).toLocaleDateString('es-CO', {
 			year: 'numeric',
@@ -143,8 +136,10 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 		});
 	};
 
-	/* -------------------- UI -------------------- */
+	// Retorno condicional DESPUÉS de todos los hooks
+	if (!isOpen || !extraProps) return null;
 
+	/* -------------------- UI -------------------- */
 	return (
 		<div className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
 			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>

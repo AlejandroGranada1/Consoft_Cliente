@@ -128,16 +128,32 @@ export interface Order {
 	paymentStatus: string;
 }
 
-export interface PedidoUI {
-	id: string;
-	nombre: string;
-	estado: string;
-	valor: string;
-	dias: string;
-	restante: number;
-	raw: Order;
-}
+// lib/types.ts
+// lib/types.ts - Agregar o actualizar esta interfaz
 
+export interface PedidoUI {
+  id: string;
+  nombre: string;
+  estado: string; // 'Pendiente', 'Pendiente (abono parcial)', 'En proceso', 'Completado', 'Cancelado'
+  valor: string;
+  restante: string;
+  dias: string;
+  requiereAbono: boolean;
+  porcentajeAbono?: number;
+  raw: {
+    _id: string;
+    total: number;
+    initialPaymentAmount: number;
+    payments: Array<{
+      amount: number;
+      status: string;
+      method: string;
+      paidAt: string;
+    }>;
+    status: string;
+    // ... otras propiedades que necesites
+  };
+}
 export type OrderWithPartialUser = Omit<Order, 'user'> & { user: string | Partial<User> };
 
 export interface Sale {
@@ -150,7 +166,7 @@ export interface Sale {
 		_id: string;
 		name: string;
 	};
-	payments: Payment[]
+	payments: Payment[];
 }
 
 export interface PaymentDetails {
@@ -185,7 +201,7 @@ export type CartItem = {
 	notes?: string;
 	price?: number;
 	total?: number;
-	isCustom?: boolean
+	isCustom?: boolean;
 	customDetails?: {
 		name: string;
 		description: string;
@@ -216,11 +232,11 @@ export type QuotationsResponse = {
 			adminNotes: string;
 			isCustom: boolean;
 			customDetails: {
-				name: string
-				description: string
-				referenceImage: string
-				woodType: string
-			}
+				name: string;
+				description: string;
+				referenceImage: string;
+				woodType: string;
+			};
 			_id: string;
 		}>;
 		createdAt: string;

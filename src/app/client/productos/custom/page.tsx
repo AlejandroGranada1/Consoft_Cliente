@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useAddCustomItem } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import Image from 'next/image';
-import { ArrowLeft, Upload, Sparkles, Minus, Plus, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Upload, Sparkles, Minus, Plus, ShoppingCart, Ruler, Palette, Tag, FileText, Paintbrush } from 'lucide-react';
 
 const AVAILABLE_COLORS = [
   { name: 'Nogal',         value: 'nogal',          hex: '#7B4A12' },
@@ -18,10 +18,17 @@ const AVAILABLE_COLORS = [
   { name: 'Verde oliva',   value: 'verde_oliva',     hex: '#556B2F' },
 ];
 
-function InputField({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
+function InputField({ label, required, hint, icon, children }: { 
+  label: string; 
+  required?: boolean; 
+  hint?: string; 
+  icon?: React.ReactNode;
+  children: React.ReactNode 
+}) {
   return (
     <div className="space-y-2">
-      <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
+      <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium flex items-center gap-1.5">
+        {icon && <span className="text-white/40">{icon}</span>}
         {label} {required && <span className="text-red-400/80">*</span>}
       </label>
       {children}
@@ -40,13 +47,13 @@ export default function CustomProductPage() {
     description: '',
     dimensions: '',
     color: '',
-    woodType: '',
-    customWoodType: '',
+    customColor: '',
     quantity: 1,
     referenceImage: null as File | null,
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [useCustomColor, setUseCustomColor] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,36 +73,78 @@ export default function CustomProductPage() {
     const Swal = (await import('sweetalert2')).default;
 
     if (!user) {
-      Swal.fire({ title: 'Inicia sesión', text: 'Debes iniciar sesión para solicitar productos personalizados', icon: 'warning', confirmButtonColor: '#8B5E3C' });
+      Swal.fire({ 
+        title: 'Inicia sesión', 
+        text: 'Debes iniciar sesión para solicitar productos personalizados', 
+        icon: 'warning', 
+        confirmButtonColor: '#8B5E3C',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
       router.push('/client/auth/login');
       return;
     }
 
-    if (!formData.productName || !formData.description || !formData.dimensions || !formData.color) {
-      Swal.fire({ title: 'Campos incompletos', text: 'Por favor completa todos los campos obligatorios', icon: 'warning', confirmButtonColor: '#8B5E3C' });
+    // Validaciones
+    if (!formData.productName || !formData.description) {
+      Swal.fire({ 
+        title: 'Campos incompletos', 
+        text: 'Por favor completa el nombre y la descripción', 
+        icon: 'warning', 
+        confirmButtonColor: '#8B5E3C',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
       return;
     }
 
-    const woodType = formData.woodType === 'Otro (especificar)' ? formData.customWoodType : formData.woodType;
+    // Validar color según el modo
+    if (useCustomColor) {
+      if (!formData.customColor.trim()) {
+        Swal.fire({ 
+          title: 'Color requerido', 
+          text: 'Por favor especifica el color deseado', 
+          icon: 'warning', 
+          confirmButtonColor: '#8B5E3C',
+          background: '#1e1e1c',
+          color: '#fff',
+        });
+        return;
+      }
+    } else {
+      if (!formData.color) {
+        Swal.fire({ 
+          title: 'Color requerido', 
+          text: 'Por favor selecciona un color', 
+          icon: 'warning', 
+          confirmButtonColor: '#8B5E3C',
+          background: '#1e1e1c',
+          color: '#fff',
+        });
+        return;
+      }
+    }
+
+    const selectedColor = useCustomColor 
+      ? formData.customColor 
+      : AVAILABLE_COLORS.find((c) => c.value === formData.color)?.name || formData.color;
 
     const detailedDescription = `
 PRODUCTO PERSONALIZADO
 
 Descripción: ${formData.description}
-Dimensiones: ${formData.dimensions}
-Tipo de madera: ${woodType || 'Por definir'}
-Color: ${AVAILABLE_COLORS.find((c) => c.value === formData.color)?.name || formData.color}
+Dimensiones: ${formData.dimensions || 'Por definir'}
+Color: ${selectedColor}
 
-${formData.referenceImage ? '✓ Imagen de referencia adjunta' : ''}
+${formData.referenceImage ? '✓ Imagen de referencia adjunta' : '✓ Sin imagen de referencia'}
 `.trim();
 
     try {
       const fd = new FormData();
       fd.append('name', formData.productName);
       fd.append('description', detailedDescription);
-      fd.append('woodType', woodType || '');
-      fd.append('color', formData.color);
-      fd.append('size', formData.dimensions);
+      fd.append('color', selectedColor);
+      fd.append('size', formData.dimensions || 'Por definir');
       fd.append('quantity', String(formData.quantity));
       if (formData.referenceImage) fd.append('referenceImage', formData.referenceImage);
 
@@ -103,16 +152,34 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : ''}
 
       Swal.fire({
         title: '¡Solicitud enviada!',
-        html: `<p>Tu producto personalizado ha sido agregado al carrito.</p><p class="text-sm text-gray-500 mt-2">Nos pondremos en contacto contigo para confirmar detalles y cotización.</p>`,
+        html: `<p>Tu producto personalizado ha sido agregado al carrito.</p><p class="text-sm text-white/40 mt-2">Nos pondremos en contacto contigo para confirmar detalles y cotización.</p>`,
         icon: 'success',
         confirmButtonColor: '#8B5E3C',
+        background: '#1e1e1c',
+        color: '#fff',
       });
 
-      setFormData({ productName: '', description: '', dimensions: '', color: '', woodType: '', customWoodType: '', quantity: 1, referenceImage: null });
+      setFormData({ 
+        productName: '', 
+        description: '', 
+        dimensions: '', 
+        color: '', 
+        customColor: '',
+        quantity: 1, 
+        referenceImage: null 
+      });
+      setUseCustomColor(false);
       setImagePreview(null);
-      router.push('/client/productos/custom');
+      router.push('/client/productos');
     } catch (error: any) {
-      Swal.fire({ title: 'Error', text: 'Hubo un problema al procesar tu solicitud', icon: 'error', confirmButtonColor: '#8B5E3C' });
+      Swal.fire({ 
+        title: 'Error', 
+        text: 'Hubo un problema al procesar tu solicitud', 
+        icon: 'error', 
+        confirmButtonColor: '#8B5E3C',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
       console.log(error);
     }
   };
@@ -226,7 +293,7 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : ''}
             <div className="h-px bg-white/10" />
 
             {/* Nombre */}
-            <InputField label="Nombre del mueble" required>
+            <InputField label="Nombre del mueble" required icon={<Tag size={12} />}>
               <input
                 type="text"
                 value={formData.productName}
@@ -238,7 +305,7 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : ''}
             </InputField>
 
             {/* Descripción */}
-            <InputField label="Descripción" required>
+            <InputField label="Descripción" required icon={<FileText size={12} />}>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -249,45 +316,91 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : ''}
               />
             </InputField>
 
-            {/* Dimensiones */}
-            <InputField label="Dimensiones" required hint="Especifica largo × ancho × alto en centímetros">
+            {/* Dimensiones (opcional) */}
+            <InputField 
+              label="Dimensiones" 
+              hint="Opcional - Especifica largo × ancho × alto en centímetros"
+              icon={<Ruler size={12} />}
+            >
               <input
                 type="text"
                 value={formData.dimensions}
                 onChange={(e) => setFormData({ ...formData, dimensions: e.target.value })}
-                placeholder="Ej: 180 × 90 × 75 cm"
-                required
+                placeholder="Ej: 180 × 90 × 75 cm (opcional)"
                 className="w-full rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8 transition-all duration-200"
               />
             </InputField>
 
-            {/* Color */}
-            <InputField label="Color / Acabado" required>
-              <div className="flex flex-wrap gap-3 pt-0.5">
-                {AVAILABLE_COLORS.map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    title={c.name}
-                    onClick={() => setFormData({ ...formData, color: c.value })}
-                    className="relative w-9 h-9 rounded-full transition-transform duration-200 hover:scale-110"
-                    style={{ backgroundColor: c.hex }}
-                  >
-                    {formData.color === c.value && (
-                      <span className="absolute inset-0 rounded-full ring-2 ring-[#C8A882] ring-offset-2 ring-offset-[#252320]" />
-                    )}
-                    {formData.color !== c.value && (
-                      <span className="absolute inset-0 rounded-full ring-1 ring-white/20" />
-                    )}
-                  </button>
-                ))}
-              </div>
-              {formData.color && (
-                <p className="text-xs text-white/40 mt-2">
-                  Seleccionado: {AVAILABLE_COLORS.find(c => c.value === formData.color)?.name}
-                </p>
-              )}
-            </InputField>
+            {/* Opción de color personalizado */}
+            <div className="space-y-4 p-5 rounded-xl border border-[#C8A882]/20 bg-[#C8A882]/5">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => setUseCustomColor(!useCustomColor)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    useCustomColor ? 'bg-[#C8A882]' : 'bg-white/20'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                      useCustomColor ? 'translate-x-5' : ''
+                    }`}
+                  />
+                </button>
+                <div className="flex items-center gap-2">
+                  <Paintbrush size={16} className="text-[#C8A882]" />
+                  <span className="text-sm font-medium text-white">
+                    Usar color personalizado
+                  </span>
+                </div>
+              </label>
+              
+              <p className="text-xs text-white/40 pl-14">
+                Activa esta opción si no encuentras el color que buscas en la paleta.
+              </p>
+            </div>
+
+            {/* Color - según modo */}
+            {useCustomColor ? (
+              <InputField label="Color personalizado" required icon={<Palette size={12} />}>
+                <input
+                  type="text"
+                  value={formData.customColor}
+                  onChange={(e) => setFormData({ ...formData, customColor: e.target.value })}
+                  placeholder="Ej: Verde esmeralda, Azul marino, Rojo vino..."
+                  required
+                  className="w-full rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8 transition-all duration-200"
+                />
+              </InputField>
+            ) : (
+              <InputField label="Color / Acabado" required icon={<Palette size={12} />}>
+                <div className="flex flex-wrap gap-3 pt-0.5">
+                  {AVAILABLE_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      title={c.name}
+                      onClick={() => setFormData({ ...formData, color: c.value })}
+                      className="relative w-9 h-9 rounded-full transition-transform duration-200 hover:scale-110"
+                      style={{ backgroundColor: c.hex }}
+                    >
+                      {formData.color === c.value && (
+                        <span className="absolute inset-0 rounded-full ring-2 ring-[#C8A882] ring-offset-2 ring-offset-[#252320]" />
+                      )}
+                      {formData.color !== c.value && (
+                        <span className="absolute inset-0 rounded-full ring-1 ring-white/20" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {formData.color && (
+                  <p className="text-xs text-white/40 mt-2 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#C8A882]" />
+                    {AVAILABLE_COLORS.find(c => c.value === formData.color)?.name}
+                  </p>
+                )}
+              </InputField>
+            )}
 
             {/* Cantidad */}
             <InputField label="Cantidad">

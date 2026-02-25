@@ -107,7 +107,6 @@ function Page() {
 					{/* Encabezado tabla - solo desktop */}
 					<div className="hidden md:grid grid-cols-8 place-items-center py-4 px-4
 						border-b border-white/10 text-[11px] tracking-[.08em] uppercase text-white/40 font-medium">
-						<p>ID Pago</p>
 						<p>Pedido</p>
 						<p>Monto Total</p>
 						<p>Valor Pago</p>
