@@ -172,27 +172,6 @@ export const useCreateOrder = () => {
 	});
 };
 
-export const useGetServices = () => {
-	return useQuery({
-		queryKey: ['services'],
-		queryFn: async () => {
-			const { data } = await api.get('/api/services');
-			return data;
-		},
-		staleTime: 1000 * 60 * 5,
-	});
-};
-
-export const useGetUsers = () => {
-	return useQuery({
-		queryKey: ['users'],
-		queryFn: async () => {
-			const { data } = await api.get('/api/users');
-			return data;
-		},
-		staleTime: 1000 * 60 * 5,
-	});
-};
 
 export const useUpdateOrder = () => {
 	const queryClient = useQueryClient();
