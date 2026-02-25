@@ -83,11 +83,11 @@ function PaymentDetailsModal({
 
 	const getStatusBadge = (status: string) => {
 		switch(status) {
-			case 'Aprobado':
+			case 'aprobado':
 				return <span className='bg-green-500/10 text-green-400 border border-green-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'><CheckCircle size={12} /> Aprobado</span>;
-			case 'En revision':
+			case 'en_revision':
 				return <span className='bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'><AlertCircle size={12} /> En revisión</span>;
-			case 'Rechazado':
+			case 'rechazado':
 				return <span className='bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'><AlertCircle size={12} /> Rechazado</span>;
 			default:
 				return <span className='bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full text-xs font-medium'>{status}</span>;
@@ -227,10 +227,10 @@ function PaymentDetailsModal({
 										focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
 										transition-all duration-200 appearance-none"
 									disabled={updating}>
-									<option value="Aprobado" className="bg-[#1e1e1c]">Aprobado</option>
-									<option value="En revision" className="bg-[#1e1e1c]">En revisión</option>
-									<option value="Pendiente" className="bg-[#1e1e1c]">Pendiente</option>
-									<option value="Rechazado" className="bg-[#1e1e1c]">Rechazado</option>
+									<option value="aprobado" className="bg-[#1e1e1c]">Aprobado</option>
+									<option value="en_revision" className="bg-[#1e1e1c]">En revisión</option>
+									<option value="pendiente" className="bg-[#1e1e1c]">Pendiente</option>
+									<option value="rechazado" className="bg-[#1e1e1c]">Rechazado</option>
 								</select>
 							</div>
 						</div>
