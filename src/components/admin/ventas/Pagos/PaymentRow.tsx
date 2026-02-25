@@ -15,11 +15,11 @@ export default function PaymentRow({ p, onView }: PaymentRowProps) {
 
 	const getStatusIcon = (status: string) => {
 		switch (status) {
-			case 'Aprobado':
+			case 'aprobado':
 				return <CheckCircle size={14} className="text-green-400" />;
-			case 'En revision':
+			case 'en_revision':
 				return <AlertCircle size={14} className="text-yellow-400" />;
-			case 'Rechazado':
+			case 'rechazado':
 				return <AlertCircle size={14} className="text-red-400" />;
 			default:
 				return <Clock size={14} className="text-blue-400" />;
@@ -28,11 +28,11 @@ export default function PaymentRow({ p, onView }: PaymentRowProps) {
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
-			case 'Aprobado':
+			case 'aprobado':
 				return 'bg-green-500/10 text-green-400 border border-green-500/20';
-			case 'En revision':
+			case 'en_revision':
 				return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
-			case 'Rechazado':
+			case 'rechazado':
 				return 'bg-red-500/10 text-red-400 border border-red-500/20';
 			default:
 				return 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
