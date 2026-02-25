@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useSendPayment } from '@/hooks/apiHooks';
+import { useOcrReceipt, useSendPayment } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import QR from '@/components/pagos/QR';
 
@@ -11,6 +11,7 @@ export default function PagoPage() {
 	const { id: pedidoId } = useParams();
 	const sendPayment = useSendPayment();
 	const { user, loading } = useUser();
+	const ocr = useOcrReceipt();
 
 	const [metodo, setMetodo] = useState<'Nequi' | 'Bancolombia' | null>(null);
 	const [tipoPago, setTipoPago] = useState<'abono' | 'final' | null>(null);
@@ -40,6 +41,8 @@ export default function PagoPage() {
 	const handleFile = (f: File) => {
 		setFile(f);
 		setPreview(URL.createObjectURL(f));
+		ocr.reset();
+		ocr.analyze(pedidoId as string, f);
 	};
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,23 +76,37 @@ export default function PagoPage() {
 
 		if (!confirm.isConfirmed) return;
 
-		sendPayment.mutate(
-			{ orderId: pedidoId as string, payment_image: file},
-			{
-				onSuccess: async () => {
-					await Swal.fire({ icon: 'success', title: 'Pago enviado', text: 'Tu comprobante está en verificación.' });
-					router.push('/client/pedidos');
-				},
-				onError: () => {
-					Swal.fire({ icon: 'error', title: 'Error al enviar el pago', text: 'Intenta nuevamente.' });
-				},
-			}
-		);
+sendPayment.mutate(
+  {
+    orderId: pedidoId as string,
+    amount: ocr.data?.detectedAmount || 0,
+    receiptUrl: ocr.data?.receipt?.receiptUrl,
+    ocrText: ocr.data?.receipt?.ocrText,
+    method: metodo,
+  },
+  {
+    onSuccess: async () => {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Pago enviado',
+        text: 'Tu comprobante está en verificación.',
+      });
+      router.push('/client/pedidos');
+    },
+    onError: (error: any) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Error desconocido',
+      });
+    },
+  }
+);
 	};
 
 	/* ───────── UI ───────── */
 	return (
-		<main className="min-h-screen bg-[#111110] text-[#e8e0d5] px-24	py-30 flex justify-center">
+		<main className="min-h-screen bg-[#111110] text-[#e8e0d5] px-24 py-30 flex justify-center">
 			<div className="w-full max-w-5xl flex flex-col gap-8">
 
 				{/* ── HEADER ── */}
@@ -155,12 +172,10 @@ export default function PagoPage() {
 					{/* ── LEFT COLUMN: Método + QR ── */}
 					<div className="flex flex-col gap-4">
 
-						{/* Método label */}
 						<p className="text-[11px] font-medium tracking-widest uppercase text-[#8B5E3C]">
 							Método de pago
 						</p>
 
-						{/* Método cards — vertical stack inside left col */}
 						<div className="flex flex-col gap-3">
 							{[
 								{ id: 'Nequi', icon: '💜', sub: 'Transferencia instantánea' },
@@ -191,7 +206,7 @@ export default function PagoPage() {
 							))}
 						</div>
 
-						{/* QR — aparece debajo de los métodos */}
+						{/* QR */}
 						<div className={`flex flex-col items-center gap-3 border rounded-2xl bg-[#1a1917] p-6 transition-all duration-300
 							${metodo ? 'border-white/[0.07] opacity-100' : 'border-dashed border-white/5 opacity-40'}`}>
 							{metodo ? (
@@ -204,22 +219,20 @@ export default function PagoPage() {
 							) : (
 								<div className="h-32 flex flex-col items-center justify-center gap-2 text-[#3a3028]">
 									<svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="opacity-40">
-										<rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-										<rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-										<rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-										<path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3v3M14 21h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+										<rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+										<rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+										<rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" />
+										<path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3v3M14 21h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
 									</svg>
 									<p className="text-xs">Selecciona un método</p>
 								</div>
 							)}
 						</div>
-
 					</div>
 
-					{/* ── RIGHT COLUMN: Comprobante + Tipo ── */}
+					{/* ── RIGHT COLUMN: Comprobante + OCR ── */}
 					<div className="flex flex-col gap-4">
 
-						{/* Comprobante label */}
 						<p className="text-[11px] font-medium tracking-widest uppercase text-[#8B5E3C]">
 							Comprobante de pago
 						</p>
@@ -266,6 +279,93 @@ export default function PagoPage() {
 								</>
 							)}
 						</div>
+
+						{/* ── OCR RESULT ── */}
+						{(ocr.loading || ocr.data || ocr.error) && (
+							<div className={`rounded-2xl border p-5 flex flex-col gap-3 transition-all duration-300
+								${ocr.error ? 'border-red-500/20 bg-[#1a1917]' : 'border-white/[0.07] bg-[#1a1917]'}`}
+							>
+								<p className="text-[11px] font-medium tracking-widest uppercase text-[#8B5E3C]">
+									Información detectada
+								</p>
+
+								{/* Skeleton mientras carga */}
+								{ocr.loading && (
+									<div className="flex flex-col gap-2">
+										{[70, 50].map((w, i) => (
+											<div
+												key={i}
+												className="h-4 rounded-md bg-white/5 animate-pulse"
+												style={{ width: `${w}%` }}
+											/>
+										))}
+									</div>
+								)}
+
+								{/* Error */}
+								{ocr.error && !ocr.loading && (
+									<div className="flex items-start gap-2 text-red-400/80">
+										<svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
+											<circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+											<path d="M8 5v3M8 10.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+										</svg>
+										<p className="text-xs">{ocr.error}</p>
+									</div>
+								)}
+
+								{/* Datos detectados */}
+								{ocr.data && !ocr.loading && (
+									<div className="flex flex-col gap-3">
+
+										{/* Monto detectado */}
+										<div className="flex items-center justify-between">
+											<span className="text-xs text-[#6b5b4e]">Monto detectado</span>
+											<span className="text-sm font-medium text-[#c4a882] tabular-nums">
+												${ocr.data.detectedAmount.toLocaleString('es-CO')}
+											</span>
+										</div>
+
+										<div className="h-px bg-white/5" />
+
+										{/* Saldo restante */}
+										<div className="flex items-center justify-between">
+											<span className="text-xs text-[#6b5b4e]">Saldo restante</span>
+											<span className={`text-sm font-semibold tabular-nums ${
+												ocr.data.projected.restanteAfter <= 0
+													? 'text-emerald-400'
+													: 'text-[#e8e0d5]'
+											}`}>
+												{ocr.data.projected.restanteAfter <= 0
+													? 'Saldado ✓'
+													: `$${ocr.data.projected.restanteAfter.toLocaleString('es-CO')}`
+												}
+											</span>
+										</div>
+
+										{/* Badge pago total */}
+										{ocr.data.projected.restanteAfter <= 0 && (
+											<div className="flex items-center gap-1.5 text-emerald-400/70 text-xs mt-1">
+												<svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+													<path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+												</svg>
+												Este pago cubre el total del pedido
+											</div>
+										)}
+
+										{/* Aviso saldo pendiente */}
+										{ocr.data.projected.restanteAfter > 0 && (
+											<div className="flex items-center gap-1.5 text-[#8B5E3C]/80 text-xs mt-1">
+												<svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+													<circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+													<path d="M8 5v3M8 10.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+												</svg>
+												Cuando el pago sea aprobado, quedará un saldo pendiente de ${ocr.data.projected.restanteAfter.toLocaleString('es-CO')}
+											</div>
+										)}
+									</div>
+								)}
+							</div>
+						)}
 					</div>
 				</div>
 
@@ -275,7 +375,7 @@ export default function PagoPage() {
 				<div className="flex justify-end">
 					<button
 						onClick={confirmarPago}
-						disabled={sendPayment.isPending}
+						disabled={sendPayment.isPending || ocr.loading}
 						className="flex items-center gap-2 px-7 py-3 rounded-full bg-gradient-to-br from-[#8B5E3C] to-[#a06840] text-white text-sm font-medium hover:opacity-90 hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 transition-all duration-200"
 					>
 						{sendPayment.isPending ? (
@@ -285,6 +385,14 @@ export default function PagoPage() {
 									<path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
 								</svg>
 								Enviando…
+							</>
+						) : ocr.loading ? (
+							<>
+								<svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+									<circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="3" />
+									<path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+								</svg>
+								Analizando…
 							</>
 						) : (
 							<>
