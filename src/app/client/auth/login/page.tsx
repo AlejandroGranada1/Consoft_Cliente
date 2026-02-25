@@ -8,7 +8,9 @@ import { useGoogleLogin, useLogin } from '@/hooks/apiHooks';
 import Script from 'next/script';
 import AuthLayout from '@/components/auth/AuthLayout';
 import AuthButton from '@/components/auth/AuthButton';
+import PasswordInput from '@/components/auth/PasswordInput';
 import Swal from 'sweetalert2';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,10 +18,7 @@ export default function LoginPage() {
   const login = useLogin();
   const { loadUser } = useUser();
 
-  const [loginData, setLoginData] = useState({
-    email: '',
-    password: '',
-  });
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,125 +27,92 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!loginData.email.trim() || !loginData.password.trim()) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'Campos incompletos',
-        text: 'Por favor ingresa tu correo y contraseña.',
-      });
+      await Swal.fire({ icon: 'warning', title: 'Campos incompletos', text: 'Por favor ingresa tu correo y contraseña.' });
       return;
     }
-
     try {
       const response = await login.mutateAsync(loginData);
-
       if (response.status === 200) {
         await loadUser();
         router.push('/client');
       }
     } catch (error: any) {
-      const message =
-        error.response?.data?.message ===
-        'Incorrect password, please try again'
-          ? 'Contraseña incorrecta, intenta de nuevo'
-          : `Error al iniciar sesión: ${error.response?.data?.message}`;
-
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: message,
-      });
+      const message = error.response?.data?.message === 'Incorrect password, please try again'
+        ? 'Contraseña incorrecta, intenta de nuevo'
+        : `Error al iniciar sesión: ${error.response?.data?.message}`;
+      await Swal.fire({ icon: 'error', title: 'Error', text: message });
     }
   };
 
-  // ------------------------
-  // GOOGLE LOGIN
-  // ------------------------
-
   const initializeGoogleLogin = () => {
     if (!window.google?.accounts?.id) return;
-
     window.google.accounts.id.initialize({
       client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
       callback: async (response: any) => {
         try {
-          const idToken = response.credential;
-          const res = await googleLogin.mutateAsync(idToken);
-
-          if (res?.message === 'Login successful') {
-            await loadUser();
-            router.push('/client');
-          }
-        } catch (err) {
-          console.error('Google login error:', err);
-        }
+          const res = await googleLogin.mutateAsync(response.credential);
+          if (res?.message === 'Login successful') { await loadUser(); router.push('/client'); }
+        } catch (err) { console.error('Google login error:', err); }
       },
       ux_mode: 'popup',
     });
-
     const container = document.getElementById('google-button-container');
-    if (container) {
-      window.google.accounts.id.renderButton(container, {
-        theme: 'filled_blue',
-        size: 'large',
-        width: container.offsetWidth,
-      });
-    }
+    if (container) window.google.accounts.id.renderButton(container, { theme: 'filled_black', size: 'large', width: container.offsetWidth });
   };
 
   return (
     <>
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={initializeGoogleLogin}
-      />
+      <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onLoad={initializeGoogleLogin} />
 
       <AuthLayout
-        title="Bienvenido a Confort & Estilo"
-        subtitle="Inicia Sesión"
+        subtitle="Inicia sesión"
         illustration="/auth/Login.png"
+        footer={
+          <p className="text-center text-sm text-white/40">
+            ¿No tienes cuenta?{' '}
+            <Link href="/client/auth/register" className="text-[#C8A882] hover:text-white font-medium transition-colors">
+              Regístrate
+            </Link>
+          </p>
+        }
       >
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           <AuthInput
             value={loginData.email}
             name="email"
-            label="Email"
+            label="Correo electrónico"
             type="email"
             placeholder="ejemplo@email.com"
             onChange={handleChange}
           />
 
-          <AuthInput
+          <PasswordInput
             name="password"
             label="Contraseña"
-            type="password"
-            placeholder="********"
             value={loginData.password}
             onChange={handleChange}
+            showRules={false}
           />
 
-          <a
-            href="../auth/forgot-password"
-            className="text-sm text-[#1E293B] hover:text-[#70492F]"
-          >
-            ¿Olvidaste tu contraseña?
-          </a>
+          <div className="flex justify-end -mt-2">
+            <Link href="../auth/forgot-password" className="text-xs text-white/40 hover:text-[#C8A882] transition-colors">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
 
-          <AuthButton text="Continuar" type="submit" />
+          <AuthButton text="Continuar" type="submit" loading={login.isPending} />
 
-          <div id="google-button-container" className="w-full mt-3" />
+          {/* Divisor Google */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-[11px] text-white/25 uppercase tracking-wider">o continúa con</span>
+            <div className="flex-1 h-px bg-white/10" />
+          </div>
 
-          <p className="text-center text-sm mt-4">
-            ¿No tienes cuenta?{' '}
-            <a
-              href="/client/auth/register"
-              className="text-[#8B5E3C] font-medium hover:underline"
-            >
-              Regístrate
-            </a>
-          </p>
+          <div className="flex justify-center">
+            <div id="google-button-container" />
+          </div>
         </form>
       </AuthLayout>
     </>

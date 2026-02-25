@@ -2,195 +2,361 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useGetProductById, useQuickQuotation } from '@/hooks/apiHooks';
-import { useUser } from '@/providers/userContext';
+import { useGetProductById, useMyCart } from '@/hooks/apiHooks';
 import { useAddItemAutoCart } from '@/hooks/apiHooks';
+import { useUser } from '@/providers/userContext';
 import Image from 'next/image';
+import { ArrowLeft, ShieldCheck, Truck, Pencil, ShoppingCart, Minus, Plus, Paintbrush } from 'lucide-react';
 
 const AVAILABLE_COLORS = [
-	{ name: 'Nogal', value: 'nogal', hex: '#7B4A12' },
-	{ name: 'Blanco', value: 'blanco', hex: '#FFFFFF' },
-	{ name: 'Negro', value: 'negro', hex: '#000000' },
-	{ name: 'Gris', value: 'gris', hex: '#9CA3AF' },
-	{ name: 'Café oscuro', value: 'cafe_oscuro', hex: '#4B2E1E' },
-	{ name: 'Azul petróleo', value: 'azul_petroleo', hex: '#1F4E5F' },
-	{ name: 'Verde oliva', value: 'verde_oliva', hex: '#556B2F' },
+  { name: 'Nogal',       value: 'nogal',        hex: '#7B4A12' },
+  { name: 'Blanco',      value: 'blanco',        hex: '#F5F5F5' },
+  { name: 'Negro',       value: 'negro',         hex: '#1A1A1A' },
+  { name: 'Gris',        value: 'gris',          hex: '#9CA3AF' },
+  { name: 'Café oscuro', value: 'cafe_oscuro',   hex: '#4B2E1E' },
+  { name: 'Azul petróleo', value: 'azul_petroleo', hex: '#1F4E5F' },
+  { name: 'Verde oliva', value: 'verde_oliva',   hex: '#556B2F' },
 ];
+
 export default function ProductDetailPage() {
-	const { id } = useParams();
-	const router = useRouter();
+  const { id } = useParams();
+  const router = useRouter();
+  const { user } = useUser();
+  const { data: cartData } = useMyCart();
+  const { data, isLoading } = useGetProductById(String(id));
+  const product = data?.data;
 
-	const { user } = useUser();
+  const addItemMutation = useAddItemAutoCart();
 
-	const { data, isLoading } = useGetProductById(String(id));
+  const [quantity, setQuantity] = useState(1);
+  const [color, setColor] = useState('');
+  const [customSize, setCustomSize] = useState('');
+  
+  // Nuevos estados para personalización completa
+  const [customizeAll, setCustomizeAll] = useState(false);
+  const [customColor, setCustomColor] = useState('');
+  const [customMaterial, setCustomMaterial] = useState('');
 
-	const product = data?.data;
+  const changeQty = (delta: number) => setQuantity((q) => Math.max(1, q + delta));
 
-	console.log(product);
+  const addToCart = async () => {
+    const Swal = (await import('sweetalert2')).default;
 
-	const addItemMutation = useAddItemAutoCart();
+    if (!user) {
+      Swal.fire({ title: 'Inicia sesión para añadir al carrito', icon: 'warning', timer: 1400, showConfirmButton: false });
+      router.push('/client/auth/login');
+      return;
+    }
 
-	const [quantity, setQuantity] = useState(1);
-	const [color, setColor] = useState<string>('');
-	const [customSize, setCustomSize] = useState('');
+    // Validaciones según el modo
+    if (customizeAll) {
+      if (!customColor.trim()) {
+        Swal.fire({ title: 'Describe el color deseado', icon: 'warning' });
+        return;
+      }
+      if (!customMaterial.trim()) {
+        Swal.fire({ title: 'Describe el material deseado', icon: 'warning' });
+        return;
+      }
+    } else {
+      if (!color) {
+        Swal.fire({ title: 'Selecciona un color', icon: 'warning' });
+        return;
+      }
+    }
 
-	const addToCart = async () => {
-		const Swal = (await import('sweetalert2')).default;
+    // Construir el payload
+    const payload: any = { 
+      productId: product._id, 
+      quantity, 
+      size: customSize 
+    };
 
-		if (!user) {
-			Swal.fire({
-				title: 'Inicia sesión para añadir al carrito',
-				icon: 'warning',
-				showConfirmButton: false,
-				timer: 1500,
-			});
-			router.push('/client/auth/login');
-			return;
-		}
+    if (customizeAll) {
+      // Modo personalizado completo
+      payload.isCustom = true;
+      payload.customDetails = {
+        color: customColor,
+        material: customMaterial,
+        name: product.name
+      };
+      payload.color = 'Personalizado';
+    } else {
+      // Modo estándar
+      payload.color = color;
+    }
 
-		if (!product) return;
+    await addItemMutation.mutateAsync({
+      quotationId: cartData?._id,
+      payload,
+    });
 
-		try {
-			if (!color) {
-				Swal.fire({
-					title: 'Selecciona un color',
-					text: 'Debes elegir un color para el mueble',
-					icon: 'warning',
-				});
-				return;
-			}
+    Swal.fire({ 
+      title: customizeAll ? 'Personalización añadida' : 'Añadido al carrito', 
+      text: customizeAll ? 'Te contactaremos para confirmar detalles' : undefined,
+      icon: 'success', 
+      timer: 1500, 
+      showConfirmButton: false 
+    });
+    
+    router.push('/client/productos');
+  };
 
-			const payload = {
-				productId: product._id,
-				quantity,
-				color,
-				size: customSize,
-			};
+  if (isLoading) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #1e1e1c 0%, #252320 30%, #2a2724 60%, #1e1c1a 100%)' }}>
+      <p className="text-white/50 text-sm tracking-widest uppercase">Cargando producto…</p>
+    </div>
+  );
 
-			console.log(payload);
-			await addItemMutation.mutateAsync(payload);
+  if (!product) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #1e1e1c 0%, #252320 30%, #2a2724 60%, #1e1c1a 100%)' }}>
+      <p className="text-white/50 text-sm">Producto no encontrado</p>
+    </div>
+  );
 
-			Swal.fire({
-				title: 'Añadido al carrito',
-				text: 'El producto ha sido añadido correctamente',
-				icon: 'success',
-				confirmButtonColor: '#8B5A2B',
-			});
+  return (
+    <div
+      className="min-h-screen w-full relative flex flex-col"
+      style={{
+        background: `
+          radial-gradient(ellipse at 80% 10%, rgba(120, 100, 80, 0.16) 0%, transparent 50%),
+          radial-gradient(ellipse at 10% 70%, rgba(90, 75, 60, 0.13) 0%, transparent 50%),
+          linear-gradient(160deg, #1e1e1c 0%, #252320 30%, #2a2724 60%, #1e1c1a 100%)
+        `,
+      }}
+    >
+      {/* Grain */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.045]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundSize: '180px 180px',
+        }}
+      />
+      {/* Vignette */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%)' }} />
 
-			router.push('/client/productos');
-		} catch (err) {
-			console.log(err);
-			Swal.fire({
-				title: 'Error',
-				text: 'No se pudo agregar al carrito',
-				icon: 'error',
-			});
-		}
-	};
+      <div className="relative z-10 max-w-6xl mx-auto w-full px-6 pt-16 pb-16">
 
-	if (isLoading) return <p className='p-10'>Cargando producto...</p>;
-	if (!product) return <p className='p-10'>Producto no encontrado</p>;
+        {/* Back */}
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-sm text-white/45 hover:text-[#C8A882] transition-colors duration-200 mb-10 group"
+        >
+          <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform duration-200" />
+          Volver a las referencias
+        </button>
 
-	return (
-		<section className='bg-[#FFF9F4] min-h-screen py-10 px-6'>
-			<div className='max-w-5xl mx-auto bg-white p-10 rounded-2xl shadow-lg'>
-				<div className='grid grid-cols-1 md:grid-cols-2 gap-12'>
-					<div className='relative w-full h-80 rounded-xl overflow-hidden bg-gray-100 border flex items-center justify-center'>
-						{product.imageUrl && product.imageUrl.trim() !== '' ? (
-							<Image
-								src={product.imageUrl}
-								alt={product.name}
-								fill
-								className='object-contain'
-							/>
-						) : (
-							<Image
-								src='/def_prod.png'
-								alt='Imagen por defecto'
-								fill
-								className='object-contain'
-							/>
-						)}
-					</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
 
-					<div>
-						<h1 className='text-3xl font-bold text-gray-900'>{product.name}</h1>
-						<p className='text-gray-600 mt-2 leading-relaxed'>{product.description}</p>
+          {/* ── Imagen ── */}
+          <div className="space-y-4">
+            <div className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 shadow-[0_24px_64px_rgba(0,0,0,0.5)]">
+              <Image
+                src={product.imageUrl || '/def_prod.png'}
+                alt={product.name}
+                fill
+                className="object-cover"
+              />
+              {/* Overlay sutil */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
 
-						<hr className='my-6' />
+              {/* Badge */}
+              <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur border border-white/15 px-3.5 py-1.5 rounded-full">
+                <span className="text-[10px] uppercase tracking-[.12em] text-white/75 font-medium">Madera certificada</span>
+              </div>
+            </div>
+          </div>
 
-						<div className='space-y-4'>
-							<div>
-								<label className='font-medium mr-4'>Cantidad</label>
-								<input
-									type='number'
-									min='1'
-									value={quantity}
-									onChange={(e) => setQuantity(Number(e.target.value))}
-									className='input-style w-24'
-								/>
-							</div>
+          {/* ── Info ── */}
+          <div className="flex flex-col gap-7">
 
-							<div>
-								<label className='font-medium block mb-2'>Color</label>
+            {/* Encabezado */}
+            <div className="space-y-2">
+              <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">
+                Colección 2025
+              </span>
+              <h1 className="font-serif text-white leading-tight" style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)' }}>
+                {product.name}
+              </h1>
+            </div>
 
-								<select
-									value={color}
-									onChange={(e) => setColor(e.target.value)}
-									className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brown bg-white'>
-									<option value=''>Selecciona un color</option>
+            <p className="text-sm leading-relaxed text-white/55">
+              {product.description}
+            </p>
 
-									{AVAILABLE_COLORS.map((c) => (
-										<option
-											key={c.value}
-											value={c.value}>
-											{c.name}
-										</option>
-									))}
-								</select>
+            <div className="h-px bg-white/10" />
 
-								{/* Vista previa del color seleccionado */}
-								<div className='flex items-center gap-2 mt-3 h-10'>
-									{color && (
-										<>
-											<span
-												className='w-6 h-6 rounded-full border'
-												style={{
-													backgroundColor: AVAILABLE_COLORS.find(
-														(c) => c.value === color
-													)?.hex,
-												}}
-											/>
-											<span className='text-sm text-gray-700'>
-												{
-													AVAILABLE_COLORS.find((c) => c.value === color)
-														?.name
-												}
-											</span>
-										</>
-									)}
-								</div>
-							</div>
+            {/* Cantidad */}
+            <div className="space-y-3">
+              <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">Cantidad</span>
+              <div className="inline-flex items-center rounded-xl border border-white/15 bg-white/5 overflow-hidden">
+                <button
+                  onClick={() => changeQty(-1)}
+                  className="w-11 h-11 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <Minus size={14} />
+                </button>
+                <div className="w-12 text-center text-white font-medium text-sm">{quantity}</div>
+                <button
+                  onClick={() => changeQty(1)}
+                  className="w-11 h-11 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            </div>
 
-							<div>
-								<label className='font-medium'>Tamaño personalizado</label>
-								<input
-									type='text'
-									value={customSize}
-									onChange={(e) => setCustomSize(e.target.value)}
-									className='input-style w-full'
-									placeholder='Ej: 50x40'
-								/>
-							</div>
-							<button
-								onClick={addToCart}
-								className='w-full border border-brown  hover:bg-[#70461f] text-brown hover:text-white py-3 rounded-lg font-semibold transition cursor-pointer'>
-								Agregar al carrito
-							</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</section>
-	);
+            {/* Opción de personalización completa */}
+            <div className="space-y-4 p-5 rounded-xl border border-[#C8A882]/20 bg-[#C8A882]/5">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => setCustomizeAll(!customizeAll)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    customizeAll ? 'bg-[#C8A882]' : 'bg-white/20'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                      customizeAll ? 'translate-x-5' : ''
+                    }`}
+                  />
+                </button>
+                <div className="flex items-center gap-2">
+                  <Paintbrush size={16} className="text-[#C8A882]" />
+                  <span className="text-sm font-medium text-white">
+                    Personalizar color y material
+                  </span>
+                </div>
+              </label>
+              
+              <p className="text-xs text-white/40 pl-14">
+                Si no encuentras el color o el material que presentamos no se adecua a tus preferencias, actívalo y especifica tus preferencias.
+              </p>
+            </div>
+
+            {/* Selector de color o personalización */}
+            {customizeAll ? (
+              <div className="space-y-4">
+                {/* Color personalizado */}
+                <div className="space-y-2">
+                  <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">
+                    Color deseado *
+                  </span>
+                  <input
+                    value={customColor}
+                    onChange={(e) => setCustomColor(e.target.value)}
+                    placeholder="Ej: Verde esmeralda, Azul marino, Rojo vino..."
+                    className="w-full rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm
+                      px-4 py-3 text-sm text-white placeholder:text-white/30
+                      focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                      transition-all duration-200"
+                  />
+                </div>
+
+                {/* Material personalizado */}
+                <div className="space-y-2">
+                  <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">
+                    Material deseado *
+                  </span>
+                  <input
+                    value={customMaterial}
+                    onChange={(e) => setCustomMaterial(e.target.value)}
+                    placeholder="Ej: Roble macizo, Metal cepillado, Cuero genuino..."
+                    className="w-full rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm
+                      px-4 py-3 text-sm text-white placeholder:text-white/30
+                      focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                      transition-all duration-200"
+                  />
+                </div>
+              </div>
+            ) : (
+              /* Colores predefinidos */
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">Color</span>
+                  {color && (
+                    <span className="text-xs text-white/45">
+                      {AVAILABLE_COLORS.find(c => c.value === color)?.name}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {AVAILABLE_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => setColor(c.value)}
+                      title={c.name}
+                      className="relative w-9 h-9 rounded-full transition-transform duration-200 hover:scale-110"
+                      style={{ backgroundColor: c.hex }}
+                    >
+                      {/* Ring activo */}
+                      {color === c.value && (
+                        <span className="absolute inset-0 rounded-full ring-2 ring-[#C8A882] ring-offset-2 ring-offset-[#252320]" />
+                      )}
+                      {/* Ring hover */}
+                      {color !== c.value && (
+                        <span className="absolute inset-0 rounded-full ring-1 ring-white/20" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tamaño personalizado (siempre disponible) */}
+            <div className="space-y-2">
+              <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">
+                Tamaño personalizado <span className="normal-case text-white/30 text-[10px]">(opcional)</span>
+              </span>
+              <input
+                value={customSize}
+                onChange={(e) => setCustomSize(e.target.value)}
+                placeholder="Ej: 220 × 90 cm"
+                className="w-full rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm
+                  px-4 py-3 text-sm text-white placeholder:text-white/30
+                  focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                  transition-all duration-200"
+              />
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={addToCart}
+              className="w-full inline-flex items-center justify-center gap-2.5
+                bg-[#8B5E3C] hover:bg-[#6F452A]
+                text-white py-4 rounded-xl
+                text-sm font-medium
+                shadow-lg shadow-[#8B5E3C]/20
+                hover:shadow-[#8B5E3C]/30
+                transition-all duration-200
+                hover:gap-3"
+            >
+              <ShoppingCart size={16} />
+              {customizeAll ? 'Solicitar personalización' : 'Agregar al carrito'}
+            </button>
+
+            {/* Trust strip */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: <ShieldCheck size={15} />, label: 'Garantía 2 años' },
+                { icon: <Truck size={15} />,        label: 'Envío a domicilio' },
+                { icon: <Pencil size={15} />,       label: 'Personalizable' },
+              ].map(({ icon, label }) => (
+                <div
+                  key={label}
+                  className="flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-3.5 text-center"
+                >
+                  <span className="text-[#C8A882]">{icon}</span>
+                  <span className="text-[11px] text-white/50 leading-snug">{label}</span>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -25,3 +25,17 @@ export const useCreateVisit = () => {
 		},
 	});
 };
+
+export const useCreateVisitForMe = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async (visitData: any) => {
+			const { data } = await api.post('/api/visits/mine', visitData);
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['visits'] });
+		},
+	});
+};

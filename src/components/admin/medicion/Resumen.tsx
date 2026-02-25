@@ -1,113 +1,70 @@
 'use client';
-import React from 'react';
 
-function Resumen() {
-	// Datos para Usuarios Totales vs Registrados
-	const usuariosData = [
-		{
-			mes: 'Enero 2024',
-			total: 12847,
-			registrados: 8234,
-			porcentaje: '64.1%',
-		},
-		{
-			mes: 'Diciembre 2023',
-			total: 11234,
-			registrados: 6789,
-			porcentaje: '60.4%',
-		},
-		{
-			mes: 'Noviembre 2023',
-			total: 9876,
-			registrados: 5432,
-			porcentaje: '55.0%',
-		},
-	];
+import { CalendarDays, TrendingUp, DollarSign, ShoppingBag } from 'lucide-react';
 
-	// Datos para Métricas de Rendimiento
-	const rendimientoData = [
-		{
-			mes: 'Enero 2024',
-			pedidos: 156,
-			calificacion: 4.8,
-			conversion: '64.1%',
-		},
-		{
-			mes: 'Diciembre 2023',
-			pedidos: 134,
-			calificacion: 4.6,
-			conversion: '60.4%',
-		},
-		{
-			mes: 'Noviembre 2023',
-			pedidos: 128,
-			calificacion: 4.5,
-			conversion: '55.0%',
-		},
-	];
+export default function Resumen({ data }: { data: any }) {
+	if (!data) return null;
+
+	const maxRevenue = Math.max(...data.series.monthly.map((m: any) => m.revenue));
 
 	return (
-		<section className='grid grid-cols-2 gap-6 mt-6'>
-			{/* Usuarios Totales vs Registrados */}
-			<div className='border rounded-lg p-4 bg-white shadow'>
-				<h2 className='font-semibold text-lg'>Usuarios totales vs Registrados</h2>
-				<p className='text-sm text-gray-500 mb-4'>
-					Comparación mensual de usuarios totales y registrados
-				</p>
-
-				<div className='space-y-4'>
-					{usuariosData.map((item, idx) => (
-						<div key={idx}>
-							<p className='font-medium'>{item.mes}</p>
-							<div className='flex justify-between text-sm text-gray-600'>
-								<span>Total: {item.total.toLocaleString()}</span>
-								<span className='font-medium bg-gray-100 px-2 rounded'>
-									{item.porcentaje} registrados
-								</span>
-							</div>
-							<meter
-								min={0}
-								max={item.total}
-								value={item.registrados}
-								className='w-full h-2 mt-1 [&::-webkit-meter-bar]:bg-gray-200 [&::-webkit-meter-optimum-value]:bg-black rounded'></meter>
-							<p className='text-xs text-gray-500 mt-1'>
-								Registrados: {item.registrados.toLocaleString()}
-							</p>
-						</div>
-					))}
-				</div>
+		<section className="space-y-6">
+			<div>
+				<h2 className="text-lg font-medium text-white">Ventas Mensuales</h2>
+				<p className="text-sm text-white/40 mt-1">Resumen de ventas e ingresos mes a mes</p>
 			</div>
 
-			{/* Métricas de Rendimiento */}
-			<div className='border rounded-lg p-4 bg-white shadow'>
-				<h2 className='font-semibold text-lg'>Métricas de Rendimiento</h2>
-				<p className='text-sm text-gray-500 mb-4'>
-					Indicadores clave de desempeño mensual
-				</p>
-
-				<div className='space-y-4'>
-					{rendimientoData.map((item, idx) => (
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{data.series.monthly.map((m: any) => {
+					const pct = Math.round((m.revenue / maxRevenue) * 100);
+					return (
 						<div
-							key={idx}
-							className='flex items-center justify-between border rounded p-3'>
-							<div>
-								<p className='font-medium'>{item.mes}</p>
-								<p className='text-sm text-gray-500'>
-									{item.pedidos} pedidos completados
-								</p>
+							key={m.period}
+							className="rounded-xl border border-white/10 bg-white/5 p-5
+								hover:border-[#C8A882]/30 hover:bg-white/8
+								transition-all duration-200 group">
+							<div className="flex items-center justify-between mb-4">
+								<div className="flex items-center gap-2">
+									<CalendarDays size={14} className="text-[#C8A882]" />
+									<span className="text-sm font-medium text-white">{m.period}</span>
+								</div>
+								<div className="flex items-center gap-1 text-xs text-white/40">
+									<TrendingUp size={12} />
+									<span>{pct}% del máximo</span>
+								</div>
 							</div>
-							<div className='text-right'>
-								<p className='font-semibold'>⭐ {item.calificacion}</p>
-								<p className='text-xs text-gray-500'>
-									{item.conversion} conversión
-								</p>
+
+							<div className="grid grid-cols-2 gap-4 mb-4">
+								<div className="space-y-1">
+									<div className="flex items-center gap-1.5 text-xs text-white/40">
+										<ShoppingBag size={12} />
+										<span>Ventas</span>
+									</div>
+									<p className="text-lg font-bold text-white">{m.sales}</p>
+								</div>
+								<div className="space-y-1">
+									<div className="flex items-center gap-1.5 text-xs text-white/40">
+										<DollarSign size={12} />
+										<span>Ingresos</span>
+									</div>
+									<p className="text-lg font-bold text-[#C8A882]">
+										${m.revenue.toLocaleString()}
+									</p>
+								</div>
+							</div>
+
+							{/* Barra de progreso */}
+							<div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+								<div
+									className="h-full rounded-full bg-gradient-to-r from-[#C8A882] to-[#8B5E3C] 
+										group-hover:opacity-80 transition-all"
+									style={{ width: `${pct}%` }}
+								/>
 							</div>
 						</div>
-					))}
-				</div>
+					);
+				})}
 			</div>
 		</section>
 	);
 }
-
-export default Resumen;

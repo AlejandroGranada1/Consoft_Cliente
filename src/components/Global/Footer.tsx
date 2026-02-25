@@ -1,36 +1,69 @@
 import Link from "next/link";
+import { Instagram, Phone } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-sky-900 text-sky-50 mt-16">
-      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Marca */}
-        <div className="space-y-3">
-          <h2 className="text-xl font-semibold">ConSoft</h2>
-          <p className="text-sm text-sky-200 leading-relaxed">
-            Sistema de gestión desarrollado para Confort & Estilo, enfocado en la
-            automatización de ventas, inventario y clientes.
-          </p>
+    <footer className="relative bg-gradient-to-r from-[#0e0d0c] via-[#2a1f18] to-[#0e0d0c] text-white border-t border-white/10">
+
+      {/* Top accent line */}
+      <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+      <div className="max-w-7xl mx-auto px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+        {/* Branding */}
+        <span className="font-serif text-base font-medium text-white tracking-wide whitespace-nowrap">
+          Confort <span className="text-white/60">&</span> Estilo
+        </span>
+
+        {/* Nav links */}
+        <div className="flex items-center gap-5 flex-wrap justify-center">
+          {[
+            { label: 'Inicio', href: '/' },
+            { label: 'Referencias', href: '/client/productos' },
+            { label: 'Servicios', href: '/client/servicios' },
+            { label: 'Agendar visita', href: '/client/agendarcita' },
+          ].map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-sm text-white/70 hover:text-white transition-colors duration-200"
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
 
-        {/* Navegación */}
-        <div>
-          <h3 className="font-medium mb-3">Navegación</h3>
-          <ul className="space-y-2 text-sm text-sky-200">
-            <li><Link href="/" className="hover:text-white">Inicio</Link></li>
-            <li><Link href="/client/productos" className="hover:text-white">Productos</Link></li>
-            <li><Link href="/client/servicios" className="hover:text-white">Ventas</Link></li>
-            <li><Link href="/client/agendarvisita" className="hover:text-white">Agendar Visita</Link></li>
-          </ul>
+        {/* Contacto */}
+        <div className="flex items-center gap-4">
+          <a
+            href="https://wa.me/573054579487"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors duration-200"
+          >
+            <Phone size={13} />
+            +57 305 4579487
+          </a>
+          <a
+            href="https://instagram.com/conforstilo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors duration-200"
+          >
+            <Instagram size={13} />
+            @consoft
+          </a>
         </div>
 
       </div>
 
-
-      {/* Línea inferior */}
-      <div className="border-t border-sky-800 py-4 text-center text-xs text-sky-300">
-        © {new Date().getFullYear()} ConSoft. Todos los derechos reservados.
+      {/* Bottom */}
+      <div className="border-t border-white/10 py-2.5 px-8 text-center">
+        <p className="text-[11px] text-white/40">
+          © {new Date().getFullYear()} Confort & Estilo · Diseño · Restauración · Medellín
+        </p>
       </div>
+
     </footer>
   );
 }

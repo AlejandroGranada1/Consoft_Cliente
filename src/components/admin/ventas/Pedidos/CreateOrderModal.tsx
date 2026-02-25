@@ -1,23 +1,24 @@
 'use client';
-import { X, Plus, Minus } from 'lucide-react';
-import { DefaultModalProps, Order, Service, User } from '@/lib/types';
+import { X, Plus, Minus, User, MapPin, Calendar, Package, DollarSign, Save, Calculator, AlertCircle } from 'lucide-react';
+import { DefaultModalProps, Order, Service, User as UserType } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
 import { useGetUsers, useGetServices } from '@/hooks/apiHooks';
 import { useCreateOrder } from '@/hooks/apiHooks';
 
 function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Order>) {
-	// Usar hooks de React Query
 	const { data: usersData, isLoading: usersLoading } = useGetUsers();
 	const { data: servicesData, isLoading: servicesLoading } = useGetServices();
 	const createOrderMutation = useCreateOrder();
+	
+	// Estados para el abono (ahora opcional)
+	const [initialPayment, setInitialPayment] = useState(0);
+	const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer'>('cash');
 
-	console.log(servicesData)
 	const users = usersData?.users || [];
 	const services = servicesData?.data || [];
 
-	// Estado inicial corregido - solo guardar el ID del usuario
 	const [orderData, setOrderData] = useState<{
-		user: string; // Solo ID del usuario
+		user: string;
 		status: string;
 		address: string;
 		startedAt: string;
@@ -31,50 +32,58 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 		payments: any[];
 		total: number;
 	}>({
-		user: '', // Solo ID, no objeto completo
+		user: '',
 		status: 'En proceso',
 		address: '',
-		startedAt: new Date().toISOString().split('T')[0], // Fecha actual por defecto
+		startedAt: new Date().toISOString().split('T')[0],
 		items: [],
 		paymentStatus: 'Pendiente',
 		payments: [],
 		total: 0,
 	});
 
-	// Obtener el usuario seleccionado completo para mostrar información
-	const selectedUser = users.find((u: User) => u._id === orderData.user);
+	const selectedUser = users.find((u: UserType) => u._id === orderData.user);
+	
+	const total = orderData.items.reduce((sum, item) => sum + (item.valor || 0), 0);
+	const minimumRequired = total * 0.3;
+	
+	// Determinar el estado del pedido basado en el abono
+	const getOrderStatus = () => {
+		if (initialPayment >= minimumRequired) return 'En proceso';
+		if (initialPayment > 0) return 'Pendiente (abono parcial)';
+		return 'Pendiente';
+	};
 
-	// Cambiar inputs generales
+	const getPaymentStatus = () => {
+		if (initialPayment >= total) return 'Pagado';
+		if (initialPayment > 0) return 'Parcial';
+		return 'Pendiente';
+	};
+
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = e.target;
-		setOrderData((prev) => ({
-			...prev,
-			[name]: value,
-		}));
+		setOrderData((prev) => ({ ...prev, [name]: value }));
 	};
 
 	const handleUserChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const userId = e.target.value;
-		const selectedUser = users.find((u: User) => u._id === userId);
+		const selectedUser = users.find((u: UserType) => u._id === userId);
 
 		setOrderData((prev) => ({
 			...prev,
 			user: userId,
-			// Auto-completar dirección si el usuario tiene una
 			address: selectedUser?.address || prev.address,
 		}));
 	};
 
-	// Cambiar valores de los servicios
 	const handleItemChange = (
 		index: number,
 		field: 'id_servicio' | 'detalles' | 'valor',
-		value: string | number
+		value: string | number,
 	) => {
 		const newItems = [...orderData.items];
 
 		if (field === 'id_servicio') {
-			// Cuando se selecciona un servicio, auto-completar nombre y valor si está disponible
 			const selectedService = services.find((s: Service) => s._id === value);
 			if (selectedService) {
 				newItems[index] = {
@@ -82,7 +91,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 					id_servicio: selectedService._id,
 					detalles: selectedService.description || '',
 					valor: selectedService.price || 0,
-					service: selectedService, // Guardar el objeto completo para referencia
+					service: selectedService,
 				};
 			} else {
 				newItems[index] = { ...newItems[index], [field]: value as string };
@@ -93,29 +102,16 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 			newItems[index] = { ...newItems[index], [field]: value as string };
 		}
 
-		setOrderData((prev) => ({
-			...prev,
-			items: newItems,
-		}));
+		setOrderData((prev) => ({ ...prev, items: newItems }));
 	};
 
-	// Agregar fila
 	const addItem = () => {
 		setOrderData((prev) => ({
 			...prev,
-			items: [
-				...prev.items,
-				{
-					id_servicio: '',
-					detalles: '',
-					valor: 0,
-					service: undefined,
-				},
-			],
+			items: [...prev.items, { id_servicio: '', detalles: '', valor: 0, service: undefined }],
 		}));
 	};
 
-	// Eliminar fila
 	const removeItem = (index: number) => {
 		setOrderData((prev) => ({
 			...prev,
@@ -123,10 +119,6 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 		}));
 	};
 
-	// Calcular total
-	const total = orderData.items.reduce((sum, item) => sum + (item.valor || 0), 0);
-
-	// Actualizar total cuando cambian los items
 	useEffect(() => {
 		setOrderData((prev) => ({ ...prev, total }));
 	}, [total]);
@@ -136,26 +128,65 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 
 		// Validaciones básicas
 		if (!orderData.user) {
-			alert('Por favor selecciona un cliente');
+			const Swal = (await import('sweetalert2')).default;
+			Swal.fire({
+				title: 'Campo requerido',
+				text: 'Por favor selecciona un cliente',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 			return;
 		}
 
 		if (orderData.items.length === 0) {
-			alert('Por favor agrega al menos un servicio');
+			const Swal = (await import('sweetalert2')).default;
+			Swal.fire({
+				title: 'Campo requerido',
+				text: 'Por favor agrega al menos un servicio',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 			return;
 		}
 
-		// Verificar que todos los servicios tengan valor
 		const invalidItems = orderData.items.filter((item) => !item.valor || item.valor <= 0);
 		if (invalidItems.length > 0) {
-			alert('Todos los servicios deben tener un valor mayor a 0');
+			const Swal = (await import('sweetalert2')).default;
+			Swal.fire({
+				title: 'Valores inválidos',
+				text: 'Todos los servicios deben tener un valor mayor a 0',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 			return;
+		}
+
+		// Mostrar advertencia si no hay abono o es insuficiente
+		if (initialPayment < minimumRequired) {
+			const Swal = (await import('sweetalert2')).default;
+			const result = await Swal.fire({
+				title: '⚠️ Abono pendiente',
+				html: `El pedido <strong>no entrará en producción</strong> hasta que se realice el abono del 30% ($${minimumRequired.toLocaleString()}).<br/><br/>¿Deseas continuar?`,
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonText: 'Sí, crear pedido',
+				cancelButtonText: 'Cancelar',
+				confirmButtonColor: '#8B5E3C',
+				cancelButtonColor: '#6b7280',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
+			
+			if (!result.isConfirmed) return;
 		}
 
 		try {
-			// Preparar datos para enviar
+			// Crear el pedido
 			const orderToSend = {
-				user: orderData.user, // Solo el ID del usuario
+				user: orderData.user,
 				address: orderData.address,
 				startedAt: orderData.startedAt,
 				items: orderData.items.map((item) => ({
@@ -164,11 +195,29 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 					valor: item.valor,
 				})),
 				total: total,
-				status: orderData.status,
-				paymentStatus: orderData.paymentStatus,
+				status: getOrderStatus(),
+				paymentStatus: getPaymentStatus(),
+				initialPayment: initialPayment > 0 ? {
+					amount: initialPayment,
+					method: paymentMethod === 'cash' ? 'offline_cash' : 'offline_transfer',
+				} : null
 			};
 
 			await createOrderMutation.mutateAsync(orderToSend);
+
+			const Swal = (await import('sweetalert2')).default;
+			Swal.fire({
+				toast: true,
+				animation: false,
+				timerProgressBar: true,
+				showConfirmButton: false,
+				title: 'Pedido creado exitosamente',
+				icon: 'success',
+				position: 'top-right',
+				timer: 1500,
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 
 			// Resetear formulario
 			setOrderData({
@@ -181,69 +230,90 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 				payments: [],
 				total: 0,
 			});
+			setInitialPayment(0);
+			setPaymentMethod('cash');
 
-			// Cerrar modal y actualizar lista
 			onClose();
 			if (updateList) updateList();
 		} catch (error) {
 			console.error('Error al crear pedido:', error);
-			alert('Error al crear el pedido. Por favor intenta nuevamente.');
+			const Swal = (await import('sweetalert2')).default;
+			Swal.fire({
+				title: 'Error',
+				text: 'Error al crear el pedido. Por favor intenta nuevamente.',
+				icon: 'error',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		}
 	};
 
 	if (!isOpen) return null;
 
 	return (
-		<div className='modal-bg'>
-			<div className='modal-frame w-[800px] p-6'>
-				<header className='relative mb-4'>
+		<div
+			className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+			<div
+				className='w-full max-w-[900px] rounded-2xl border border-white/10
+        shadow-[0_8px_32px_rgba(0,0,0,0.3)]
+        flex flex-col max-h-[90vh]'
+				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
+				
+				{/* Header */}
+				<header className='relative px-6 py-5 border-b border-white/10'>
 					<button
 						onClick={onClose}
-						className='absolute top-0 left-0 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<X />
+						className='absolute right-4 top-1/2 -translate-y-1/2
+              p-2 rounded-lg text-white/40 hover:text-white/70
+              hover:bg-white/5 transition-all duration-200'>
+						<X size={18} />
 					</button>
-					<h1 className='text-xl font-semibold text-center'>Crear Nuevo Pedido</h1>
+					<h2 className='text-lg font-medium text-white text-center flex items-center justify-center gap-2'>
+						<Package size={18} className='text-[#C8A882]' />
+						Crear nuevo pedido
+					</h2>
 				</header>
 
-				<form
-					onSubmit={handleSubmit}
-					className='flex flex-col gap-4'>
+				<form onSubmit={handleSubmit} className='p-6 overflow-y-auto space-y-5'>
+					
 					{/* Cliente */}
-					<div className='flex flex-col'>
-						<label className='font-medium mb-1'>Cliente *</label>
+					<div className='space-y-2'>
+						<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+							Cliente *
+						</label>
 						<select
 							name='user'
-							className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown'
 							value={orderData.user}
 							onChange={handleUserChange}
+							className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                text-sm text-white placeholder:text-white/30
+                focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                transition-all duration-200 appearance-none'
 							required
 							disabled={usersLoading}>
-							<option value=''>Seleccione un cliente</option>
+							<option value='' className='bg-[#1e1e1c]'>Seleccione un cliente</option>
 							{usersLoading ? (
-								<option>Cargando clientes...</option>
+								<option value='' disabled className='bg-[#1e1e1c]'>Cargando clientes...</option>
 							) : (
-								users.map((user: User) => (
-									<option
-										key={user._id}
-										value={user._id}>
+								users.map((user: UserType) => (
+									<option key={user._id} value={user._id} className='bg-[#1e1e1c]'>
 										{user.name} - {user.email}
 									</option>
 								))
 							)}
 						</select>
 						{selectedUser && (
-							<div className='mt-2 p-2 bg-blue-50 rounded text-sm'>
-								<p>
-									<strong>Cliente:</strong> {selectedUser.name}
+							<div className='mt-2 p-3 rounded-xl bg-[#C8A882]/10 border border-[#C8A882]/20'>
+								<p className='text-xs text-white/70'>
+									<span className='text-[#C8A882]'>Cliente:</span> {selectedUser.name}
 								</p>
-								<p>
-									<strong>Teléfono:</strong>{' '}
-									{selectedUser.phone || 'No registrado'}
+								<p className='text-xs text-white/70 mt-1'>
+									<span className='text-[#C8A882]'>Teléfono:</span> {selectedUser.phone || 'No registrado'}
 								</p>
 								{selectedUser.address && (
-									<p>
-										<strong>Dirección registrada:</strong>{' '}
-										{selectedUser.address}
+									<p className='text-xs text-white/70 mt-1'>
+										<span className='text-[#C8A882]'>Dirección:</span> {selectedUser.address}
 									</p>
 								)}
 							</div>
@@ -251,218 +321,318 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 					</div>
 
 					{/* Dirección */}
-					<div className='flex flex-col'>
-						<label className='font-medium mb-1'>Dirección del servicio *</label>
+					<div className='space-y-2'>
+						<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+							Dirección del servicio *
+						</label>
 						<input
 							name='address'
 							type='text'
 							placeholder='Dirección donde se realizará el servicio'
 							value={orderData.address}
 							onChange={handleChange}
-							className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown'
+							className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                text-sm text-white placeholder:text-white/30
+                focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                transition-all duration-200'
 							required
 						/>
 						{selectedUser?.address && orderData.address !== selectedUser.address && (
-							<p className='text-xs text-gray-500 mt-1'>
+							<p className='text-xs text-yellow-400/70 mt-1'>
 								⚠️ La dirección difiere de la registrada por el cliente
 							</p>
 						)}
 					</div>
 
+					{/* Fecha y pago */}
 					<div className='grid grid-cols-2 gap-4'>
-						{/* Fecha */}
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1'>Fecha de inicio *</label>
+						<div className='space-y-2'>
+							<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+								Fecha de inicio *
+							</label>
 							<input
 								name='startedAt'
 								type='date'
 								value={orderData.startedAt}
 								onChange={handleChange}
-								className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown'
+								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                  text-sm text-white
+                  focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                  transition-all duration-200'
 								required
 							/>
 						</div>
 
-						{/* Estado del pago */}
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1'>Estado del pago</label>
+						<div className='space-y-2'>
+							<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+								Estado del pago
+							</label>
 							<select
 								name='paymentStatus'
 								value={orderData.paymentStatus}
 								onChange={handleChange}
-								className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown'>
-								<option value='Pendiente'>Pendiente</option>
-								<option value='Pagado'>Pagado</option>
-								<option value='Parcial'>Parcial</option>
+								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                  text-sm text-white
+                  focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                  transition-all duration-200 appearance-none'>
+								<option value='Pendiente' className='bg-[#1e1e1c]'>Pendiente</option>
+								<option value='Pagado' className='bg-[#1e1e1c]'>Pagado</option>
+								<option value='Parcial' className='bg-[#1e1e1c]'>Parcial</option>
 							</select>
 						</div>
 					</div>
 
-					{/* Tabla de servicios */}
-					<div className='mt-4'>
-						<div className='flex justify-between items-center mb-3'>
-							<h3 className='font-semibold text-lg'>Servicios *</h3>
+					{/* Servicios */}
+					<div className='space-y-4'>
+						<div className='flex items-center justify-between'>
+							<h3 className='text-sm font-medium text-white/70 flex items-center gap-2'>
+								<Package size={14} className='text-[#C8A882]' />
+								Servicios ({orderData.items.length})
+							</h3>
 							<button
 								type='button'
 								onClick={addItem}
-								className='flex items-center gap-2 px-4 py-2 border border-brown text-brown rounded-md hover:bg-brown hover:text-white transition-colors'>
-								<Plus size={18} />
+								className='inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                  border border-[#C8A882]/30 bg-[#C8A882]/10
+                  text-[#C8A882] text-xs font-medium
+                  hover:bg-[#C8A882]/20 hover:border-[#C8A882]/50
+                  transition-all duration-200'>
+								<Plus size={14} />
 								Agregar Servicio
 							</button>
 						</div>
 
-						<div className='h-[200px] overflow-y-auto border rounded-lg p-2'>
-							{orderData.items.length === 0 ? (
-								<div className='text-center py-8 text-gray-500'>
-									No hay servicios agregados. Agrega el primer servicio.
-								</div>
-							) : (
-								<div className='space-y-3'>
-									{orderData.items.map((item, idx) => {
-										const itemService = services.find(
-											(s: Service) => s._id === item.id_servicio
-										);
-
-										return (
-											<div
-												key={idx}
-												className='grid grid-cols-12 gap-3 p-3 bg-gray-50 rounded-lg items-center'>
+						{orderData.items.length === 0 ? (
+							<div className='text-center py-12 rounded-xl border border-white/10 bg-white/5'>
+								<Package size={32} className='mx-auto text-white/20 mb-2' />
+								<p className='text-white/40 text-sm'>No hay servicios agregados</p>
+							</div>
+						) : (
+							<div className='space-y-3 max-h-80 overflow-y-auto pr-2'>
+								{orderData.items.map((item, idx) => {
+									const itemService = services.find((s: Service) => s._id === item.id_servicio);
+									return (
+										<div key={idx} className='rounded-xl border border-white/10 bg-white/5 p-4'>
+											<div className='grid grid-cols-12 gap-3'>
+												{/* Servicio */}
 												<div className='col-span-4'>
-													<label className='text-xs text-gray-600 mb-1 block'>
-														Servicio
+													<label className='text-[10px] text-white/40 mb-1 block'>
+														Servicio *
 													</label>
 													<select
 														value={item.id_servicio}
-														onChange={(e) =>
-															handleItemChange(
-																idx,
-																'id_servicio',
-																e.target.value
-															)
-														}
-														className='w-full border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brown'
+														onChange={(e) => handleItemChange(idx, 'id_servicio', e.target.value)}
+														className='w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2
+                              text-xs text-white
+                              focus:outline-none focus:border-[#C8A882]/50
+                              transition-all duration-200'
 														required>
-														<option value=''>
-															Seleccione un servicio
-														</option>
+														<option value='' className='bg-[#1e1e1c]'>Seleccionar</option>
 														{servicesLoading ? (
-															<option>Cargando servicios...</option>
+															<option value='' disabled className='bg-[#1e1e1c]'>Cargando...</option>
 														) : (
 															services?.map((service: Service) => (
-																<option
-																	key={service._id}
-																	value={service._id}>
+																<option key={service._id} value={service._id} className='bg-[#1e1e1c]'>
 																	{service.name}
 																</option>
 															))
 														)}
 													</select>
 													{itemService && (
-														<p className='text-xs text-gray-500 mt-1'>
-															{itemService.description?.substring(
-																0,
-																50
-															)}
-															...
+														<p className='text-[10px] text-white/30 mt-1'>
+															{itemService.description?.substring(0, 40)}...
 														</p>
 													)}
 												</div>
 
+												{/* Valor */}
 												<div className='col-span-3'>
-													<label className='text-xs text-gray-600 mb-1 block'>
-														Valor ($)
+													<label className='text-[10px] text-white/40 mb-1 block'>
+														Valor ($) *
 													</label>
 													<input
 														type='number'
-														placeholder='Valor'
 														min='0'
 														step='1000'
 														value={item.valor || ''}
-														onChange={(e) =>
-															handleItemChange(
-																idx,
-																'valor',
-																e.target.value
-															)
-														}
-														className='w-full border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brown'
+														onChange={(e) => handleItemChange(idx, 'valor', e.target.value)}
+														className='w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2
+                              text-xs text-white
+                              focus:outline-none focus:border-[#C8A882]/50
+                              transition-all duration-200'
 														required
 													/>
-													{itemService?.price &&
-														item.valor !== itemService.price && (
-															<p className='text-xs text-yellow-600 mt-1'>
-																⚠️ Diferente del precio base ($
-																{itemService.price.toLocaleString()}
-																)
-															</p>
-														)}
+													{itemService?.price && item.valor !== itemService.price && (
+														<p className='text-[10px] text-yellow-400/70 mt-1'>
+															⚠️ Base: ${itemService.price.toLocaleString()}
+														</p>
+													)}
 												</div>
 
+												{/* Detalles */}
 												<div className='col-span-4'>
-													<label className='text-xs text-gray-600 mb-1 block'>
-														Detalles/Notas
+													<label className='text-[10px] text-white/40 mb-1 block'>
+														Detalles
 													</label>
 													<textarea
-														placeholder='Detalles específicos del servicio'
+														placeholder='Notas...'
 														value={item.detalles || ''}
-														onChange={(e) =>
-															handleItemChange(
-																idx,
-																'detalles',
-																e.target.value
-															)
-														}
-														className='w-full border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brown h-16 resize-none'
+														onChange={(e) => handleItemChange(idx, 'detalles', e.target.value)}
+														className='w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2
+                              text-xs text-white placeholder:text-white/30
+                              focus:outline-none focus:border-[#C8A882]/50
+                              transition-all duration-200 resize-none'
 														rows={2}
 													/>
 												</div>
 
-												<div className='col-span-1 flex justify-center'>
+												{/* Eliminar */}
+												<div className='col-span-1 flex justify-center items-end pb-2'>
 													<button
 														type='button'
 														onClick={() => removeItem(idx)}
-														className='p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors'
+														className='p-1.5 rounded-lg text-white/40 hover:text-red-400
+                              hover:bg-white/5 transition-all duration-200'
 														title='Eliminar servicio'>
-														<Minus size={18} />
+														<Minus size={16} />
 													</button>
 												</div>
 											</div>
-										);
-									})}
-								</div>
-							)}
-						</div>
+										</div>
+									);
+								})}
+							</div>
+						)}
 					</div>
 
 					{/* Total */}
-					<div className='mt-4 p-4 bg-gray-50 rounded-lg'>
+					<div className='p-4 rounded-xl border border-white/10 bg-white/5'>
 						<div className='flex justify-between items-center'>
 							<div>
-								<span className='font-semibold text-lg'>Total del pedido:</span>
-								<p className='text-sm text-gray-600'>
-									{orderData.items.length}{' '}
-									{orderData.items.length === 1 ? 'servicio' : 'servicios'}
+								<p className='text-sm font-medium text-white'>Total del pedido</p>
+								<p className='text-xs text-white/40 mt-1'>
+									{orderData.items.length} {orderData.items.length === 1 ? 'servicio' : 'servicios'}
 								</p>
 							</div>
 							<div className='text-right'>
-								<span className='text-2xl font-bold text-brown'>
-									${total.toLocaleString('es-CO')} COP
+								<span className='text-2xl font-bold text-[#C8A882]'>
+									${total.toLocaleString('es-CO')}
 								</span>
-								{orderData.paymentStatus !== 'Pendiente' && (
-									<p className='text-sm text-green-600'>
-										Estado pago: {orderData.paymentStatus}
-									</p>
-								)}
+								<p className='text-xs text-white/40'>COP</p>
 							</div>
+						</div>
+					</div>
+
+					{/* 🔥 SECCIÓN DE ABONO INICIAL (OPCIONAL) */}
+					<div className='mt-6 p-4 rounded-xl border border-[#C8A882]/20 bg-[#C8A882]/5'>
+						<div className='flex items-center justify-between mb-4'>
+							<h3 className='text-white font-medium flex items-center gap-2'>
+								<Calculator size={16} className='text-[#C8A882]' />
+								Abono inicial (opcional)
+							</h3>
+							{initialPayment < minimumRequired && initialPayment > 0 && (
+								<span className='text-xs px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'>
+									Abono parcial
+								</span>
+							)}
+						</div>
+
+						<div className='grid grid-cols-2 gap-4'>
+							{/* Monto del abono */}
+							<div>
+								<label className='text-white/40 text-xs mb-1 block'>
+									Monto a abonar
+								</label>
+								<div className='relative'>
+									<span className='absolute left-3 top-1/2 -translate-y-1/2 text-white/40'>
+										$
+									</span>
+									<input
+										type='number'
+										value={initialPayment}
+										onChange={(e) => setInitialPayment(Number(e.target.value))}
+										className='w-full bg-white/5 border border-white/15 rounded-xl pl-8 pr-4 py-3 text-white'
+										placeholder='0'
+									/>
+								</div>
+							</div>
+
+							{/* Método de pago */}
+							<div>
+								<label className='text-white/40 text-xs mb-1 block'>
+									Método de pago
+								</label>
+								<div className='grid grid-cols-2 gap-2'>
+									<button
+										type='button'
+										onClick={() => setPaymentMethod('cash')}
+										className={`p-3 rounded-lg border transition ${
+											paymentMethod === 'cash'
+												? 'border-[#C8A882] bg-[#C8A882]/10 text-white'
+												: 'border-white/10 bg-white/5 text-white/40'
+										}`}>
+										💵 Efectivo
+									</button>
+									<button
+										type='button'
+										onClick={() => setPaymentMethod('transfer')}
+										className={`p-3 rounded-lg border transition ${
+											paymentMethod === 'transfer'
+												? 'border-[#C8A882] bg-[#C8A882]/10 text-white'
+												: 'border-white/10 bg-white/5 text-white/40'
+										}`}>
+										🏦 Transferencia
+									</button>
+								</div>
+							</div>
+						</div>
+
+						{/* Barra de progreso del abono (solo si hay abono) */}
+						{initialPayment > 0 && (
+							<div className='mt-4'>
+								<div className='flex justify-between text-sm mb-2'>
+									<span className='text-white/60'>Progreso del abono</span>
+									<span className='text-[#C8A882] font-medium'>
+										{total > 0 ? ((initialPayment / total) * 100).toFixed(0) : 0}%
+									</span>
+								</div>
+								<div className='h-2 bg-white/10 rounded-full overflow-hidden'>
+									<div
+										className='h-full bg-gradient-to-r from-[#C8A882] to-[#8B5E3C] transition-all'
+										style={{
+											width: `${total > 0 ? Math.min((initialPayment / total) * 100, 100) : 0}%`,
+										}}
+									/>
+								</div>
+							</div>
+						)}
+
+						{/* Mensaje informativo */}
+						<div className='mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20'>
+							<p className='text-xs text-blue-400 flex items-start gap-2'>
+								<AlertCircle size={14} className='shrink-0 mt-0.5' />
+								<span>
+									<strong>Importante:</strong> El pedido no entrará en producción hasta que se complete el abono del <strong>30% (${minimumRequired.toLocaleString()})</strong>.
+									{initialPayment > 0 && initialPayment < minimumRequired && (
+										<span className='block mt-1 text-yellow-400'>
+											Faltan ${(minimumRequired - initialPayment).toLocaleString()} para iniciar producción.
+										</span>
+									)}
+								</span>
+							</p>
 						</div>
 					</div>
 
 					{/* Botones */}
-					<div className='flex justify-between mt-6 pt-4 border-t'>
+					<div className='flex justify-end gap-3 pt-4 border-t border-white/10'>
 						<button
 							type='button'
 							onClick={onClose}
-							className='px-6 py-2 border border-gray-400 rounded-md text-gray-600 hover:bg-gray-100 transition-colors'>
+							className='px-5 py-2.5 rounded-lg
+                border border-white/15 bg-white/5
+                text-white/70 text-sm
+                hover:bg-white/10 hover:text-white
+                transition-all duration-200'>
 							Cancelar
 						</button>
 						<button
@@ -472,14 +642,24 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 								orderData.items.length === 0 ||
 								!orderData.user
 							}
-							className={`px-6 py-2 border border-brown rounded-md transition-colors ${
-								createOrderMutation.isPending ||
-								orderData.items.length === 0 ||
-								!orderData.user
-									? 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-500'
-									: 'text-brown hover:bg-brown hover:text-white'
-							}`}>
-							{createOrderMutation.isPending ? 'Creando...' : 'Crear Pedido'}
+							className='px-5 py-2.5 rounded-lg
+                bg-[#8B5E3C] hover:bg-[#6F452A]
+                text-white text-sm font-medium
+                shadow-lg shadow-[#8B5E3C]/20
+                disabled:opacity-50 disabled:cursor-not-allowed
+                flex items-center gap-2
+                transition-all duration-200'>
+							{createOrderMutation.isPending ? (
+								<>
+									<span className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></span>
+									Creando...
+								</>
+							) : (
+								<>
+									<Save size={14} />
+									Crear Pedido
+								</>
+							)}
 						</button>
 					</div>
 				</form>

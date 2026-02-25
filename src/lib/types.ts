@@ -89,7 +89,12 @@ export interface Visit {
 	visitDate: Date; // ISO date string
 	address: string;
 	status: string;
-	services: Visit[]; // Array of Service IDs
+	isGuest?: boolean;
+	guestInfo?: {
+		email: string;
+		name: string;
+		phone: string;
+	};
 }
 
 export interface OrderItem {
@@ -112,7 +117,7 @@ export interface Attachment {
 
 export interface Order {
 	_id: string | undefined;
-	user:  User | string; // User ID
+	user: User | string; // User ID
 	status: string; // e.g. "In process", "Completed"
 	address: string;
 	startedAt: string;
@@ -123,16 +128,32 @@ export interface Order {
 	paymentStatus: string;
 }
 
+// lib/types.ts
+// lib/types.ts - Agregar o actualizar esta interfaz
+
 export interface PedidoUI {
   id: string;
   nombre: string;
-  estado: string;
+  estado: string; // 'Pendiente', 'Pendiente (abono parcial)', 'En proceso', 'Completado', 'Cancelado'
   valor: string;
+  restante: string;
   dias: string;
-  restante: number;
-  raw: Order;
+  requiereAbono: boolean;
+  porcentajeAbono?: number;
+  raw: {
+    _id: string;
+    total: number;
+    initialPaymentAmount: number;
+    payments: Array<{
+      amount: number;
+      status: string;
+      method: string;
+      paidAt: string;
+    }>;
+    status: string;
+    // ... otras propiedades que necesites
+  };
 }
-
 export type OrderWithPartialUser = Omit<Order, 'user'> & { user: string | Partial<User> };
 
 export interface Sale {
@@ -145,6 +166,7 @@ export interface Sale {
 		_id: string;
 		name: string;
 	};
+	payments: Payment[];
 }
 
 export interface PaymentDetails {
@@ -172,13 +194,20 @@ export interface PaymentSummary {
 
 export type CartItem = {
 	_id?: string;
-	productId: Product | string;
+	productId?: Product | string;
 	quantity: number;
 	color: string;
 	size: string;
 	notes?: string;
 	price?: number;
 	total?: number;
+	isCustom?: boolean;
+	customDetails?: {
+		name: string;
+		description: string;
+		woodType: string;
+		referenceImage: string | null; // Base64 de la imagen
+	};
 };
 
 export type QuotationsResponse = {
@@ -201,6 +230,13 @@ export type QuotationsResponse = {
 			color: string;
 			size: string;
 			adminNotes: string;
+			isCustom: boolean;
+			customDetails: {
+				name: string;
+				description: string;
+				referenceImage: string;
+				woodType: string;
+			};
 			_id: string;
 		}>;
 		createdAt: string;
@@ -211,9 +247,9 @@ export type QuotationsResponse = {
 	}[];
 };
 
-export type Quotation = QuotationsResponse["quotations"][number];
+export type Quotation = QuotationsResponse['quotations'][number];
 
-export type QuotationItem = QuotationsResponse['quotations'][number]['items'][number]
+export type QuotationItem = QuotationsResponse['quotations'][number]['items'][number];
 
 export interface ChatMessageSender {
 	_id: string;
@@ -229,12 +265,47 @@ export interface ChatMessage {
 	sentAt: string;
 }
 
-
 declare global {
-  interface Window {
-    google: any;
-  }
+	interface Window {
+		google: any;
+	}
 
-  const google: any;
+	const google: any;
 }
 
+// Dashboard
+export interface DashboardSummary {
+	totalRevenue: number;
+	totalSales: number;
+	totalUsers: number;
+}
+
+export interface DashboardSeriesItem {
+	period: string;
+	revenue: number;
+	sales: number;
+}
+
+export interface DashboardTopItem {
+	id: string;
+	name: string;
+	quantity: number;
+}
+
+export interface DashboardResponse {
+	ok: boolean;
+	range: {
+		from: string;
+		to: string;
+	};
+	summary: DashboardSummary;
+	series: {
+		monthly: DashboardSeriesItem[];
+		quarterly: DashboardSeriesItem[];
+		semiannual: DashboardSeriesItem[];
+	};
+	topItems: {
+		products: DashboardTopItem[];
+		services: DashboardTopItem[];
+	};
+}

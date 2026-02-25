@@ -2,304 +2,453 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Eye, EyeOff } from 'lucide-react';
-import { useGetProfile, useUpdateUser, useChangePassword } from '@/hooks/apiHooks';
+import { Eye, EyeOff, User, Lock, Camera, Check, X, Heart } from 'lucide-react';
+import { useGetProfile, useUpdateUser, useChangePassword, useGetUserById } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import { useRouter } from 'next/navigation';
+import ProductCard from '@/components/productos/ProductCard';
+
+function DarkInput({
+  value, onChange, placeholder, readOnly, type = 'text',
+}: {
+  value: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  readOnly?: boolean;
+  type?: string;
+}) {
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      readOnly={readOnly}
+      className={`w-full rounded-xl border px-4 py-3 text-sm text-white placeholder:text-white/30
+        focus:outline-none transition-all duration-200
+        ${readOnly
+          ? 'border-white/8 bg-white/3 text-white/30 cursor-not-allowed'
+          : 'border-white/15 bg-white/5 focus:border-[#C8A882]/50 focus:bg-white/8'
+        }`}
+    />
+  );
+}
+
+function PasswordField({
+  label, value, onChange, show, onToggle,
+}: {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  show: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={onChange}
+          placeholder="••••••••"
+          className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 pr-11
+            text-sm text-white placeholder:text-white/30
+            focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+            transition-all duration-200"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/70 transition-colors"
+        >
+          {show ? <EyeOff size={15} /> : <Eye size={15} />}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function ProfilePage() {
-	const router = useRouter();
-	const { user, loading } = useUser();
+  const router = useRouter();
+  const { user, loading } = useUser();
 
-	// Hooks
-	const { data, isLoading } = useGetProfile();
-	const updateUser = useUpdateUser();
-	const changePassword = useChangePassword();
-	const dbUser = data?.user;
+  const { data, isLoading } = useGetProfile();
+  const updateUser = useUpdateUser();
+  const changePassword = useChangePassword();
+  const dbUser = data?.user;
 
-	// Estados perfil
-	const [form, setForm] = useState({
-		name: '',
-		email: '',
-		document: '',
-		address: '',
-		phone: '',
-	});
+  // Obtener datos completos del usuario con favoritos
+  const { data: userData, refetch: refetchUser } = useGetUserById(user?.id ?? '');
+  const userWithFavorites = userData?.data;
 
-	const [profilePreview, setProfilePreview] = useState<string | null>(null);
-	const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [form, setForm] = useState({ name: '', email: '', document: '', address: '', phone: '' });
+  const [profilePreview, setProfilePreview] = useState<string | null>(null);
+  const [profileFile, setProfileFile] = useState<File | null>(null);
 
-	// Estados contraseña
-	const [passwordForm, setPasswordForm] = useState({
-		currentPassword: '',
-		newPassword: '',
-		confirmPassword: '',
-	});
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-	const [showCurrent, setShowCurrent] = useState(false);
-	const [showNew, setShowNew] = useState(false);
-	const [showConfirm, setShowConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile' o 'favorites'
 
-	// Redirección si no hay sesión
-	useEffect(() => {
-		if (loading) return;
+  useEffect(() => {
+    if (loading) return;
+    if (user === null) {
+      (async () => {
+        const Swal = (await import('sweetalert2')).default;
+        await Swal.fire({ icon: 'warning', title: 'Inicia sesión', text: 'Debes iniciar sesión para acceder a tu perfil' });
+        router.push('/client/auth/login');
+      })();
+    }
+  }, [user, router, loading]);
 
-		if (user === null) {
-			(async () => {
-				const Swal = (await import('sweetalert2')).default;
+  useEffect(() => {
+    if (dbUser) {
+      setForm({ name: dbUser.name ?? '', email: dbUser.email ?? '', document: dbUser.document ?? '', address: dbUser.address ?? '', phone: dbUser.phone ?? '' });
+      setProfilePreview(dbUser.profile_picture ?? null);
+    }
+  }, [dbUser]);
 
-				await Swal.fire({
-					icon: 'warning',
-					title: 'Inicia sesión',
-					text: 'Debes iniciar sesión para acceder a tu perfil',
-				});
+  if (isLoading || !dbUser) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #1e1e1c 0%, #252320 30%, #2a2724 60%, #1e1c1a 100%)' }}>
+      <p className="text-white/40 text-sm tracking-widest uppercase">Cargando...</p>
+    </div>
+  );
 
-				router.push('/client/auth/login');
-			})();
-		}
-	}, [user, router, loading]);
+  const handleUpdateProfile = async () => {
+    const Swal = (await import('sweetalert2')).default;
+    if (!form.name || !form.document || !form.address || !form.phone)
+      return Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Completa todos los campos' });
+    try {
+      const formData = new FormData();
+      formData.append('name', form.name);
+      formData.append('document', form.document);
+      formData.append('address', form.address);
+      formData.append('phone', form.phone);
+      if (profileFile) formData.append('profile_picture', profileFile);
+      await updateUser.mutateAsync({ _id: dbUser._id, formData });
+      Swal.fire({ icon: 'success', title: 'Perfil actualizado', timer: 1500, showConfirmButton: false });
+    } catch {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo actualizar el perfil' });
+    }
+  };
 
-	// Cargar datos
-	useEffect(() => {
-		if (dbUser) {
-			setForm({
-				name: dbUser.name ?? '',
-				email: dbUser.email ?? '',
-				document: dbUser.document ?? '',
-				address: dbUser.address ?? '',
-				phone: dbUser.phone ?? '',
-			});
-			setProfilePreview(dbUser.profile_picture ?? null);
-		}
-	}, [dbUser]);
+  const handleChangePassword = async () => {
+    const Swal = (await import('sweetalert2')).default;
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword)
+      return Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Completa todos los campos' });
+    if (passwordForm.newPassword !== passwordForm.confirmPassword)
+      return Swal.fire({ icon: 'error', title: 'Contraseñas no coinciden' });
+    if (passwordForm.currentPassword === passwordForm.newPassword)
+      return Swal.fire({ icon: 'error', title: 'Contraseña inválida', text: 'La nueva contraseña no puede ser igual a la actual' });
 
-	if (isLoading || !dbUser) {
-		return <p className="p-10 text-center">Cargando...</p>;
-	}
+    const hasUpper = /[A-Z]/.test(passwordForm.newPassword);
+    const hasNumber = /\d/.test(passwordForm.newPassword);
+    const hasSpecial = /[^A-Za-z0-9]/.test(passwordForm.newPassword);
+    const validLen = passwordForm.newPassword.length >= 8;
 
-	// Guardar perfil
-	const handleUpdateProfile = async () => {
-		const Swal = (await import('sweetalert2')).default;
+    if (!hasUpper || !hasNumber || !hasSpecial || !validLen)
+      return Swal.fire({ icon: 'error', title: 'Contraseña débil', html: '<ul class="text-left ml-4"><li>• Una letra mayúscula</li><li>• Un número</li><li>• Un carácter especial</li><li>• Mínimo 8 caracteres</li></ul>' });
 
-		if (!form.name || !form.document || !form.address || !form.phone) {
-			await Swal.fire({
-				icon: 'error',
-				title: 'Campos incompletos',
-				text: 'Completa todos los campos',
-			});
-			return;
-		}
+    try {
+      Swal.fire({ title: 'Actualizando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      await changePassword.mutateAsync({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword });
+      Swal.fire({ icon: 'success', title: 'Contraseña actualizada', timer: 1500, showConfirmButton: false });
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error: any) {
+      Swal.fire({ icon: 'error', title: 'Error', text: error.response?.data?.message || 'No se pudo cambiar la contraseña' });
+    }
+  };
 
-		try {
-			const formData = new FormData();
-			formData.append('name', form.name);
-			formData.append('document', form.document);
-			formData.append('address', form.address);
-			formData.append('phone', form.phone);
+  if (!user) return null;
 
-			if (profileFile) {
-				formData.append('profile_picture', profileFile);
-			}
+  const pwRules = [
+    { ok: passwordForm.newPassword.length >= 8, text: 'Mínimo 8 caracteres' },
+    { ok: /[A-Z]/.test(passwordForm.newPassword), text: 'Una mayúscula' },
+    { ok: /\d/.test(passwordForm.newPassword), text: 'Un número' },
+    { ok: /[^A-Za-z0-9]/.test(passwordForm.newPassword), text: 'Un carácter especial' },
+  ];
 
-			await updateUser.mutateAsync({
-				_id: dbUser._id,
-				formData,
-			});
+  return (
+    <div
+      className="min-h-screen w-full relative flex flex-col"
+      style={{
+        background: `
+          radial-gradient(ellipse at 75% 10%, rgba(120,100,80,0.16) 0%, transparent 50%),
+          radial-gradient(ellipse at 15% 65%, rgba(90,75,60,0.13) 0%, transparent 50%),
+          linear-gradient(160deg, #1e1e1c 0%, #252320 30%, #2a2724 60%, #1e1c1a 100%)
+        `,
+      }}
+    >
+      {/* Grain */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.045]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundSize: '180px 180px',
+        }}
+      />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%)' }} />
 
-			await Swal.fire({
-				icon: 'success',
-				title: 'Perfil actualizado',
-				text: 'Información guardada correctamente',
-			});
-		} catch {
-			await Swal.fire({
-				icon: 'error',
-				title: 'Error',
-				text: 'No se pudo actualizar el perfil',
-			});
-		}
-	};
+      <div className="relative z-10 max-w-4xl mx-auto w-full px-6 pt-24 pb-16 space-y-6">
 
-	// Cambiar contraseña
-	const handleChangePassword = async () => {
-		const Swal = (await import('sweetalert2')).default;
+        {/* Page title */}
+        <div>
+          <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">Cuenta</span>
+          <h1 className="font-serif text-white text-2xl mt-1">Mi perfil</h1>
+        </div>
 
-		if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
-			await Swal.fire({
-				icon: 'error',
-				title: 'Campos incompletos',
-				text: 'Completa todos los campos',
-			});
-			return;
-		}
+        {/* Tabs de navegación */}
+        <div className="flex gap-1 border-b border-white/10 pb-1">
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`px-5 py-2.5 text-sm font-medium transition-all relative rounded-t-lg ${
+              activeTab === 'profile'
+                ? 'text-[#C8A882] border-b-2 border-[#C8A882] -mb-[5px]'
+                : 'text-white/40 hover:text-white/60'
+            }`}
+          >
+            Información personal
+          </button>
+          <button
+            onClick={() => setActiveTab('favorites')}
+            className={`px-5 py-2.5 text-sm font-medium transition-all relative rounded-t-lg flex items-center gap-2 ${
+              activeTab === 'favorites'
+                ? 'text-[#C8A882] border-b-2 border-[#C8A882] -mb-[5px]'
+                : 'text-white/40 hover:text-white/60'
+            }`}
+          >
+            <Heart size={15} />
+            Mis favoritos
+            {userWithFavorites?.favorites?.length > 0 && (
+              <span className="ml-1 bg-[#C8A882] text-[#1e1e1c] text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
+                {userWithFavorites.favorites.length}
+              </span>
+            )}
+          </button>
+        </div>
 
-		if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-			await Swal.fire({
-				icon: 'error',
-				title: 'Contraseñas no coinciden',
-			});
-			return;
-		}
+        {/* Contenido según tab activo */}
+        {activeTab === 'profile' ? (
+          <>
+            {/* ── INFORMACIÓN PERSONAL ── */}
+            <div className="rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+              style={{ backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' }}
+            >
+              {/* Header */}
+              <div className="flex items-center gap-2.5 px-6 py-4 border-b border-white/8">
+                <User size={13} className="text-[#C8A882]" />
+                <h2 className="text-[11px] font-medium text-white/50 uppercase tracking-wider">
+                  Información personal
+                </h2>
+              </div>
 
-		if (passwordForm.currentPassword === passwordForm.newPassword) {
-			await Swal.fire({
-				icon: 'error',
-				title: 'Contraseña inválida',
-				text: 'La nueva contraseña no puede ser igual a la actual',
-			});
-			return;
-		}
+              <div className="grid md:grid-cols-3">
+                {/* Avatar */}
+                <div className="border-b md:border-b-0 md:border-r border-white/8 flex flex-col items-center justify-center p-8 gap-4">
+                  <div className="relative">
+                    <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-white/15 shadow-lg">
+                      <Image
+                        src={profilePreview || '/default-user.png'}
+                        alt="Perfil"
+                        width={112}
+                        height={112}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    <label className="absolute bottom-0 right-0 bg-[#8B5E3C] hover:bg-[#6F452A] text-white p-2 rounded-full cursor-pointer transition shadow-lg">
+                      <Camera size={13} />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) { setProfileFile(file); setProfilePreview(URL.createObjectURL(file)); }
+                        }}
+                      />
+                    </label>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-medium text-white text-sm">{form.name || 'Sin nombre'}</p>
+                    <p className="text-xs text-white/35 mt-0.5">{form.email}</p>
+                  </div>
+                </div>
 
-		const hasUpper = /[A-Z]/.test(passwordForm.newPassword);
-		const hasNumber = /\d/.test(passwordForm.newPassword);
-		const hasSpecial = /[^A-Za-z0-9]/.test(passwordForm.newPassword);
-		const validLength = passwordForm.newPassword.length >= 8;
+                {/* Campos */}
+                <div className="md:col-span-2 p-6 space-y-5">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {[
+                      { key: 'name', label: 'Nombre completo' },
+                      { key: 'document', label: 'Documento' },
+                      { key: 'address', label: 'Dirección' },
+                      { key: 'phone', label: 'Teléfono' },
+                    ].map((f) => (
+                      <div key={f.key} className="space-y-2">
+                        <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
+                          {f.label}
+                        </label>
+                        <DarkInput
+                          value={(form as any)[f.key]}
+                          onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                          placeholder={f.label}
+                        />
+                      </div>
+                    ))}
 
-		if (!hasUpper || !hasNumber || !hasSpecial || !validLength) {
-			await Swal.fire({
-				icon: 'error',
-				title: 'Contraseña débil',
-				html: `
-					<ul class="text-left ml-4">
-						<li>• Una letra mayúscula</li>
-						<li>• Un número</li>
-						<li>• Un carácter especial</li>
-						<li>• Mínimo 8 caracteres</li>
-					</ul>
-				`,
-			});
-			return;
-		}
+                    <div className="space-y-2">
+                      <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
+                        Correo electrónico
+                      </label>
+                      <DarkInput value={form.email} readOnly />
+                    </div>
+                  </div>
 
-		try {
-			Swal.fire({
-				title: 'Actualizando...',
-				allowOutsideClick: false,
-				didOpen: () => Swal.showLoading(),
-			});
+                  <div className="flex justify-end pt-1">
+                    <button
+                      onClick={handleUpdateProfile}
+                      disabled={updateUser.isPending}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl
+                        bg-[#8B5E3C] hover:bg-[#6F452A] text-white text-sm font-medium
+                        shadow-lg shadow-[#8B5E3C]/20 transition-all duration-200
+                        disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {updateUser.isPending ? 'Guardando...' : 'Guardar cambios'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-			await changePassword.mutateAsync({
-				currentPassword: passwordForm.currentPassword,
-				newPassword: passwordForm.newPassword,
-			});
+            {/* ── SEGURIDAD ── */}
+            <div className="rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+              style={{ backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' }}
+            >
+              <div className="flex items-center gap-2.5 px-6 py-4 border-b border-white/8">
+                <Lock size={13} className="text-[#C8A882]" />
+                <h2 className="text-[11px] font-medium text-white/50 uppercase tracking-wider">
+                  Seguridad
+                </h2>
+              </div>
 
-			await Swal.fire({
-				icon: 'success',
-				title: 'Contraseña actualizada',
-			});
+              <div className="p-6 space-y-5">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <PasswordField
+                    label="Contraseña actual"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                    show={showCurrent}
+                    onToggle={() => setShowCurrent(!showCurrent)}
+                  />
+                  <PasswordField
+                    label="Nueva contraseña"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    show={showNew}
+                    onToggle={() => setShowNew(!showNew)}
+                  />
+                  <PasswordField
+                    label="Confirmar contraseña"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                    show={showConfirm}
+                    onToggle={() => setShowConfirm(!showConfirm)}
+                  />
+                </div>
 
-			setPasswordForm({
-				currentPassword: '',
-				newPassword: '',
-				confirmPassword: '',
-			});
-		} catch (error: any) {
-			await Swal.fire({
-				icon: 'error',
-				title: 'Error',
-				text: error.response?.data?.message || 'No se pudo cambiar la contraseña',
-			});
-		}
-	};
+                {/* Reglas de contraseña */}
+                {passwordForm.newPassword.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {pwRules.map(({ ok, text }) => (
+                      <div key={text} className={`flex items-center gap-1.5 text-[11px] transition-colors ${ok ? 'text-emerald-400' : 'text-white/30'}`}>
+                        {ok ? <Check size={11} className="shrink-0" /> : <X size={11} className="shrink-0" />}
+                        {text}
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-	if (!user) return null;
+                {/* Match indicator */}
+                {passwordForm.confirmPassword.length > 0 && (
+                  <p className={`text-xs ${passwordForm.newPassword === passwordForm.confirmPassword ? 'text-emerald-400' : 'text-red-400/80'}`}>
+                    {passwordForm.newPassword === passwordForm.confirmPassword ? '✓ Las contraseñas coinciden' : '✗ Las contraseñas no coinciden'}
+                  </p>
+                )}
 
-	return (
-		<main className="min-h-screen bg-[#FAF4EF] py-10 px-6">
-			<div className="max-w-4xl mx-auto space-y-8">
+                <div className="flex justify-end pt-1">
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={changePassword.isPending}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl
+                      bg-white/8 hover:bg-white/12 border border-white/15 hover:border-white/25
+                      text-white text-sm font-medium
+                      transition-all duration-200
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Lock size={13} />
+                    {changePassword.isPending ? 'Actualizando...' : 'Actualizar contraseña'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* ── FAVORITOS ── */
+          <div className="rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+            style={{ backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' }}
+          >
+            <div className="flex items-center gap-2.5 px-6 py-4 border-b border-white/8">
+              <Heart size={13} className="text-[#C8A882]" />
+              <h2 className="text-[11px] font-medium text-white/50 uppercase tracking-wider">
+                Mis productos favoritos
+              </h2>
+            </div>
 
-				<h1 className="text-2xl font-semibold">Mi perfil</h1>
+            <div className="p-6">
+              {!userWithFavorites?.favorites || userWithFavorites.favorites.length === 0 ? (
+                <div className="text-center py-16 px-4">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/5 border border-white/10 mb-5">
+                    <Heart size={30} className="text-white/20" />
+                  </div>
+                  <h3 className="text-lg font-medium text-white/80 mb-2">No tienes favoritos</h3>
+                  <p className="text-sm text-white/30 mb-6 max-w-sm mx-auto">
+                    Explora nuestros productos y guarda tus favoritos para verlos aquí
+                  </p>
+                  <button
+                    onClick={() => router.push('/productos')}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
+                      bg-[#8B5E3C] hover:bg-[#6F452A] text-white text-sm font-medium
+                      shadow-lg shadow-[#8B5E3C]/20 transition-all duration-200"
+                  >
+                    Ver productos
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-white/40 mb-5">
+                    Tienes {userWithFavorites.favorites.length} producto{userWithFavorites.favorites.length !== 1 ? 's' : ''} guardado{userWithFavorites.favorites.length !== 1 ? 's' : ''} como favorito{userWithFavorites.favorites.length !== 1 ? 's' : ''}
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {userWithFavorites.favorites.map((product: any) => (
+                      <ProductCard
+                        key={product._id}
+                        id={product._id}
+                        name={product.name}
+                        image={product.imageUrl || product.images?.[0] || '/default-product.jpg'}
+                        refetch={refetchUser}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
-				{/* PERFIL */}
-				<div className="grid md:grid-cols-3 gap-6">
-					<div className="bg-white border rounded-xl p-6 flex flex-col items-center">
-						<Image
-							src={profilePreview || '/default-user.png'}
-							alt="Perfil"
-							width={140}
-							height={140}
-							className="rounded-full border object-cover"
-						/>
-
-						<label className="mt-4 cursor-pointer text-sm px-4 py-2 rounded-full bg-[#F3E8D5]">
-							Cambiar foto
-							<input
-								type="file"
-								accept="image/*"
-								className="hidden"
-								onChange={(e) => {
-									const file = e.target.files?.[0];
-									if (file) {
-										setProfileFile(file);
-										setProfilePreview(URL.createObjectURL(file));
-									}
-								}}
-							/>
-						</label>
-					</div>
-
-					<div className="md:col-span-2 bg-white border rounded-xl p-6 space-y-4">
-						<h2 className="font-semibold">Información personal</h2>
-
-						<div className="grid md:grid-cols-2 gap-4">
-							{[
-								{ key: 'name', ph: 'Nombre' },
-								{ key: 'document', ph: 'Documento' },
-								{ key: 'address', ph: 'Dirección' },
-								{ key: 'phone', ph: 'Teléfono' },
-							].map((f) => (
-								<input
-									key={f.key}
-									value={(form as any)[f.key]}
-									onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-									placeholder={f.ph}
-									className="px-4 py-2 border rounded-lg"
-								/>
-							))}
-							<input value={form.email} readOnly className="px-4 py-2 border rounded-lg bg-gray-100" />
-						</div>
-
-						<div className="flex justify-end pt-4">
-							<button onClick={handleUpdateProfile} className="px-6 py-2 rounded-full bg-[#8B5E3C] text-white">
-								Guardar cambios
-							</button>
-						</div>
-					</div>
-				</div>
-
-				{/* CONTRASEÑA */}
-				<div className="bg-white border rounded-xl p-6 space-y-4">
-					<h2 className="font-semibold">Seguridad</h2>
-
-					<div className="grid md:grid-cols-3 gap-4">
-						{[
-							{ key: 'currentPassword', label: 'Contraseña actual', show: showCurrent, setShow: setShowCurrent },
-							{ key: 'newPassword', label: 'Nueva contraseña', show: showNew, setShow: setShowNew },
-							{ key: 'confirmPassword', label: 'Confirmar contraseña', show: showConfirm, setShow: setShowConfirm },
-						].map((f) => (
-							<div key={f.key} className="relative">
-								<input
-									type={f.show ? 'text' : 'password'}
-									placeholder={f.label}
-									value={(passwordForm as any)[f.key]}
-									onChange={(e) => setPasswordForm({ ...passwordForm, [f.key]: e.target.value })}
-									className="w-full px-4 py-2 pr-10 border rounded-lg"
-								/>
-								<button type="button" onClick={() => f.setShow(!f.show)} className="absolute right-3 top-1/2 -translate-y-1/2">
-									{f.show ? <EyeOff size={18} /> : <Eye size={18} />}
-								</button>
-							</div>
-						))}
-					</div>
-
-					<div className="flex justify-end pt-4">
-						<button onClick={handleChangePassword} className="px-6 py-2 rounded-full bg-[#1E293B] text-white">
-							Actualizar contraseña
-						</button>
-					</div>
-				</div>
-
-			</div>
-		</main>
-	);
+      </div>
+    </div>
+  );
 }
