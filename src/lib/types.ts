@@ -87,6 +87,7 @@ export interface Visit {
 	_id: string | undefined;
 	user: User; // User ID
 	visitDate: Date; // ISO date string
+	visitTime: string
 	address: string;
 	status: string;
 	isGuest?: boolean;

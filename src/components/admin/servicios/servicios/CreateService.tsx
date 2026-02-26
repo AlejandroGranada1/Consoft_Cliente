@@ -4,6 +4,7 @@ import { DefaultModalProps, Service } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { useAddService } from '@/hooks/apiHooks';
+import { createPortal } from 'react-dom';
 
 const initialState: Service = { _id: undefined, name: '', description: '', imageUrl: '', status: true };
 
@@ -86,8 +87,9 @@ function CreateServiceModal({ isOpen, onClose }: DefaultModalProps<Service>) {
 
 	if (!isOpen) return null;
 
-	return (
-		<div className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
+	return createPortal(
+		<div
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
 			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
 			
 			<div className="w-full max-w-3xl rounded-2xl border border-white/10
@@ -298,7 +300,8 @@ function CreateServiceModal({ isOpen, onClose }: DefaultModalProps<Service>) {
 					</button>
 				</div>
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 }
 

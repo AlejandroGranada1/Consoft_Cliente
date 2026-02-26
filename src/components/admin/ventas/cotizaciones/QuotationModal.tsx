@@ -21,6 +21,7 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { formatCOP } from '@/lib/formatCOP';
+import { createPortal } from 'react-dom';
 
 function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps) {
 	const setQuote = useSetQuote();
@@ -140,8 +141,9 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 	if (!isOpen || !extraProps) return null;
 
 	/* -------------------- UI -------------------- */
-	return (
-		<div className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
+	return createPortal(
+		<div
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
 			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
 			
 			<div className="w-full max-w-[1000px] rounded-2xl border border-white/10
@@ -437,7 +439,8 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 					</div>
 				</div>
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 }
 

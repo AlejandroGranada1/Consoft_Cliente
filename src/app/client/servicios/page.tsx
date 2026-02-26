@@ -221,7 +221,7 @@ export default function ServiciosPage() {
                 ))}
               </ul>
 
-              <Link href="/agendarcita">
+              <Link href="agendarcita">
                 <button className="inline-flex items-center gap-2 bg-[#8B5E3C] hover:bg-[#6F452A] text-white px-7 py-3 rounded-full text-sm font-medium shadow-lg hover:gap-3 transition-all duration-200 w-fit">
                   Agenda tu Cita <ArrowRight size={15} />
                 </button>

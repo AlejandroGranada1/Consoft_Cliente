@@ -5,6 +5,7 @@ import { DefaultModalProps, GroupPermission, Permission, Role } from '@/lib/type
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { useGetPermissions, useUpdateRole } from '@/hooks/apiHooks';
+import { createPortal } from 'react-dom';
 
 function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Role>) {
 	const [roleData, setRoleData] = useState<Role | null>(null);
@@ -170,9 +171,9 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 		});
 	};
 
-	return (
+	return createPortal(
 		<div
-			className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
 			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
 			<div
 				className='w-full max-w-[720px] rounded-2xl border border-white/10
@@ -484,7 +485,8 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 					</div>
 				</form>
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 }
 

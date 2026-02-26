@@ -1,5 +1,5 @@
 'use client';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, Menu, User } from 'lucide-react';
 import Sidebar from '@/components/admin/global/Sidebar';
 import api from '@/components/Global/axios';
 import { useState, useEffect } from 'react';
@@ -17,10 +17,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 		}
 	}, [user, loading]);
 
-	if (loading) return null; // o un spinner
-
-	if (!user) return null;
-
 	useEffect(() => {
 		const handleScroll = () => {
 			setScrolled(window.scrollY > 10);
@@ -28,6 +24,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 		window.addEventListener('scroll', handleScroll);
 		return () => window.removeEventListener('scroll', handleScroll);
 	}, []);
+
+	if (loading) return null; // o un spinner
+
+	if (!user) return null;
 
 	const handleLogout = async () => {
 		const Swal = (await import('sweetalert2')).default;
@@ -84,13 +84,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 			<div className='flex-1 flex flex-col overflow-hidden relative z-10'>
 				{/* TopBar - sticky */}
 				<header
-					className={`sticky top-0 z-20 flex items-center justify-between gap-10 px-6 py-4 transition-all duration-300
-          ${
-				scrolled
-					? 'bg-[#1e1e1c]/80 backdrop-blur-xl border-b border-white/10'
-					: 'bg-transparent border-b border-white/5'
-			}`}>
-					<div className='flex items-center gap-3'>
+					className={`sticky top-0 z-20 flex items-center justify-between px-4 py-3 transition-all duration-300
+    ${scrolled ? 'bg-[#1e1e1c]/80 backdrop-blur-xl border-b border-white/10' : 'bg-transparent border-b border-white/5'}`}>
+					{/* Botón hamburguesa - solo móvil */}
+					<button className='md:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-white/60'>
+						<Menu size={18} />
+					</button>
+
+					{/* Título - solo desktop */}
+					<div className='hidden md:flex items-center gap-3'>
 						<div className='w-8 h-8 rounded-full bg-gradient-to-br from-[#C8A882]/20 to-[#8B5E3C]/20 flex items-center justify-center'>
 							<User
 								size={16}
@@ -100,24 +102,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 						<span className='text-sm text-white/60'>Panel Administrativo</span>
 					</div>
 
-					<div className='flex items-center gap-4'>
+					<div className='flex items-center gap-3'>
 						<div
-							className='px-4 py-1.5 rounded-xl
-              bg-white/5 border border-white/10
-              text-xs text-[#C8A882] font-medium
-              flex items-center gap-2'>
+							className='px-3 py-1.5 rounded-xl bg-white/5 border border-white/10
+            text-xs text-[#C8A882] font-medium flex items-center gap-2'>
 							<span className='w-1.5 h-1.5 rounded-full bg-[#C8A882] animate-pulse'></span>
-							Administrador
+							<span className='hidden sm:inline'>Administrador</span>
 						</div>
-
 						<button
 							onClick={handleLogout}
-							className='p-2.5 rounded-xl
-                bg-white/5 border border-white/10
-                text-white/40 hover:text-[#C8A882]
-                hover:bg-white/8 hover:border-[#C8A882]/30
-                transition-all duration-200 group'
-							title='Cerrar sesión'>
+							className='p-2.5 rounded-xl bg-white/5 border border-white/10
+            text-white/40 hover:text-[#C8A882] transition-all duration-200 group'>
 							<LogOut
 								size={18}
 								className='group-hover:scale-110 transition-transform'

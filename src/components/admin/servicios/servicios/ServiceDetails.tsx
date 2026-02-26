@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import EditServiceModal from './EditService';
 import { useDeleteService } from '@/hooks/apiHooks';
 import Swal from 'sweetalert2';
+import { createPortal } from 'react-dom';
 
 function ServiceDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<Service>) {
 	const [editModal, setEditModal] = useState(false);
@@ -54,10 +55,11 @@ function ServiceDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 		}
 	};
 
-	return (
+	return createPortal(
 		<>
-			<div className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
-				style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+		<div
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
 				
 				<div className="w-full max-w-3xl rounded-2xl border border-white/10
 					shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
@@ -238,7 +240,8 @@ function ServiceDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 				onClose={() => setEditModal(false)}
 				extraProps={extraProps}
 			/>
-		</>
+		</>,
+		document.body
 	);
 }
 
