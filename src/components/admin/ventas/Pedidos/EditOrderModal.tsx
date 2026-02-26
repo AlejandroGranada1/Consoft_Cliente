@@ -15,6 +15,7 @@ import { DefaultModalProps, Order, Service, User as UserType } from '@/lib/types
 import React, { useEffect, useState } from 'react';
 import { useGetServices, useGetUsers, useUpdateOrder } from '@/hooks/apiHooks';
 import api from '@/components/Global/axios';
+import { createPortal } from 'react-dom';
 
 interface EditOrderData {
   _id: string;
@@ -205,9 +206,10 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed  top-18 left-72 inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+  return createPortal(
+		<div
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
       
       <div className="w-full max-w-[1000px] rounded-2xl border border-white/10
         shadow-[0_8px_32px_rgba(0,0,0,0.3)]
@@ -616,7 +618,8 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

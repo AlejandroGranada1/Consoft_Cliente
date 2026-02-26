@@ -18,6 +18,7 @@ import api from '@/components/Global/axios';
 import React, { useState } from 'react';
 import { updateElement } from '../../global/alerts';
 import { formatDateForInput } from '@/lib/formatDate';
+import { createPortal } from 'react-dom';
 
 function PaymentDetailsModal({
 	isOpen,
@@ -125,9 +126,9 @@ function PaymentDetailsModal({
 		});
 	};
 
-	return (
+	return createPortal(
 		<div
-			className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
 			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
 			<div
 				className='w-full max-w-[800px] rounded-2xl border border-white/10
@@ -161,7 +162,7 @@ function PaymentDetailsModal({
 							<div
 								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
 								text-sm text-white/90 font-mono'>
-								{payment?._id}
+								{payment?._id.slice(-6)}
 							</div>
 						</div>
 
@@ -172,7 +173,7 @@ function PaymentDetailsModal({
 							<div
 								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
 								text-sm text-white/90 font-mono'>
-								{order?._id}
+								{order?._id.slice(-6)}
 							</div>
 						</div>
 					</div>
@@ -360,7 +361,8 @@ function PaymentDetailsModal({
 					</div>
 				</div>
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 }
 

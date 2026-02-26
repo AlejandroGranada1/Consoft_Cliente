@@ -4,6 +4,7 @@ import { DefaultModalProps, Order, Service, User as UserType } from '@/lib/types
 import React, { useEffect, useState } from 'react';
 import { useGetUsers, useGetServices } from '@/hooks/apiHooks';
 import { useCreateOrder } from '@/hooks/apiHooks';
+import { createPortal } from 'react-dom';
 
 function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Order>) {
 	const { data: usersData, isLoading: usersLoading } = useGetUsers();
@@ -250,9 +251,9 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 
 	if (!isOpen) return null;
 
-	return (
+	return createPortal(
 		<div
-			className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
 			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
 			<div
 				className='w-full max-w-[900px] rounded-2xl border border-white/10
@@ -664,7 +665,8 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 					</div>
 				</form>
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 }
 

@@ -3,6 +3,7 @@ import { DefaultModalProps, Role } from '@/lib/types';
 import React, { useState } from 'react';
 import EditUserModal from './EditUserModal';
 import { deleteElement } from '../global/alerts';
+import { createPortal } from 'react-dom';
 
 function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<any>) {
   const [editModal, setEditModal] = useState(false);
@@ -31,11 +32,11 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 
   if (!isOpen || !extraProps) return null;
 
-  return (
+  return createPortal(
     <>
-      <div className="fixed  top-18 left-72 inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-        
+		<div
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
         <div className="w-full max-w-[600px] rounded-2xl border border-white/10
           shadow-[0_8px_32px_rgba(0,0,0,0.3)]
           flex flex-col max-h-[90vh]"
@@ -211,7 +212,8 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
         extraProps={extraProps}
         updateList={updateList}
       />
-    </>
+    </>,
+    document.body 
   );
 }
 

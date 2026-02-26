@@ -3,16 +3,18 @@ import { X, Tag, FileText, Package, Edit, Layers } from 'lucide-react';
 import { DefaultModalProps, Category } from '@/lib/types';
 import React, { useState } from 'react';
 import EditCategoryModal from './EditCategoryModal';
+import { createPortal } from 'react-dom';
 
 function CategoryDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Category>) {
 	const [editModal, setEditModal] = useState(false);
 
 	if (!isOpen || !extraProps) return null;
 
-	return (
+	return createPortal(
 		<>
-			<div className='fixed top-18 left-72 inset-0 z-50 flex items-center justify-center p-4'
-				style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+		<div
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
 				
 				<div className="w-full max-w-[600px] rounded-2xl border border-white/10
 					shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
@@ -151,7 +153,8 @@ function CategoryDetailsModal({ isOpen, onClose, extraProps, updateList }: Defau
 				extraProps={extraProps}
 				updateList={updateList}
 			/>
-		</>
+		</>,
+		document.body
 	);
 }
 

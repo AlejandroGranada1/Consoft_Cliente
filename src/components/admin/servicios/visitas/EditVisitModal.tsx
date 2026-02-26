@@ -2,7 +2,7 @@
 import { X } from 'lucide-react';
 import { DefaultModalProps, Visit } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
-
+import { createPortal } from 'react-dom';
 
 function EditVisitModal({ isOpen, onClose, extraProps }: DefaultModalProps<Visit>) {
 	const [visitData, setVisitData] = useState<Visit>({
@@ -55,9 +55,14 @@ function EditVisitModal({ isOpen, onClose, extraProps }: DefaultModalProps<Visit
 
 	if (!isOpen) return null;
 
-	return (
-		<div className='modal-bg'>
-			<div className='modal-frame w-[800px]'>
+	return createPortal(
+		<div
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+			<div
+				className='w-full max-w-3xl rounded-2xl border border-white/10
+				shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]'
+				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
 				<header className='w-fit mx-auto'>
 					<button
 						onClick={onClose}
@@ -127,8 +132,8 @@ function EditVisitModal({ isOpen, onClose, extraProps }: DefaultModalProps<Visit
 								extraProps?.status == 'Terminada'
 									? 'bg-green/30 text-green'
 									: extraProps?.status == 'Cancelada'
-									? 'bg-red/30 text-red'
-									: 'bg-orange/30 text-orange'
+										? 'bg-red/30 text-red'
+										: 'bg-orange/30 text-orange'
 							} px-2 py-1 rounded-xl`}>
 							{extraProps?.status}
 						</p>
@@ -148,7 +153,8 @@ function EditVisitModal({ isOpen, onClose, extraProps }: DefaultModalProps<Visit
 					</button>
 				</div>
 			</div>
-		</div>
+		</div>,
+		document.body,
 	);
 }
 
