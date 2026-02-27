@@ -24,10 +24,10 @@ export default function ProductRow({ product, onView, onEdit, onDelete }: Produc
 			<div className='hidden md:grid grid-cols-5 place-items-center py-3 px-4
 				rounded-xl border border-white/10 bg-white/5
 				hover:bg-white/8 transition-all duration-200'>
-				
+
 				{/* Producto con imagen pequeña */}
-				<div className="flex items-center gap-3">
-					<div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10">
+				<div className="flex items-center gap-3 min-w-0 w-full">
+					<div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shrink-0">
 						<Image
 							src={imageUrl}
 							alt={product.name}
@@ -36,18 +36,22 @@ export default function ProductRow({ product, onView, onEdit, onDelete }: Produc
 							className="object-cover w-full h-full"
 						/>
 					</div>
-					<p className="text-sm text-white/90 font-medium">{product.name}</p>
+					<p className="text-sm text-white/90 font-medium truncate">{product.name}</p>
 				</div>
 
 				{/* Categoría */}
-				<p className="text-sm text-white/60">
-					{category?.name || 'Sin categoría'}
-				</p>
+				<div className='min-w-0 w-full text-center'>
+					<p className="text-sm text-white/60 truncate" title={category?.name || ''}>
+						{category?.name || 'Sin categoría'}
+					</p>
+				</div>
 
 				{/* Descripción */}
-				<p className="text-sm text-white/60 max-w-[200px] truncate">
-					{product.description || 'Sin descripción'}
-				</p>
+				<div className='min-w-0 w-full text-center'>
+					<p className="text-sm text-white/60 truncate" title={product.description || ''}>
+						{product.description || 'Sin descripción'}
+					</p>
+				</div>
 
 				{/* Estado */}
 				<div className="flex items-center gap-1.5">
@@ -56,11 +60,10 @@ export default function ProductRow({ product, onView, onEdit, onDelete }: Produc
 					) : (
 						<XCircle size={14} className="text-red-400" />
 					)}
-					<span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-						product.status 
-							? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+					<span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${product.status
+							? 'bg-green-500/10 text-green-400 border border-green-500/20'
 							: 'bg-red-500/10 text-red-400 border border-red-500/20'
-					}`}>
+						}`}>
 						{product.status ? 'Activo' : 'Inactivo'}
 					</span>
 				</div>
@@ -116,11 +119,10 @@ export default function ProductRow({ product, onView, onEdit, onDelete }: Produc
 						) : (
 							<XCircle size={14} className="text-red-400" />
 						)}
-						<span className={`text-[10px] px-2 py-0.5 rounded-full ${
-							product.status 
-								? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+						<span className={`text-[10px] px-2 py-0.5 rounded-full ${product.status
+								? 'bg-green-500/10 text-green-400 border border-green-500/20'
 								: 'bg-red-500/10 text-red-400 border border-red-500/20'
-						}`}>
+							}`}>
 							{product.status ? 'Activo' : 'Inactivo'}
 						</span>
 					</div>
