@@ -41,6 +41,21 @@ function Page() {
 	const handleDeleteUser = async (id: string) => {
 		const Swal = (await import('sweetalert2')).default;
 		try {
+			// Validar si el usuario tiene rol Master
+			const userToDelete = users?.find((u: User) => u._id === id);
+			const roleName = (userToDelete?.role as any)?.name;
+
+			if (roleName?.toLowerCase() === 'master') {
+				return Swal.fire({
+					title: 'Acción bloqueada',
+					text: 'No se puede eliminar un usuario con rol Master.',
+					icon: 'error',
+					background: '#1e1e1c',
+					color: '#fff',
+					confirmButtonColor: '#8B5E3C',
+				});
+			}
+
 			Swal.fire({
 				title: '¿Estás seguro de eliminar este usuario?',
 				text: 'Esta acción es irreversible',
@@ -53,8 +68,8 @@ function Page() {
 				confirmButtonColor: '#8B5E3C',
 				cancelButtonText: 'Cancelar',
 				cancelButtonColor: '#4a4a4a',
-			}).then(async (response) => {
-				if (response.isConfirmed) {
+			}).then(async (result) => {
+				if (result.isConfirmed) {
 					await deleteUser.mutateAsync(id);
 					Swal.fire({
 						toast: true,

@@ -39,6 +39,19 @@ function Page() {
   const handleDeleteRole = async (id: string) => {
     const Swal = (await import('sweetalert2')).default;
     try {
+      // Validar si el rol es Master
+      const roleToDelete = roles.find((r: Role) => r._id === id);
+      if (roleToDelete?.name.toLowerCase() === 'master') {
+        return Swal.fire({
+          title: 'Acción bloqueada',
+          text: 'El rol Master es del sistema y no se puede eliminar.',
+          icon: 'error',
+          background: '#1e1e1c',
+          color: '#fff',
+          confirmButtonColor: '#8B5E3C',
+        });
+      }
+
       Swal.fire({
         title: '¿Estás seguro de eliminar este rol?',
         text: 'Esta acción es irreversible',
