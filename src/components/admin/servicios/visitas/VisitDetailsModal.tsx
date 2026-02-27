@@ -181,39 +181,41 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 							</h3>
 
 							<div className='grid grid-cols-2 gap-4'>
-								<div>
+								<div className='min-w-0'>
 									<p className='text-xs text-white/40'>Nombre completo</p>
-									<p className='text-sm text-white/90 mt-1'>
+									<p className='text-sm text-white/90 mt-1 truncate'>
 										{extraProps?.isGuest
 											? extraProps.guestInfo?.name
 											: extraProps?.user?.name || 'No especificado'}
 									</p>
 								</div>
-								<div>
+								<div className='min-w-0 overflow-hidden'>
 									<p className='text-xs text-white/40'>Email</p>
-									<p className='text-sm text-white/90 mt-1 flex items-center gap-1'>
+									<p className='text-sm text-white/90 mt-1 flex items-center gap-1 overflow-hidden'>
 										<Mail
 											size={12}
-											className='text-white/40'
+											className='text-white/40 shrink-0'
 										/>
-										{extraProps?.isGuest
-											? extraProps.guestInfo?.email
-											: extraProps?.user?.email || 'No especificado'}
+										<span className='truncate'>
+											{extraProps?.isGuest
+												? extraProps.guestInfo?.email
+												: extraProps?.user?.email || 'No especificado'}
+										</span>
 									</p>
 								</div>
-								<div>
+								<div className='min-w-0 overflow-hidden'>
 									<p className='text-xs text-white/40'>Teléfono</p>
-									<p className='text-sm text-white/90 mt-1 flex items-center gap-1'>
+									<p className='text-sm text-white/90 mt-1 flex items-center gap-1 overflow-hidden'>
 										<Phone
 											size={12}
-											className='text-white/40'
+											className='text-white/40 shrink-0'
 										/>
-										{extraProps?.isGuest ? extraProps.guestInfo?.phone : extraProps?.user?.phone || 'No registrado'}
+										<span className='truncate'>{extraProps?.isGuest ? extraProps.guestInfo?.phone : extraProps?.user?.phone || 'No registrado'}</span>
 									</p>
 								</div>
-								<div>
+								<div className='min-w-0'>
 									<p className='text-xs text-white/40'>ID del cliente</p>
-									<p className='text-sm text-white/60 font-mono mt-1'>
+									<p className='text-sm text-white/60 font-mono mt-1 truncate'>
 										{extraProps?.isGuest ? "Usuario sin registro" : extraProps?.user?._id?.substring(0, 8)}
 									</p>
 								</div>
@@ -229,7 +231,7 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 								/>
 								Dirección de la visita
 							</h3>
-							<p className='text-sm text-white/90'>
+							<p className='text-sm text-white/90 line-clamp-3 break-words'>
 								{extraProps?.address || 'No especificada'}
 							</p>
 						</div>
@@ -336,9 +338,9 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 								Resumen de la visita
 							</h4>
 							<div className='grid grid-cols-2 gap-4 text-sm'>
-								<div>
-									<p className='text-white/40'>Cliente:</p>
-									<p className='text-white/90 font-medium'>
+								<div className='min-w-0'>
+									<p className='text-white/40 truncate'>Cliente:</p>
+									<p className='text-white/90 font-medium truncate'>
 										{extraProps?.isGuest
 											? extraProps.guestInfo?.name
 											: extraProps?.user?.name}
@@ -360,9 +362,9 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 									<p className='text-white/40'>Estado:</p>
 									<p className='text-white/90'>{status}</p>
 								</div>
-								<div className='col-span-2'>
-									<p className='text-white/40'>Dirección:</p>
-									<p className='text-white/90'>{extraProps?.address}</p>
+								<div className='col-span-2 min-w-0'>
+									<p className='text-white/40 truncate'>Dirección:</p>
+									<p className='text-white/90 line-clamp-2 break-words'>{extraProps?.address}</p>
 								</div>
 							</div>
 						</div>

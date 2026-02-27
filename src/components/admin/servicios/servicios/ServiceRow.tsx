@@ -20,23 +20,25 @@ export default function ServiceRow({ service, onView, onEdit, onDelete }: Servic
 			<div className='hidden md:grid grid-cols-4 place-items-center py-3 px-4
 				rounded-xl border border-white/10 bg-white/5
 				hover:bg-white/8 transition-all duration-200'>
-				
+
 				{/* Servicio */}
-				<div className="text-center">
-					<p className="text-sm text-white/90 font-medium">
+				<div className="text-center min-w-0 w-full">
+					<p className="text-sm text-white/90 font-medium truncate">
 						{service.name}
 					</p>
 					{service.description && (
-						<p className="text-xs text-white/40 mt-0.5 max-w-[200px] truncate">
+						<p className="text-xs text-white/40 mt-0.5 truncate" title={service.description || ''}>
 							{service.description}
 						</p>
 					)}
 				</div>
 
 				{/* Descripción (en desktop) */}
-				<p className="text-sm text-white/60 max-w-[250px] truncate">
-					{service.description || 'Sin descripción'}
-				</p>
+				<div className='min-w-0 w-full text-center'>
+					<p className="text-sm text-white/60 truncate" title={service.description || ''}>
+						{service.description || 'Sin descripción'}
+					</p>
+				</div>
 
 				{/* Estado */}
 				<div className="flex items-center gap-1.5">
@@ -45,11 +47,10 @@ export default function ServiceRow({ service, onView, onEdit, onDelete }: Servic
 					) : (
 						<XCircle size={14} className="text-red-400" />
 					)}
-					<span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-						service.status 
-							? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+					<span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${service.status
+							? 'bg-green-500/10 text-green-400 border border-green-500/20'
 							: 'bg-red-500/10 text-red-400 border border-red-500/20'
-					}`}>
+						}`}>
 						{service.status ? 'Activo' : 'Inactivo'}
 					</span>
 				</div>
@@ -104,11 +105,10 @@ export default function ServiceRow({ service, onView, onEdit, onDelete }: Servic
 						) : (
 							<XCircle size={14} className="text-red-400" />
 						)}
-						<span className={`text-[10px] px-2 py-0.5 rounded-full ${
-							service.status 
-								? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+						<span className={`text-[10px] px-2 py-0.5 rounded-full ${service.status
+								? 'bg-green-500/10 text-green-400 border border-green-500/20'
 								: 'bg-red-500/10 text-red-400 border border-red-500/20'
-						}`}>
+							}`}>
 							{service.status ? 'Activo' : 'Inactivo'}
 						</span>
 					</div>

@@ -64,7 +64,7 @@ export default function VisitRow({ visit, onView, onDelete }: VisitRowProps) {
 			<div className='hidden md:grid grid-cols-5 place-items-center py-3 px-4
 				rounded-xl border border-white/10 bg-white/5
 				hover:bg-white/8 transition-all duration-200'>
-				
+
 				{/* ID Visita */}
 				<p className="text-sm text-white/60 font-mono">
 					#{visit._id?.slice(-6).toUpperCase()}
@@ -81,9 +81,11 @@ export default function VisitRow({ visit, onView, onDelete }: VisitRowProps) {
 				</div>
 
 				{/* Cliente */}
-				<p className="text-sm text-white/90 font-medium">
-					{visit.user?.name || 'N/A'}
-				</p>
+				<div className='min-w-0 w-full text-center'>
+					<p className="text-sm text-white/90 font-medium truncate">
+						{visit.user?.name || 'N/A'}
+					</p>
+				</div>
 
 				{/* Estado */}
 				<div className="flex items-center gap-1.5">
