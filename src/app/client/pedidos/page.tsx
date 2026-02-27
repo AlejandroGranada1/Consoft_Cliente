@@ -186,7 +186,7 @@ export default function PedidosPage() {
 													{p.nombre}
 												</p>
 												<p className='text-xs text-white/30 mt-0.5 font-mono'>
-													#{p.id?.slice(-8).toUpperCase()}
+													#{p.id?.slice(-6).toUpperCase()}
 												</p>
 											</td>
 											<td className='py-4 px-6'>
@@ -208,7 +208,13 @@ export default function PedidosPage() {
 												{p.requiereAbono ? (
 													<span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border bg-yellow-500/10 text-yellow-400 border-yellow-500/20'>
 														<AlertCircle size={12} />
-														Pendiente abono
+														Abono pendiente
+													</span>
+												) : p.estado?.toLowerCase() === 'completado' ||
+													p.estado?.toLowerCase() === 'listo' ? (
+													<span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border bg-emerald-500/10 text-emerald-400 border-emerald-500/20'>
+														<CheckCircle size={12} />
+														Finalizado
 													</span>
 												) : (
 													<span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border bg-emerald-500/10 text-emerald-400 border-emerald-500/20'>

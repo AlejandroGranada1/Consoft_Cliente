@@ -11,8 +11,8 @@ function QR({ type }: QRProps) {
 		<Image
 			src={src}
 			alt={`Codigo QR de ${type}`}
-			width={400}
-			height={400}
+			width={250}
+			height={250}
 			priority
 		/>
 	);

@@ -34,18 +34,21 @@ export default function NotificationCard({
 			showCancelButton: true,
 			confirmButtonColor: '#d33',
 			cancelButtonColor: '#3085d6',
+			background: '#1e1e1c',
+			color: '#fff',
 		});
 
 		if (result.isConfirmed) {
 			await setDesicion.mutateAsync({ quotationId: _id, decision: 'rejected' });
+			await Swal.fire({
+				title: 'Cotización rechazada',
+				icon: 'error',
+				confirmButtonColor: '#8B5A2B',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 			refetch?.();
 		}
-
-		await Swal.fire({
-			title: 'Cotización rechazada',
-			icon: 'error',
-			confirmButtonColor: '#8B5A2B',
-		});
 	};
 
 	const acceptAlert = async () => {
@@ -56,19 +59,22 @@ export default function NotificationCard({
 			showCancelButton: true,
 			confirmButtonColor: '#3085d6',
 			cancelButtonColor: '#d33',
+			background: '#1e1e1c',
+			color: '#fff',
 		});
 
 		if (result.isConfirmed) {
 			await setDesicion.mutateAsync({ quotationId: _id, decision: 'accepted' });
+			await Swal.fire({
+				title: 'Aceptaste la cotización',
+				html: 'Se asignó tu cotización a un pedido, estaremos trabajando en ello',
+				icon: 'success',
+				confirmButtonColor: '#8B5A2B',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 			refetch?.();
 		}
-
-		await Swal.fire({
-			title: 'Aceptaste la cotización',
-			html: 'Se asignó tu cotización a un pedido, estaremos trabajando en ello',
-			icon: 'success',
-			confirmButtonColor: '#8B5A2B',
-		});
 	};
 
 	return (
@@ -107,7 +113,7 @@ export default function NotificationCard({
 
 				{/* ── PRODUCTOS ── */}
 				<div className="flex flex-col gap-3">
-					{items.map(item => {
+					{items.map((item, index) => {
 						const unitPrice = (item as any).price ?? 0;
 						const subtotal = unitPrice * item.quantity;
 						const name = item.isCustom ? item.customDetails.name : item.product.name;
@@ -117,7 +123,8 @@ export default function NotificationCard({
 
 						return (
 							<div
-								key={item.adminNotes}
+								key={index}
+
 								className="flex gap-4 border border-white/[0.06] rounded-xl bg-[#151413] p-4"
 							>
 								{/* Imagen */}

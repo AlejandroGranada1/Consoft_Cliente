@@ -13,12 +13,11 @@ export default function PagoPage() {
 	const sendPayment = useSendPayment();
 	const { user, loading } = useUser();
 	const ocr = useOcrReceipt();
-	
+
 	// Obtener datos del pedido
 	const { data: orderData } = useMyOrder(pedidoId as string);
 
 	const [metodo, setMetodo] = useState<'Nequi' | 'Bancolombia' | null>(null);
-	const [tipoPago, setTipoPago] = useState<'abono' | 'final' | null>(null);
 	const [file, setFile] = useState<File | null>(null);
 	const [preview, setPreview] = useState<string | null>(null);
 	const [dragOver, setDragOver] = useState(false);
@@ -139,7 +138,7 @@ export default function PagoPage() {
 
 					{/* Progress dots */}
 					<div className="flex gap-1.5 items-center">
-						{[!!metodo, !!file, !!tipoPago].map((done, i) => (
+						{[!!metodo, !!file].map((done, i) => (
 							<span
 								key={i}
 								className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${done ? 'bg-[#8B5E3C]' : 'bg-white/10'}`}
@@ -172,9 +171,8 @@ export default function PagoPage() {
 					{[
 						{ num: 1, label: 'Método de pago', done: !!metodo },
 						{ num: 2, label: 'Comprobante', done: !!file },
-						{ num: 3, label: 'Tipo de pago', done: !!tipoPago },
 					].map((s, i, arr) => (
-						<div key={s.num}>
+						<div key={s.num} className="flex items-center gap-2 shrink-0 mr2">
 							<div key={s.num} className="flex items-center gap-2 shrink-0">
 								<div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium border transition-all duration-300
 									${s.done ? 'bg-[#8B5E3C] border-[#8B5E3C] text-white' : 'border-white/10 text-[#6b5b4e]'}`}>
@@ -209,8 +207,9 @@ export default function PagoPage() {
 
 						<div className="flex flex-col gap-3">
 							{[
-								{ id: 'Nequi', icon: '💜', sub: 'Transferencia instantánea' },
-								{ id: 'Bancolombia', icon: '🏦', sub: 'PSE / transferencia' },
+								{ id: 'Nequi', icon: <img src="/pagos/icono_nequi.png" className="w-12 h-12 object-contain rounded-lg" alt="Nequi" />, sub: 'Transferencia instantánea' },
+
+								{ id: 'Bancolombia', icon: <img src="/pagos/icono_bancolombia.jfif" className="w-12 h-12 object-contain rounded-lg" alt="Bancolombia" />, sub: 'PSE / transferencia' },
 							].map(m => (
 								<button
 									key={m.id}
@@ -361,11 +360,10 @@ export default function PagoPage() {
 										{/* Saldo restante */}
 										<div className="flex items-center justify-between">
 											<span className="text-xs text-[#6b5b4e]">Saldo restante</span>
-											<span className={`text-sm font-semibold tabular-nums ${
-												ocr.data.projected.restanteAfter <= 0
-													? 'text-emerald-400'
-													: 'text-[#e8e0d5]'
-											}`}>
+											<span className={`text-sm font-semibold tabular-nums ${ocr.data.projected.restanteAfter <= 0
+												? 'text-emerald-400'
+												: 'text-[#e8e0d5]'
+												}`}>
 												{ocr.data.projected.restanteAfter <= 0
 													? 'Saldado ✓'
 													: `$${ocr.data.projected.restanteAfter.toLocaleString('es-CO')}`
@@ -395,12 +393,12 @@ export default function PagoPage() {
 										)}
 
 										{/* 🔥 Mensaje de abono si aplica */}
-										{necesitaAbono && ocr.data.detectedAmount > 0 && (
+										{necesitaAbono && ocr.data.detectedAmount > 0 && ocr.data.projected.restanteAfter > 0 && (
 											<div className="mt-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
 												<p className="text-xs text-yellow-400 flex items-start gap-2">
 													<AlertCircle size={14} className="shrink-0 mt-0.5" />
 													<span>
-														<strong>Importante:</strong> Este pago será registrado como abono. 
+														<strong>Importante:</strong> Este pago será registrado como abono.
 														{abonoInicial + ocr.data.detectedAmount >= totalPedido * 0.3 ? (
 															<span className="block mt-1 text-emerald-400">
 																✓ Con este pago alcanzarás el 30% y el pedido entrará en producción.

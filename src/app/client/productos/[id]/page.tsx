@@ -9,13 +9,13 @@ import Image from 'next/image';
 import { ArrowLeft, ShieldCheck, Truck, Pencil, ShoppingCart, Minus, Plus, Paintbrush } from 'lucide-react';
 
 const AVAILABLE_COLORS = [
-  { name: 'Nogal',       value: 'nogal',        hex: '#7B4A12' },
-  { name: 'Blanco',      value: 'blanco',        hex: '#F5F5F5' },
-  { name: 'Negro',       value: 'negro',         hex: '#1A1A1A' },
-  { name: 'Gris',        value: 'gris',          hex: '#9CA3AF' },
-  { name: 'Café oscuro', value: 'cafe_oscuro',   hex: '#4B2E1E' },
+  { name: 'Nogal', value: 'nogal', hex: '#7B4A12' },
+  { name: 'Blanco', value: 'blanco', hex: '#F5F5F5' },
+  { name: 'Negro', value: 'negro', hex: '#1A1A1A' },
+  { name: 'Gris', value: 'gris', hex: '#9CA3AF' },
+  { name: 'Café oscuro', value: 'cafe_oscuro', hex: '#4B2E1E' },
   { name: 'Azul petróleo', value: 'azul_petroleo', hex: '#1F4E5F' },
-  { name: 'Verde oliva', value: 'verde_oliva',   hex: '#556B2F' },
+  { name: 'Verde oliva', value: 'verde_oliva', hex: '#556B2F' },
 ];
 
 export default function ProductDetailPage() {
@@ -31,7 +31,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [color, setColor] = useState('');
   const [customSize, setCustomSize] = useState('');
-  
+
   // Nuevos estados para personalización completa
   const [customizeAll, setCustomizeAll] = useState(false);
   const [customColor, setCustomColor] = useState('');
@@ -66,15 +66,14 @@ export default function ProductDetailPage() {
     }
 
     // Construir el payload
-    const payload: any = { 
-      productId: product._id, 
-      quantity, 
-      size: customSize 
+    const payload: any = {
+      productId: product._id,
+      quantity,
+      size: customSize
     };
 
     if (customizeAll) {
       // Modo personalizado completo
-      payload.isCustom = true;
       payload.customDetails = {
         color: customColor,
         material: customMaterial,
@@ -91,14 +90,14 @@ export default function ProductDetailPage() {
       payload,
     });
 
-    Swal.fire({ 
-      title: customizeAll ? 'Personalización añadida' : 'Añadido al carrito', 
+    Swal.fire({
+      title: customizeAll ? 'Personalización añadida' : 'Añadido al carrito',
       text: customizeAll ? 'Te contactaremos para confirmar detalles' : undefined,
-      icon: 'success', 
-      timer: 1500, 
-      showConfirmButton: false 
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false
     });
-    
+
     router.push('/client/productos');
   };
 
@@ -213,14 +212,12 @@ export default function ProductDetailPage() {
                 <button
                   type="button"
                   onClick={() => setCustomizeAll(!customizeAll)}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${
-                    customizeAll ? 'bg-[#C8A882]' : 'bg-white/20'
-                  }`}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${customizeAll ? 'bg-[#C8A882]' : 'bg-white/20'
+                    }`}
                 >
                   <span
-                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                      customizeAll ? 'translate-x-5' : ''
-                    }`}
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${customizeAll ? 'translate-x-5' : ''
+                      }`}
                   />
                 </button>
                 <div className="flex items-center gap-2">
@@ -230,7 +227,7 @@ export default function ProductDetailPage() {
                   </span>
                 </div>
               </label>
-              
+
               <p className="text-xs text-white/40 pl-14">
                 Si no encuentras el color o el material que presentamos no se adecua a tus preferencias, actívalo y especifica tus preferencias.
               </p>
@@ -341,8 +338,8 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-3 gap-3">
               {[
                 { icon: <ShieldCheck size={15} />, label: 'Garantía 2 años' },
-                { icon: <Truck size={15} />,        label: 'Envío a domicilio' },
-                { icon: <Pencil size={15} />,       label: 'Personalizable' },
+                { icon: <Truck size={15} />, label: 'Envío a domicilio' },
+                { icon: <Pencil size={15} />, label: 'Personalizable' },
               ].map(({ icon, label }) => (
                 <div
                   key={label}

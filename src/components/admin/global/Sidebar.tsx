@@ -69,15 +69,15 @@ export default function Sidebar() {
 				<div className='flex items-center justify-between px-5 py-5 border-b border-white/10'>
 					<Link
 						href={'/client'}
-						className='font-serif text-base md:text-xl text-white hover:text-[#C8A882] transition-colors ml-16 md:ml-0'>
+						className='font-serif text-base md:text-xl text-white hover:text-[#C8A882] transition-colors ml-16 md:ml-0 flex justify-between w-full'>
 						Confort & Estilo
+						<div className='w-8 h-8 rounded-lg bg-[#C8A882]/10 flex items-center justify-center'>
+							<Home
+								size={16}
+								className='text-[#C8A882]'
+							/>
+						</div>
 					</Link>
-					<div className='w-8 h-8 rounded-lg bg-[#C8A882]/10 flex items-center justify-center'>
-						<Home
-							size={16}
-							className='text-[#C8A882]'
-						/>
-					</div>
 				</div>
 
 				{/* User info - fijo */}

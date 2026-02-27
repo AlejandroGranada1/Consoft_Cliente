@@ -1,19 +1,19 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useMyOrder } from '@/hooks/apiHooks';
+import { useMyOrder, useGetOrderReviews, useCreateOrderReview } from '@/hooks/apiHooks';
 import ItemCard from '@/components/pedidos/ItemCard';
 import { useUser } from '@/providers/userContext';
-import { useEffect } from 'react';
-import { ArrowLeft, CalendarDays, Tag, Wallet, PackageOpen, CreditCard } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, CalendarDays, Tag, Wallet, PackageOpen, CreditCard, Star } from 'lucide-react';
 
 const getStatusStyle = (estado: string) => {
   switch (estado?.toLowerCase()) {
     case 'listo':
     case 'completado': return 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20';
-    case 'cancelado':  return 'bg-red-400/10 text-red-400 border-red-400/20';
+    case 'cancelado': return 'bg-red-400/10 text-red-400 border-red-400/20';
     case 'en proceso': return 'bg-blue-400/10 text-blue-400 border-blue-400/20';
-    default:           return 'bg-[#C8A882]/10 text-[#C8A882] border-[#C8A882]/20';
+    default: return 'bg-[#C8A882]/10 text-[#C8A882] border-[#C8A882]/20';
   }
 };
 
@@ -21,6 +21,14 @@ export default function PedidoDetallePage() {
   const { user, loading } = useUser();
   const router = useRouter();
   const { id } = useParams();
+
+  const { data: pedido, isLoading, error } = useMyOrder(id as string);
+  const { data: reviews } = useGetOrderReviews(id as string);
+  const addReviewMutation = useCreateOrderReview();
+
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState('');
 
   useEffect(() => {
     if (loading) return;
@@ -40,7 +48,32 @@ export default function PedidoDetallePage() {
   );
   if (user === null) return null;
 
-  const { data: pedido, isLoading, error } = useMyOrder(id as string);
+
+  const existingReview = reviews?.find((r: any) => String(r.user?._id || r.user) === String(user?.id));
+
+  const handleReviewSubmit = async () => {
+    if (rating < 1) return;
+    try {
+      await addReviewMutation.mutateAsync({ orderId: id as string, rating, comment });
+      const Swal = (await import('sweetalert2')).default;
+      Swal.fire({
+        icon: 'success',
+        title: '¡Gracias por tu reseña!',
+        text: 'Tu opinión nos ayuda a mejorar.',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
+    } catch (e: any) {
+      const Swal = (await import('sweetalert2')).default;
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: e.response?.data?.message || 'Error al enviar reseña',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
+    }
+  };
 
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #1e1e1c 0%, #252320 30%, #2a2724 60%, #1e1c1a 100%)' }}>
@@ -57,9 +90,9 @@ export default function PedidoDetallePage() {
     </div>
   );
 
-  const productos   = pedido.raw?.items ?? [];
+  const productos = pedido.raw?.items ?? [];
   const attachments = pedido.raw?.attachments ?? [];
-  const cardStyle   = { backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' };
+  const cardStyle = { backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' };
 
   return (
     <div
@@ -127,7 +160,7 @@ export default function PedidoDetallePage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { icon: <CalendarDays size={15} />, label: 'Fecha de entrega', value: pedido.dias },
-            { icon: <Tag size={15} />,          label: 'Estado',           value: pedido.estado },
+            { icon: <Tag size={15} />, label: 'Estado', value: pedido.estado },
           ].map(({ icon, label, value }) => (
             <div key={label} className="rounded-2xl border border-white/10 p-5 space-y-3" style={cardStyle}>
               <div className="flex items-center gap-2 text-[#C8A882]">
@@ -161,6 +194,82 @@ export default function PedidoDetallePage() {
             Pagar
           </button>
         </div>
+
+        {/* REVIEWS SECTION */}
+        {(pedido.estado?.toLowerCase() === 'completado' || pedido.estado?.toLowerCase() === 'listo') && (
+          <div className="rounded-2xl border border-white/10 p-6 md:p-8 space-y-6 mt-8" style={cardStyle}>
+            <div>
+              <h3 className="font-serif text-xl tracking-wide text-white mb-2">Reseña del pedido</h3>
+              <p className="text-sm text-white/40">Cuéntanos cómo fue tu experiencia con tu pedido.</p>
+            </div>
+
+            {existingReview ? (
+              <div className="space-y-4">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      size={20}
+                      className={star <= existingReview.rating ? "text-yellow-400 fill-yellow-400" : "text-white/20"}
+                    />
+                  ))}
+                </div>
+                {existingReview.comment && (
+                  <p className="text-sm text-white/80 p-4 bg-white/5 rounded-xl border border-white/10">
+                    "{existingReview.comment}"
+                  </p>
+                )}
+                <p className="text-xs text-white/30 truncate uppercase tracking-widest">
+                  Reseña publicada el {new Date(existingReview.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs text-white/40 uppercase tracking-widest pl-1">Calificación</label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setRating(star)}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="transition-transform hover:scale-110 p-1"
+                        disabled={addReviewMutation.isPending}
+                      >
+                        <Star
+                          size={28}
+                          className={`transition-colors duration-200 ${(hoverRating || rating) >= star ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-white/40 uppercase tracking-widest pl-1">Comentario (Opcional)</label>
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    disabled={addReviewMutation.isPending}
+                    placeholder="Nos encantaría saber más sobre tu experiencia..."
+                    className="w-full bg-[#111110]/50 border border-white/10 rounded-xl p-4 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-[#C8A882]/50 focus:bg-[#111110] transition-all duration-300 resize-none min-h-[120px]"
+                  />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={handleReviewSubmit}
+                    disabled={rating === 0 || addReviewMutation.isPending}
+                    className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {addReviewMutation.isPending ? 'Enviando...' : 'Publicar reseña'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
