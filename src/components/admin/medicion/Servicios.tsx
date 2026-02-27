@@ -8,7 +8,7 @@ export default function ServiciosPopulares({ data }: { data: any }) {
 	const maxQty = Math.max(...data.topItems.services.map((s: any) => s.quantity));
 
 	const getMedal = (index: number) => {
-		switch(index) {
+		switch (index) {
 			case 0: return <Award size={16} className="text-yellow-400" />;
 			case 1: return <Award size={16} className="text-gray-400" />;
 			case 2: return <Award size={16} className="text-amber-600" />;
@@ -19,7 +19,7 @@ export default function ServiciosPopulares({ data }: { data: any }) {
 	return (
 		<section className="space-y-6">
 			<div>
-				<h2 className="text-lg font-medium text-white">Servicios más solicitados</h2>
+				<h2 className="text-lg font-medium text-white">Servicios más populares</h2>
 				<p className="text-sm text-white/40 mt-1">Top 5 servicios con mayor demanda</p>
 			</div>
 
@@ -54,7 +54,7 @@ export default function ServiciosPopulares({ data }: { data: any }) {
 									</span>
 								</div>
 							</div>
-							
+
 							{/* Barra de progreso */}
 							<div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
 								<div

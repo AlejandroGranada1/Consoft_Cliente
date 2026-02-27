@@ -4,6 +4,7 @@ import { BarChart3, DollarSign, Star, Users, TrendingUp } from 'lucide-react';
 import Resumen from '@/components/admin/medicion/Resumen';
 import ServiciosPopulares from '@/components/admin/medicion/Servicios';
 import Tendencias from '@/components/admin/medicion/Tendencias';
+import Satisfaccion from '@/components/admin/medicion/Satisfaccion';
 import { useDashboard } from '@/hooks/apiHooks';
 import React, { useState } from 'react';
 
@@ -11,6 +12,7 @@ const TABS = [
 	{ id: 'resumen', label: 'Resumen' },
 	{ id: 'servicios', label: 'Servicios Populares' },
 	{ id: 'tendencias', label: 'Tendencias' },
+	{ id: 'reseñas', label: 'Reseñas' },
 ];
 
 const SUMMARY_CARDS = (data: any) => [
@@ -61,7 +63,7 @@ export default function Page() {
 				<div className="text-white/40 text-sm tracking-widest uppercase">Cargando métricas...</div>
 			</div>
 		);
-	
+
 	if (!data)
 		return (
 			<div className="min-h-screen flex items-center justify-center"
@@ -141,11 +143,10 @@ export default function Page() {
 						<button
 							key={t.id}
 							onClick={() => setTab(t.id)}
-							className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-								tab === t.id
-									? 'bg-[#C8A882]/20 text-[#C8A882] border border-[#C8A882]/30'
-									: 'text-white/40 hover:text-white/60'
-							}`}>
+							className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${tab === t.id
+								? 'bg-[#C8A882]/20 text-[#C8A882] border border-[#C8A882]/30'
+								: 'text-white/40 hover:text-white/60'
+								}`}>
 							{t.label}
 						</button>
 					))}
@@ -156,6 +157,7 @@ export default function Page() {
 					{tab === 'resumen' && <Resumen data={data} />}
 					{tab === 'servicios' && <ServiciosPopulares data={data} />}
 					{tab === 'tendencias' && <Tendencias data={data} />}
+					{tab === 'reseñas' && <Satisfaccion />}
 				</div>
 			</div>
 		</div>
