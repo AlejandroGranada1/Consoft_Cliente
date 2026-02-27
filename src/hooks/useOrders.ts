@@ -32,15 +32,15 @@ export const useMyOrders = () => {
 		queryKey: ['myOrders'],
 		queryFn: async () => {
 			const { data } = await api.get('/api/orders/mine');
-			
+
 			// La API devuelve { ok: true, orders: [...] }
 			const orders = data.orders || [];
-			
+
 			return orders.map((o: any) => {
 				// 🔥 ASEGURAR QUE TODOS LOS NÚMEROS SEAN NÚMEROS REALES
 				// El total puede venir en o.total o en o.raw.total
 				const total = Number(o.total || o.raw?.total || 0);
-				
+
 				// Calcular pagado desde payments (si existen en o.raw)
 				let pagado = 0;
 				if (o.raw?.payments && Array.isArray(o.raw.payments)) {
@@ -51,17 +51,17 @@ export const useMyOrders = () => {
 						return acc;
 					}, 0);
 				}
-				
+
 				// Si no hay payments, usar o.pagado o o.raw.pagado
 				if (pagado === 0) {
 					pagado = Number(o.pagado || o.raw?.pagado || 0);
 				}
-				
+
 				const restante = total - pagado;
-				
+
 				// 🔥 CORRECCIÓN: requiereAbono = lo pagado es MENOR al 30%
 				const requiereAbono = pagado < total * 0.3;
-				
+
 				// Obtener nombre del primer item
 				let nombre = 'Pedido';
 				const firstItem = o.raw?.items?.[0] || o.items?.[0];
@@ -74,18 +74,7 @@ export const useMyOrders = () => {
 						nombre = firstItem.detalles;
 					}
 				}
-				
-				// 🔥 LOG PARA DEBUG (opcional, puedes quitarlo después)
-				console.log({
-					id: o.id,
-					nombre,
-					total,
-					pagado,
-					restante,
-					treinta: total * 0.3,
-					requiereAbono
-				});
-				
+
 				return {
 					id: o.id || o.raw?._id,
 					nombre,
@@ -106,18 +95,43 @@ export const useMyOrder = (id: string) => {
 	return useQuery({
 		queryKey: ['pedidoDetalle', id],
 		queryFn: async () => {
-			const { data } = await api.get(`/api/orders/${id}`);
-			const pagado =
-				data.payments?.reduce((acc: number, p: any) => acc + (p.amount || 0), 0) || 0;
-			const restante = (data.total || 0) - pagado;
+			const { data: o } = await api.get(`/api/orders/${id}`);
+
+			const total = Number(o.total || 0);
+			let pagado = 0;
+			if (o.payments && Array.isArray(o.payments)) {
+				pagado = o.payments.reduce((acc: number, p: any) => {
+					if (p.status?.toLowerCase() === 'aprobado' || p.status?.toLowerCase() === 'confirmado') {
+						return acc + (Number(p.amount) || 0);
+					}
+					return acc;
+				}, 0);
+			}
+
+			if (pagado === 0) pagado = Number(o.pagado || 0);
+			const restante = total - pagado;
+			const requiereAbono = pagado < total * 0.3;
+
+			// Obtener nombre
+			let nombre = 'Pedido';
+			const firstItem = o.items?.[0];
+			if (firstItem) {
+				if (firstItem.id_servicio?.name) nombre = firstItem.id_servicio.name;
+				else if (firstItem.id_producto?.name) nombre = firstItem.id_producto.name;
+				else if (firstItem.detalles) nombre = firstItem.detalles;
+			}
+
 			return {
-				id: data._id,
-				nombre: data.items?.[0]?.id_servicio?.name || 'Pedido',
-				estado: data.paymentStatus === 'Pagado' ? 'Listo' : 'Pendiente',
-				valor: `$${data.total.toLocaleString()} COP`,
-				restante: `$${restante.toLocaleString()} COP`,
-				dias: calcDiasRestantes(data.startedAt),
-				raw: data,
+				id: o._id,
+				nombre,
+				estado: o.status || 'Pendiente',
+				valor: `$${total.toLocaleString('es-CO')} COP`,
+				restante: `$${restante.toLocaleString('es-CO')} COP`,
+				dias: calcDiasRestantes(o.startedAt),
+				requiereAbono,
+				total,
+				pagado,
+				raw: o,
 			};
 		},
 		enabled: !!id,
@@ -236,3 +250,41 @@ export function useOcrReceipt() {
 
 	return { analyze, data, loading, error, reset };
 }
+
+/* ─────────────────────────────────────────────
+   REVIEWS — POST & GET
+───────────────────────────────────────────── */
+export const useGetOrderReviews = (orderId: string) => {
+	return useQuery({
+		queryKey: ['orderReviews', orderId],
+		queryFn: async () => {
+			const { data } = await api.get(`/api/orders/${orderId}/reviews`);
+			return data.reviews || [];
+		},
+		enabled: !!orderId,
+	});
+};
+
+export const useCreateOrderReview = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({ orderId, rating, comment }: { orderId: string; rating: number; comment?: string }) => {
+			const { data } = await api.post(`/api/orders/${orderId}/reviews`, { rating, comment });
+			return data;
+		},
+		onSuccess: (_, variables) => {
+			queryClient.invalidateQueries({ queryKey: ['orderReviews', variables.orderId] });
+			queryClient.invalidateQueries({ queryKey: ['orders'] });
+		},
+	});
+};
+export const useGetAllReviews = () => {
+	return useQuery({
+		queryKey: ['allReviews'],
+		queryFn: async () => {
+			const { data } = await api.get('/api/orders/reviews');
+			return data.reviews || [];
+		},
+		staleTime: 1000 * 60 * 10,
+	});
+};

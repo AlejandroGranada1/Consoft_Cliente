@@ -15,7 +15,7 @@ export default function QuotationRow({ q, onView }: QuotationRowProps) {
 	const status = q.status || 'Solicitada';
 
 	const getStatusIcon = () => {
-		switch(status.toLowerCase()) {
+		switch (status.toLowerCase()) {
 			case 'solicitada':
 				return <Clock size={14} className="text-yellow-400" />;
 			case 'aprobada':
@@ -28,7 +28,7 @@ export default function QuotationRow({ q, onView }: QuotationRowProps) {
 	};
 
 	const getStatusColor = () => {
-		switch(status.toLowerCase()) {
+		switch (status.toLowerCase()) {
 			case 'solicitada':
 				return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
 			case 'aprobada':
@@ -54,18 +54,18 @@ export default function QuotationRow({ q, onView }: QuotationRowProps) {
 			<div className='hidden md:grid grid-cols-5 place-items-center py-3 px-4
 				rounded-xl border border-white/10 bg-white/5
 				hover:bg-white/8 transition-all duration-200'>
-				
+
 				{/* Código */}
 				<p className="text-sm text-white/60 font-mono">
 					#{q._id?.slice(-6).toUpperCase()}
 				</p>
 
 				{/* Cliente */}
-				<div className="text-center">
-					<p className="text-sm text-white/90 font-medium">
+				<div className="text-center min-w-0 w-full">
+					<p className="text-sm text-white/90 font-medium truncate">
 						{q.user?.name || 'N/A'}
 					</p>
-					<p className="text-xs text-white/40 mt-0.5">
+					<p className="text-xs text-white/40 mt-0.5 truncate">
 						{formatDate(q.createdAt)}
 					</p>
 				</div>

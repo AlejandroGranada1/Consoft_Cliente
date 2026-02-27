@@ -20,16 +20,20 @@ export default function CategoryRow({ category, onView, onEdit, onDelete }: Cate
 			<div className='hidden md:grid grid-cols-4 place-items-center py-3 px-4
 				rounded-xl border border-white/10 bg-white/5
 				hover:bg-white/8 transition-all duration-200'>
-				
+
 				{/* Categoría */}
-				<p className="text-sm text-white/90 font-medium">
-					{category.name}
-				</p>
+				<div className='min-w-0 w-full text-center'>
+					<p className="text-sm text-white/90 font-medium truncate">
+						{category.name}
+					</p>
+				</div>
 
 				{/* Descripción */}
-				<p className="text-sm text-white/60 max-w-[250px] truncate">
-					{category.description || 'Sin descripción'}
-				</p>
+				<div className='min-w-0 w-full text-center'>
+					<p className="text-sm text-white/60 truncate" title={category.description || ''}>
+						{category.description || 'Sin descripción'}
+					</p>
+				</div>
 
 				{/* Productos */}
 				<div className="flex items-center gap-1.5">

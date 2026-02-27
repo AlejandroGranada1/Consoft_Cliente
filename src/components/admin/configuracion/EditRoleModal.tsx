@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Shield, Package, Check, User, Info, Save, Lock } from 'lucide-react';
+import { X, Shield, Package, Check, User, Info, Save, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { DefaultModalProps, GroupPermission, Permission, Role } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
@@ -9,9 +9,14 @@ import { createPortal } from 'react-dom';
 
 function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Role>) {
 	const [roleData, setRoleData] = useState<Role | null>(null);
+	const [expandedModule, setExpandedModule] = useState<string | null>(null);
 	const { data } = useGetPermissions();
 	const permissions = (data?.permisos as GroupPermission[]) || [];
 	const updateRole = useUpdateRole();
+
+	const toggleModule = (module: string) => {
+		setExpandedModule(prev => prev === module ? null : module);
+	};
 
 	useEffect(() => {
 		if (isOpen && extraProps) {
@@ -93,9 +98,9 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 		setRoleData((prev) =>
 			prev
 				? {
-						...prev,
-						[name]: type === 'checkbox' ? checked : value,
-					}
+					...prev,
+					[name]: type === 'checkbox' ? checked : value,
+				}
 				: null,
 		);
 	};
@@ -235,11 +240,10 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 								/>
 								<span
 									className={`px-3 py-1.5 rounded-full text-xs font-medium
-                  ${
-						roleData.status
-							? 'bg-green-500/10 text-green-400 border border-green-500/20'
-							: 'bg-red-500/10 text-red-400 border border-red-500/20'
-					}`}>
+                  ${roleData.status
+											? 'bg-green-500/10 text-green-400 border border-green-500/20'
+											: 'bg-red-500/10 text-red-400 border border-red-500/20'
+										}`}>
 									{roleData.status ? 'Activo' : 'Inactivo'}
 								</span>
 							</label>
@@ -331,84 +335,100 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 									return (
 										<div
 											key={group.module}
-											className='rounded-xl border border-white/10 bg-white/5 p-4'>
-											<div className='flex items-center justify-between mb-3'>
-												<label className='flex items-center gap-2 cursor-pointer'>
-													<input
-														type='checkbox'
-														checked={groupSelected}
-														onChange={() => toggleGroup(group.module)}
-														ref={(input) => {
-															if (input && groupPartiallySelected) {
-																input.indeterminate = true;
-															}
-														}}
-														className='w-4 h-4 rounded border-white/30
-                              bg-white/5 text-[#C8A882]
-                              focus:ring-[#C8A882] focus:ring-1 focus:ring-offset-0
-                              transition-colors'
-													/>
+											className='rounded-xl border border-white/10 bg-white/5 overflow-hidden transition-all duration-200'>
+											<div
+												className='flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 select-none'
+												onClick={() => toggleModule(group.module)}
+											>
+												<div className='flex items-center gap-3' onClick={(e) => e.stopPropagation()}>
+													<label className='flex items-center gap-2 cursor-pointer'>
+														<input
+															type='checkbox'
+															checked={groupSelected}
+															onChange={() => toggleGroup(group.module)}
+															ref={(input) => {
+																if (input && groupPartiallySelected) {
+																	input.indeterminate = true;
+																}
+															}}
+															className='w-4 h-4 rounded border-white/30
+																bg-white/5 text-[#C8A882]
+																focus:ring-[#C8A882] focus:ring-1 focus:ring-offset-0
+																transition-colors'
+														/>
+													</label>
 													<span className='text-sm font-medium text-white'>
 														{group.module}
 													</span>
-												</label>
-
-												{groupPartiallySelected && (
-													<span
-														className='text-[10px] px-2 py-1 rounded-full
-                            bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'>
-														Parcial
-													</span>
-												)}
-												{groupSelected && (
-													<span
-														className='text-[10px] px-2 py-1 rounded-full
-                            bg-green-500/10 text-green-400 border border-green-500/20
-                            flex items-center gap-1'>
-														<Check size={10} /> Todos
-													</span>
-												)}
-											</div>
-
-											<div className='grid grid-cols-2 gap-2 ml-6'>
-												{group.permissions.map((permission) => (
-													<label
-														key={permission._id}
-														className='flex items-center gap-2 cursor-pointer
-                              p-2 rounded-lg hover:bg-white/5 transition-colors'>
-														<input
-															type='checkbox'
-															checked={isPermissionSelected(
-																permission._id,
-															)}
-															onChange={() =>
-																togglePermission(permission)
-															}
-															className='w-3.5 h-3.5 rounded border-white/30
-                                bg-white/5 text-[#C8A882]
-                                focus:ring-[#C8A882] focus:ring-1 focus:ring-offset-0'
-														/>
-														<span className='text-xs text-white/70'>
-															{permission.action === 'view' && 'Ver'}
-															{permission.action === 'create' &&
-																'Crear'}
-															{permission.action === 'update' &&
-																'Editar'}
-															{permission.action === 'delete' &&
-																'Eliminar'}
-														</span>
-													</label>
-												))}
-											</div>
-
-											{selectedCount > 0 && (
-												<div className='mt-2 pt-2 border-t border-white/10'>
-													<p className='text-[10px] text-white/30'>
-														{selectedCount} de{' '}
-														{group.permissions.length} seleccionados
-													</p>
 												</div>
-											)}
+
+												<div className='flex items-center gap-3'>
+													{groupPartiallySelected && (
+														<span
+															className='text-[10px] px-2 py-1 rounded-full
+															bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'>
+															Parcial
+														</span>
+													)}
+													{groupSelected && (
+														<span
+															className='text-[10px] px-2 py-1 rounded-full
+															bg-green-500/10 text-green-400 border border-green-500/20
+															flex items-center gap-1'>
+															<Check size={10} /> Todos
+														</span>
+													)}
+													{expandedModule === group.module ? (
+														<ChevronUp size={16} className='text-white/40' />
+													) : (
+														<ChevronDown size={16} className='text-white/40' />
+													)}
+												</div>
+											</div>
+
+											<div className={`transition-all duration-300 ease-in-out overflow-hidden ${expandedModule === group.module ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+												<div className='p-4 pt-0 border-t border-white/5'>
+													<div className='grid grid-cols-2 gap-2 mt-3'>
+														{group.permissions.map((permission) => (
+															<label
+																key={permission._id}
+																className='flex items-center gap-2 cursor-pointer
+																	p-2 rounded-lg hover:bg-white/5 transition-colors'>
+																<input
+																	type='checkbox'
+																	checked={isPermissionSelected(
+																		permission._id,
+																	)}
+																	onChange={() =>
+																		togglePermission(permission)
+																	}
+																	className='w-3.5 h-3.5 rounded border-white/30
+																		bg-white/5 text-[#C8A882]
+																		focus:ring-[#C8A882] focus:ring-1 focus:ring-offset-0'
+																/>
+																<span className='text-xs text-white/70'>
+																	{permission.action === 'view' && 'Ver'}
+																	{permission.action === 'create' &&
+																		'Crear'}
+																	{permission.action === 'update' &&
+																		'Editar'}
+																	{permission.action === 'delete' &&
+																		'Eliminar'}
+																</span>
+															</label>
+														))}
+													</div>
+
+													{selectedCount > 0 && (
+														<div className='mt-3 pt-3 border-t border-white/10'>
+															<p className='text-[10px] text-white/30'>
+																{selectedCount} de{' '}
+																{group.permissions.length} seleccionados
+															</p>
+														</div>
+													)}
+												</div>
+											</div>
 										</div>
 									);
 								})}

@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Shield, Package, Check, User, Calendar, Users, Edit, Info } from 'lucide-react';
+import { X, Shield, Package, Check, User, Calendar, Users, Edit, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { DefaultModalProps, Role } from '@/lib/types';
 import React, { useState } from 'react';
 import EditRoleModal from './EditRoleModal';
@@ -8,6 +8,11 @@ import { createPortal } from 'react-dom';
 
 function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Role>) {
 	const [editModal, setEditModal] = useState(false);
+	const [expandedModule, setExpandedModule] = useState<string | null>(null);
+
+	const toggleModule = (module: string) => {
+		setExpandedModule(prev => prev === module ? null : module);
+	};
 
 	if (!isOpen || !extraProps) return null;
 
@@ -58,7 +63,7 @@ function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 								</label>
 								<div
 									className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-                  text-sm text-white/90'>
+                  text-sm text-white/90 truncate'>
 									{extraProps.name}
 								</div>
 							</div>
@@ -70,11 +75,10 @@ function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 								<div className='flex items-center h-12'>
 									<span
 										className={`px-3 py-1.5 rounded-full text-xs font-medium
-                    ${
-						extraProps.status
-							? 'bg-green-500/10 text-green-400 border border-green-500/20'
-							: 'bg-red-500/10 text-red-400 border border-red-500/20'
-					}`}>
+                    ${extraProps.status
+												? 'bg-green-500/10 text-green-400 border border-green-500/20'
+												: 'bg-red-500/10 text-red-400 border border-red-500/20'
+											}`}>
 										{extraProps.status ? 'Activo' : 'Inactivo'}
 									</span>
 								</div>
@@ -88,7 +92,7 @@ function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 							</label>
 							<div
 								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-                text-sm text-white/70 min-h-[50px]'>
+                text-sm text-white/70 min-h-[50px] line-clamp-3 break-words whitespace-normal'>
 								{extraProps.description || 'Sin descripción'}
 							</div>
 						</div>
@@ -162,40 +166,54 @@ function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 										return (
 											<div
 												key={module}
-												className='rounded-xl border border-white/10 bg-white/5 p-4'>
-												<div className='flex items-center justify-between mb-3'>
+												className='rounded-xl border border-white/10 bg-white/5 overflow-hidden transition-all duration-200'>
+												<div
+													className='flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 select-none'
+													onClick={() => toggleModule(module)}
+												>
 													<h4 className='text-sm font-medium text-white'>
 														{module}
 													</h4>
-													<span
-														className='text-[10px] px-2 py-1 rounded-full
-                            bg-blue-500/10 text-blue-400 border border-blue-500/20'>
-														{modulePerms?.length} permiso
-														{modulePerms?.length !== 1 ? 's' : ''}
-													</span>
+													<div className='flex items-center gap-3'>
+														<span
+															className='text-[10px] px-2 py-1 rounded-full
+															bg-blue-500/10 text-blue-400 border border-blue-500/20'>
+															{modulePerms?.length} permiso
+															{modulePerms?.length !== 1 ? 's' : ''}
+														</span>
+														{expandedModule === module ? (
+															<ChevronUp size={16} className='text-white/40' />
+														) : (
+															<ChevronDown size={16} className='text-white/40' />
+														)}
+													</div>
 												</div>
 
-												<div className='grid grid-cols-2 gap-2'>
-													{modulePerms?.map((permission) => (
-														<div
-															key={permission._id}
-															className='flex items-center gap-2 p-2 rounded-lg bg-white/5'>
-															<Check
-																size={12}
-																className='text-[#C8A882]'
-															/>
-															<span className='text-xs text-white/70'>
-																{permission.action === 'view' &&
-																	'Ver'}
-																{permission.action === 'create' &&
-																	'Crear'}
-																{permission.action === 'update' &&
-																	'Editar'}
-																{permission.action === 'delete' &&
-																	'Eliminar'}
-															</span>
+												<div className={`transition-all duration-300 ease-in-out overflow-hidden ${expandedModule === module ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+													<div className='p-4 pt-0 border-t border-white/5'>
+														<div className='grid grid-cols-2 gap-2 mt-3'>
+															{modulePerms?.map((permission) => (
+																<div
+																	key={permission._id}
+																	className='flex items-center gap-2 p-2 rounded-lg bg-white/5'>
+																	<Check
+																		size={12}
+																		className='text-[#C8A882]'
+																	/>
+																	<span className='text-xs text-white/70'>
+																		{permission.action === 'view' &&
+																			'Ver'}
+																		{permission.action === 'create' &&
+																			'Crear'}
+																		{permission.action === 'update' &&
+																			'Editar'}
+																		{permission.action === 'delete' &&
+																			'Eliminar'}
+																	</span>
+																</div>
+															))}
 														</div>
-													))}
+													</div>
 												</div>
 											</div>
 										);
@@ -206,13 +224,13 @@ function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 
 						{/* Resumen */}
 						{extraProps.permissions && extraProps.permissions.length > 0 && (
-							<div className='p-4 rounded-xl border border-white/10 bg-white/5'>
-								<div className='flex justify-between items-center'>
-									<div>
-										<p className='text-sm font-medium text-white'>
+							<div className='p-4 rounded-xl border border-white/10 bg-white/5 overflow-hidden'>
+								<div className='flex justify-between items-center gap-4'>
+									<div className='min-w-0 flex-1'>
+										<p className='text-sm font-medium text-white truncate'>
 											Resumen del rol
 										</p>
-										<p className='text-xs text-white/40 mt-1'>
+										<p className='text-xs text-white/40 mt-1 truncate'>
 											{extraProps.permissions.length} permiso
 											{extraProps.permissions.length !== 1 ? 's' : ''}
 											{' en '}
@@ -221,11 +239,10 @@ function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 									</div>
 									<span
 										className={`text-xs px-3 py-1.5 rounded-full
-                    ${
-						extraProps.status
-							? 'bg-green-500/10 text-green-400 border border-green-500/20'
-							: 'bg-red-500/10 text-red-400 border border-red-500/20'
-					}`}>
+                    ${extraProps.status
+												? 'bg-green-500/10 text-green-400 border border-green-500/20'
+												: 'bg-red-500/10 text-red-400 border border-red-500/20'
+											}`}>
 										{extraProps.status ? 'Activo' : 'Inactivo'}
 									</span>
 								</div>
@@ -268,7 +285,7 @@ function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 				updateList={updateList}
 			/>
 		</>,
-    document.body
+		document.body
 	);
 }
 

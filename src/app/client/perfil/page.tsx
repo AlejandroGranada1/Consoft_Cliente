@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Eye, EyeOff, User, Lock, Camera, Check, X, Heart } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, Camera, Check, X, Heart, Bookmark } from 'lucide-react';
 import { useGetProfile, useUpdateUser, useChangePassword, useGetUserById } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import { useRouter } from 'next/navigation';
@@ -205,23 +205,21 @@ export default function ProfilePage() {
         <div className="flex gap-1 border-b border-white/10 pb-1">
           <button
             onClick={() => setActiveTab('profile')}
-            className={`px-5 py-2.5 text-sm font-medium transition-all relative rounded-t-lg ${
-              activeTab === 'profile'
-                ? 'text-[#C8A882] border-b-2 border-[#C8A882] -mb-[5px]'
-                : 'text-white/40 hover:text-white/60'
-            }`}
+            className={`px-5 py-2.5 text-sm font-medium transition-all relative rounded-t-lg ${activeTab === 'profile'
+              ? 'text-[#C8A882] border-b-2 border-[#C8A882] -mb-[5px]'
+              : 'text-white/40 hover:text-white/60'
+              }`}
           >
             Información personal
           </button>
           <button
             onClick={() => setActiveTab('favorites')}
-            className={`px-5 py-2.5 text-sm font-medium transition-all relative rounded-t-lg flex items-center gap-2 ${
-              activeTab === 'favorites'
-                ? 'text-[#C8A882] border-b-2 border-[#C8A882] -mb-[5px]'
-                : 'text-white/40 hover:text-white/60'
-            }`}
+            className={`px-5 py-2.5 text-sm font-medium transition-all relative rounded-t-lg flex items-center gap-2 ${activeTab === 'favorites'
+              ? 'text-[#C8A882] border-b-2 border-[#C8A882] -mb-[5px]'
+              : 'text-white/40 hover:text-white/60'
+              }`}
           >
-            <Heart size={15} />
+            <Bookmark size={15} />
             Mis favoritos
             {userWithFavorites?.favorites?.length > 0 && (
               <span className="ml-1 bg-[#C8A882] text-[#1e1e1c] text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">

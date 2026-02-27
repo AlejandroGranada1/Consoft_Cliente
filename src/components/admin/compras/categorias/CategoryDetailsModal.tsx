@@ -12,14 +12,14 @@ function CategoryDetailsModal({ isOpen, onClose, extraProps, updateList }: Defau
 
 	return createPortal(
 		<>
-		<div
-			className='fixed inset-0 z-50 flex items-center justify-center p-4'
-			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-				
+			<div
+				className='fixed inset-0 z-50 flex items-center justify-center p-4'
+				style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+
 				<div className="w-full max-w-[600px] rounded-2xl border border-white/10
 					shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
 					style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-					
+
 					{/* Header */}
 					<header className="relative px-6 py-5 border-b border-white/10">
 						<div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -51,7 +51,7 @@ function CategoryDetailsModal({ isOpen, onClose, extraProps, updateList }: Defau
 								Nombre de la categoría
 							</label>
 							<div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-								text-sm text-white/90">
+								text-sm text-white/90 truncate">
 								{extraProps.name}
 							</div>
 						</div>
@@ -62,7 +62,7 @@ function CategoryDetailsModal({ isOpen, onClose, extraProps, updateList }: Defau
 								Descripción
 							</label>
 							<div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-								text-sm text-white/70 min-h-[60px]">
+								text-sm text-white/70 min-h-[60px] line-clamp-3 break-words whitespace-normal">
 								{extraProps.description || 'Sin descripción'}
 							</div>
 						</div>
@@ -79,16 +79,16 @@ function CategoryDetailsModal({ isOpen, onClose, extraProps, updateList }: Defau
 										{extraProps.products?.length || 0}
 									</span>
 								</div>
-								
+
 								{extraProps.products && extraProps.products.length > 0 && (
 									<>
 										<div className="border-t border-white/10 my-3"></div>
 										<div className="max-h-32 overflow-y-auto space-y-2 pr-2">
 											{extraProps.products.map((product: any, idx: number) => (
-												<div key={idx} 
-													className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/8 transition">
-													<Package size={14} className="text-white/40" />
-													<span className="text-xs text-white/70">
+												<div key={idx}
+													className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/8 transition overflow-hidden">
+													<Package size={14} className="text-white/40 shrink-0" />
+													<span className="text-xs text-white/70 truncate">
 														{product.name || `Producto ${idx + 1}`}
 													</span>
 												</div>
@@ -100,11 +100,11 @@ function CategoryDetailsModal({ isOpen, onClose, extraProps, updateList }: Defau
 						</div>
 
 						{/* Resumen */}
-						<div className="p-4 rounded-xl border border-white/10 bg-white/5">
-							<div className="flex justify-between items-center">
-								<div>
-									<p className="text-sm font-medium text-white">Resumen</p>
-									<p className="text-xs text-white/40 mt-1">
+						<div className="p-4 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+							<div className="flex justify-between items-center gap-4">
+								<div className="min-w-0 flex-1">
+									<p className="text-sm font-medium text-white truncate">Resumen</p>
+									<p className="text-xs text-white/40 mt-1 truncate">
 										{extraProps.name}
 									</p>
 								</div>

@@ -73,7 +73,7 @@ function ProductDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 								</label>
 								<div
 									className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-									text-sm text-white/90'>
+									text-sm text-white/90 truncate'>
 									{extraProps.name}
 								</div>
 							</div>
@@ -85,7 +85,7 @@ function ProductDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 								</label>
 								<div
 									className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-									text-sm text-white/90'>
+									text-sm text-white/90 truncate'>
 									{category?.name || 'Sin categoría'}
 								</div>
 							</div>
@@ -97,7 +97,7 @@ function ProductDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 								</label>
 								<div
 									className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-									text-sm text-white/70 min-h-[60px]'>
+									text-sm text-white/70 min-h-[60px] line-clamp-4 break-words whitespace-normal'>
 									{extraProps.description || 'Sin descripción'}
 								</div>
 							</div>
@@ -109,15 +109,13 @@ function ProductDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 								</label>
 								<div className='flex items-center gap-3'>
 									<div
-										className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
-											extraProps.status
+										className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${extraProps.status
 												? 'bg-green-500/10 text-green-400 border border-green-500/20'
 												: 'bg-red-500/10 text-red-400 border border-red-500/20'
-										}`}>
+											}`}>
 										<span
-											className={`w-2 h-2 rounded-full ${
-												extraProps.status ? 'bg-green-400' : 'bg-red-400'
-											}`}
+											className={`w-2 h-2 rounded-full ${extraProps.status ? 'bg-green-400' : 'bg-red-400'
+												}`}
 										/>
 										{extraProps.status ? 'Activo' : 'Inactivo'}
 									</div>
@@ -157,22 +155,21 @@ function ProductDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 						</div>
 
 						{/* Resumen - ocupa ambas columnas */}
-						<div className='col-span-2 p-4 rounded-xl border border-white/10 bg-white/5'>
-							<div className='flex justify-between items-center'>
-								<div>
-									<p className='text-sm font-medium text-white'>Resumen</p>
-									<p className='text-xs text-white/40 mt-1'>{extraProps.name}</p>
-									<p className='text-xs text-white/40'>
+						<div className='col-span-2 p-4 rounded-xl border border-white/10 bg-white/5 overflow-hidden'>
+							<div className='flex justify-between items-center gap-4'>
+								<div className='min-w-0 flex-1'>
+									<p className='text-sm font-medium text-white truncate'>Resumen</p>
+									<p className='text-xs text-white/40 mt-1 truncate'>{extraProps.name}</p>
+									<p className='text-xs text-white/40 truncate'>
 										{category?.name || 'Sin categoría'}
 									</p>
 								</div>
 								<div className='text-right'>
 									<span
-										className={`text-xs px-3 py-1.5 rounded-full ${
-											extraProps.status
+										className={`text-xs px-3 py-1.5 rounded-full ${extraProps.status
 												? 'bg-green-500/10 text-green-400 border border-green-500/20'
 												: 'bg-red-500/10 text-red-400 border border-red-500/20'
-										}`}>
+											}`}>
 										{extraProps.status ? 'Activo' : 'Inactivo'}
 									</span>
 								</div>
@@ -213,7 +210,7 @@ function ProductDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 				isOpen={editModal}
 				onClose={() => setEditModal(false)}
 				extraProps={extraProps}
-				updateList={() => {}}
+				updateList={() => { }}
 			/>
 		</>,
 		document.body,

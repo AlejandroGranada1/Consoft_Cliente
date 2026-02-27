@@ -9,21 +9,21 @@ import Image from 'next/image';
 import { ArrowLeft, Upload, Sparkles, Minus, Plus, ShoppingCart, Ruler, Palette, Tag, FileText, Paintbrush } from 'lucide-react';
 
 const AVAILABLE_COLORS = [
-  { name: 'Nogal',         value: 'nogal',          hex: '#7B4A12' },
-  { name: 'Blanco',        value: 'blanco',          hex: '#F5F5F5' },
-  { name: 'Negro',         value: 'negro',           hex: '#1A1A1A' },
-  { name: 'Gris',          value: 'gris',            hex: '#9CA3AF' },
-  { name: 'Café oscuro',   value: 'cafe_oscuro',     hex: '#4B2E1E' },
-  { name: 'Azul petróleo', value: 'azul_petroleo',   hex: '#1F4E5F' },
-  { name: 'Verde oliva',   value: 'verde_oliva',     hex: '#556B2F' },
+  { name: 'Nogal', value: 'nogal', hex: '#7B4A12' },
+  { name: 'Blanco', value: 'blanco', hex: '#F5F5F5' },
+  { name: 'Negro', value: 'negro', hex: '#1A1A1A' },
+  { name: 'Gris', value: 'gris', hex: '#9CA3AF' },
+  { name: 'Café oscuro', value: 'cafe_oscuro', hex: '#4B2E1E' },
+  { name: 'Azul petróleo', value: 'azul_petroleo', hex: '#1F4E5F' },
+  { name: 'Verde oliva', value: 'verde_oliva', hex: '#556B2F' },
 ];
 
-function InputField({ label, required, hint, icon, children }: { 
-  label: string; 
-  required?: boolean; 
-  hint?: string; 
+function InputField({ label, required, hint, icon, children }: {
+  label: string;
+  required?: boolean;
+  hint?: string;
   icon?: React.ReactNode;
-  children: React.ReactNode 
+  children: React.ReactNode
 }) {
   return (
     <div className="space-y-2">
@@ -73,10 +73,10 @@ export default function CustomProductPage() {
     const Swal = (await import('sweetalert2')).default;
 
     if (!user) {
-      Swal.fire({ 
-        title: 'Inicia sesión', 
-        text: 'Debes iniciar sesión para solicitar productos personalizados', 
-        icon: 'warning', 
+      Swal.fire({
+        title: 'Inicia sesión',
+        text: 'Debes iniciar sesión para solicitar productos personalizados',
+        icon: 'warning',
         confirmButtonColor: '#8B5E3C',
         background: '#1e1e1c',
         color: '#fff',
@@ -87,10 +87,10 @@ export default function CustomProductPage() {
 
     // Validaciones
     if (!formData.productName || !formData.description) {
-      Swal.fire({ 
-        title: 'Campos incompletos', 
-        text: 'Por favor completa el nombre y la descripción', 
-        icon: 'warning', 
+      Swal.fire({
+        title: 'Campos incompletos',
+        text: 'Por favor completa el nombre y la descripción',
+        icon: 'warning',
         confirmButtonColor: '#8B5E3C',
         background: '#1e1e1c',
         color: '#fff',
@@ -101,10 +101,10 @@ export default function CustomProductPage() {
     // Validar color según el modo
     if (useCustomColor) {
       if (!formData.customColor.trim()) {
-        Swal.fire({ 
-          title: 'Color requerido', 
-          text: 'Por favor especifica el color deseado', 
-          icon: 'warning', 
+        Swal.fire({
+          title: 'Color requerido',
+          text: 'Por favor especifica el color deseado',
+          icon: 'warning',
           confirmButtonColor: '#8B5E3C',
           background: '#1e1e1c',
           color: '#fff',
@@ -113,10 +113,10 @@ export default function CustomProductPage() {
       }
     } else {
       if (!formData.color) {
-        Swal.fire({ 
-          title: 'Color requerido', 
-          text: 'Por favor selecciona un color', 
-          icon: 'warning', 
+        Swal.fire({
+          title: 'Color requerido',
+          text: 'Por favor selecciona un color',
+          icon: 'warning',
           confirmButtonColor: '#8B5E3C',
           background: '#1e1e1c',
           color: '#fff',
@@ -125,8 +125,8 @@ export default function CustomProductPage() {
       }
     }
 
-    const selectedColor = useCustomColor 
-      ? formData.customColor 
+    const selectedColor = useCustomColor
+      ? formData.customColor
       : AVAILABLE_COLORS.find((c) => c.value === formData.color)?.name || formData.color;
 
     const detailedDescription = `
@@ -159,23 +159,23 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : '✓ Sin imagen
         color: '#fff',
       });
 
-      setFormData({ 
-        productName: '', 
-        description: '', 
-        dimensions: '', 
-        color: '', 
+      setFormData({
+        productName: '',
+        description: '',
+        dimensions: '',
+        color: '',
         customColor: '',
-        quantity: 1, 
-        referenceImage: null 
+        quantity: 1,
+        referenceImage: null
       });
       setUseCustomColor(false);
       setImagePreview(null);
       router.push('/client/productos');
     } catch (error: any) {
-      Swal.fire({ 
-        title: 'Error', 
-        text: 'Hubo un problema al procesar tu solicitud', 
-        icon: 'error', 
+      Swal.fire({
+        title: 'Error',
+        text: 'Hubo un problema al procesar tu solicitud',
+        icon: 'error',
         confirmButtonColor: '#8B5E3C',
         background: '#1e1e1c',
         color: '#fff',
@@ -222,32 +222,31 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : '✓ Sin imagen
           {/* ── Columna izquierda: imagen ── */}
           <div className="space-y-4">
 
-            {/* Preview */}
-            <div className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 shadow-[0_24px_64px_rgba(0,0,0,0.5)] bg-white/5">
+            {/* Preview & Upload Area */}
+            <label className="relative cursor-pointer aspect-square rounded-2xl overflow-hidden border border-white/10 shadow-[0_24px_64px_rgba(0,0,0,0.5)] bg-white/5 flex group transition-all duration-300 hover:border-[#C8A882]/50 hover:shadow-[0_24px_64px_rgba(200,168,130,0.15)] w-full block">
+              <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+
               {imagePreview ? (
-                <Image src={imagePreview} alt="Referencia" fill className="object-cover" />
+                <>
+                  <Image src={imagePreview} alt="Referencia" fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                    <div className="flex items-center gap-2 bg-[#C8A882] text-white px-4 py-2 rounded-lg font-medium text-sm translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                      <Upload size={16} />
+                      Cambiar imagen
+                    </div>
+                  </div>
+                </>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-center p-8 gap-4">
-                  <div className="w-16 h-16 rounded-2xl border border-white/15 bg-white/5 flex items-center justify-center">
-                    <Upload size={24} className="text-white/30" />
+                <div className="flex flex-col items-center justify-center w-full h-full text-center p-8 gap-4 group-hover:bg-white/[0.02] transition-colors duration-300">
+                  <div className="w-16 h-16 rounded-2xl border border-white/15 bg-white/5 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:border-[#C8A882]/40 group-hover:bg-[#C8A882]/10">
+                    <Upload size={24} className="text-white/30 group-hover:text-[#C8A882] transition-colors duration-300" />
                   </div>
                   <div>
-                    <p className="text-sm text-white/40">Sube una imagen de referencia</p>
+                    <p className="text-sm text-white/40 group-hover:text-white/70 transition-colors duration-300">Sube una imagen de referencia</p>
                     <p className="text-xs text-white/25 mt-1">opcional</p>
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Upload button */}
-            <label className="block cursor-pointer">
-              <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-              <div className="flex items-center justify-center gap-2.5 rounded-xl border border-dashed border-white/15 bg-white/5 hover:bg-white/8 hover:border-[#C8A882]/40 p-4 transition-all duration-200">
-                <Upload size={15} className="text-[#C8A882]" />
-                <span className="text-xs text-white/50 hover:text-white/70 transition-colors">
-                  {formData.referenceImage ? 'Cambiar imagen' : 'Subir imagen de referencia'}
-                </span>
-              </div>
             </label>
 
             {/* Info card */}
@@ -317,8 +316,8 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : '✓ Sin imagen
             </InputField>
 
             {/* Dimensiones (opcional) */}
-            <InputField 
-              label="Dimensiones" 
+            <InputField
+              label="Dimensiones"
               hint="Opcional - Especifica largo × ancho × alto en centímetros"
               icon={<Ruler size={12} />}
             >
@@ -337,14 +336,12 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : '✓ Sin imagen
                 <button
                   type="button"
                   onClick={() => setUseCustomColor(!useCustomColor)}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${
-                    useCustomColor ? 'bg-[#C8A882]' : 'bg-white/20'
-                  }`}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${useCustomColor ? 'bg-[#C8A882]' : 'bg-white/20'
+                    }`}
                 >
                   <span
-                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                      useCustomColor ? 'translate-x-5' : ''
-                    }`}
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${useCustomColor ? 'translate-x-5' : ''
+                      }`}
                   />
                 </button>
                 <div className="flex items-center gap-2">
@@ -354,7 +351,7 @@ ${formData.referenceImage ? '✓ Imagen de referencia adjunta' : '✓ Sin imagen
                   </span>
                 </div>
               </label>
-              
+
               <p className="text-xs text-white/40 pl-14">
                 Activa esta opción si no encuentras el color que buscas en la paleta.
               </p>

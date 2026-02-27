@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Heart, ArrowUpRight } from 'lucide-react';
+import { Heart, ArrowUpRight, Bookmark } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetUserById, useUpdateUser } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
@@ -92,14 +92,15 @@ export default function ProductCard({
             onClick={(e) => { e.stopPropagation(); toggleFavorite(); }}
             className="absolute top-3 right-3 z-10
               w-8 h-8 rounded-full
-              bg-black/40 backdrop-blur border border-white/15
+              bg-black/70 backdrop-blur border border-white/15
               flex items-center justify-center
               hover:scale-110 hover:bg-black/60
               transition-all duration-200"
           >
-            <Heart
+            <Bookmark
               size={14}
-              className={isFavorite ? 'text-red-400' : 'text-white/70'}
+              className={isFavorite ? 'text-red' : 'text-white/70'}
+
               fill={isFavorite ? 'currentColor' : 'none'}
             />
           </button>

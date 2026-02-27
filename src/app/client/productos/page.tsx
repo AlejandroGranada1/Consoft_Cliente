@@ -3,12 +3,36 @@
 import ProductCard from '@/components/productos/ProductCard';
 import { useGetProducts } from '@/hooks/apiHooks';
 import { Category } from '@/lib/types';
-import { Plus, Sparkles, ArrowRight } from 'lucide-react';
+import { Plus, Sparkles, Search, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState, useMemo } from 'react';
 
 export default function ProductsPage() {
   const router = useRouter();
   const { data: products, isLoading, refetch } = useGetProducts();
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const categories = useMemo(() => {
+    if (!products) return [];
+    const cats = new Set<string>();
+    products.forEach(p => {
+      const catName = (p.category as Category)?.name;
+      if (catName) cats.add(catName);
+    });
+    return Array.from(cats).sort();
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    return products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const catName = (p.category as Category)?.name || 'Sin categoría';
+      const matchesCategory = selectedCategory ? catName === selectedCategory : true;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchTerm, selectedCategory]);
 
   if (isLoading) return (
     <div
@@ -19,16 +43,6 @@ export default function ProductsPage() {
     >
       <p className="text-white/50 text-sm tracking-widest uppercase">Cargando...</p>
     </div>
-  );
-
-  const productsByCategory = products?.reduce(
-    (acc, product) => {
-      const categoryName = (product.category as Category)?.name || 'Sin categoría';
-      if (!acc[categoryName]) acc[categoryName] = [];
-      acc[categoryName].push(product);
-      return acc;
-    },
-    {} as Record<string, typeof products>,
   );
 
   return (
@@ -76,25 +90,69 @@ export default function ProductsPage() {
           </p>
         </header>
 
-        {/* ── CATEGORÍAS ── */}
-        {productsByCategory &&
-          Object.entries(productsByCategory).map(([categoryName, items]) => (
-            <section key={categoryName} className="space-y-6">
+        <div className="flex flex-col lg:flex-row gap-10">
 
-              {/* Encabezado de categoría */}
-              <div className="flex items-center gap-4">
-                <h2 className="font-serif text-white text-xl font-semibold whitespace-nowrap">
-                  {categoryName}
-                </h2>
-                <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
-                <span className="text-[11px] uppercase tracking-wider text-white/35 font-medium">
-                  {items.length} {items.length === 1 ? 'pieza' : 'piezas'}
-                </span>
+          {/* Sidebar de Filtros */}
+          <aside className="w-full lg:w-64 shrink-0 space-y-8">
+            {/* Buscador */}
+            <div className="space-y-3">
+              <h3 className="text-[11px] font-medium tracking-[.07em] uppercase text-white/50">Buscar</h3>
+              <div className="relative">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+                <input
+                  type="text"
+                  placeholder="Buscar productos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/10 transition-all duration-200 shadow-sm"
+                />
               </div>
+            </div>
 
-              {/* Grid de productos */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {items.map((product) => (
+            {/* Lista de Categorías */}
+            <div className="space-y-3">
+              <h3 className="text-[11px] font-medium tracking-[.07em] uppercase text-white/50">Categorías</h3>
+              <div className="flex flex-col space-y-1 shrink-0 bg-white/[0.02] border border-white/5 rounded-2xl p-2">
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${selectedCategory === null
+                    ? 'bg-[#C8A882]/15 text-[#C8A882] font-medium'
+                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  Todas
+                </button>
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-left transition-all duration-200 ${selectedCategory === cat
+                      ? 'bg-[#C8A882]/15 text-[#C8A882] font-medium'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                      }`}
+                  >
+                    <span className="truncate pr-2">{cat}</span>
+                    {selectedCategory === cat && <ChevronRight size={14} className="shrink-0" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          {/* Grid de Productos */}
+          <div className="flex-1 space-y-6 min-w-0">
+            <div className="flex items-center justify-between">
+              <h2 className="font-serif text-white text-xl font-semibold truncate pr-4">
+                {selectedCategory || 'Todos los productos'}
+              </h2>
+              <span className="text-[11px] uppercase tracking-wider text-white/35 font-medium shrink-0">
+                {filteredProducts.length} {filteredProducts.length === 1 ? 'resultado' : 'resultados'}
+              </span>
+            </div>
+
+            {filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                {filteredProducts.map((product) => (
                   <ProductCard
                     key={product._id}
                     id={product._id!}
@@ -108,8 +166,20 @@ export default function ProductsPage() {
                   />
                 ))}
               </div>
-            </section>
-          ))}
+            ) : (
+              <div className="flex flex-col items-center justify-center p-12 text-center border border-white/10 rounded-2xl bg-white/[0.02] border-dashed">
+                <Search size={32} className="text-white/20 mb-4" />
+                <p className="text-white/50 text-sm mb-4">No se encontraron productos que coincidan con tu búsqueda.</p>
+                <button
+                  onClick={() => { setSearchTerm(''); setSelectedCategory(null); }}
+                  className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-white/80 transition-all duration-200 text-sm"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* ── BANNER PERSONALIZADO (al final) ── */}
         <div

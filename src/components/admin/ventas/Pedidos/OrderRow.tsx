@@ -65,16 +65,20 @@ export default function OrderRow({ order, onView, onEdit, onDelete }: OrderRowPr
       <div className='hidden md:grid grid-cols-7 place-items-center py-3 px-4
         rounded-xl border border-white/10 bg-white/5
         hover:bg-white/8 transition-all duration-200'>
-        
+
         {/* ID */}
-        <p className="text-sm text-white/60 font-mono">
-          #{order._id?.slice(-6).toUpperCase()}
-        </p>
+        <div className='min-w-0 w-full text-center'>
+          <p className="text-sm text-white/60 font-mono truncate">
+            #{order._id?.slice(-6).toUpperCase()}
+          </p>
+        </div>
 
         {/* Cliente */}
-        <p className="text-sm text-white/90 font-medium">
-          {user?.name || 'N/A'}
-        </p>
+        <div className='min-w-0 w-full text-center'>
+          <p className="text-sm text-white/90 font-medium truncate">
+            {user?.name || 'N/A'}
+          </p>
+        </div>
 
         {/* Valor */}
         <p className="text-sm text-[#C8A882] font-semibold">
