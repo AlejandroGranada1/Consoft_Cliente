@@ -62,31 +62,31 @@ export default function UserRow({ user, onView, onEdit, onDelete }: UserRowProps
 				</div>
 
 				{/* Usuario */}
-				<div className='text-left'>
-					<p className='text-sm text-white/90 font-medium'>{user.name}</p>
+				<div className='text-left min-w-0'>
+					<p className='text-sm text-white/90 font-medium truncate'>{user.name}</p>
 					{user.phone && (
-						<p className='text-xs text-white/40 flex items-center gap-1 mt-0.5'>
-							<Phone size={10} /> {user.phone}
+						<p className='text-xs text-white/40 flex items-center gap-1 mt-0.5 overflow-hidden'>
+							<Phone size={10} className='shrink-0' /> <span className='truncate'>{user.phone}</span>
 						</p>
 					)}
 				</div>
 
 				{/* Correo */}
-				<div className='text-left'>
-					<p className='text-sm text-white/70 flex items-center gap-2'>
+				<div className='text-left min-w-0'>
+					<p className='text-sm text-white/70 flex items-center gap-2 overflow-hidden'>
 						<Mail
 							size={12}
-							className='text-white/40'
+							className='text-white/40 shrink-0'
 						/>
-						{user.email}
+						<span className='truncate'>{user.email}</span>
 					</p>
 				</div>
 
 				{/* Rol */}
-				<div className='text-left'>
+				<div className='text-left min-w-0 flex items-center'>
 					<span
 						className='text-xs px-2 py-1 rounded-full
-            bg-[#C8A882]/10 text-[#C8A882] border border-[#C8A882]/20'>
+            bg-[#C8A882]/10 text-[#C8A882] border border-[#C8A882]/20 truncate'>
 						{(user.role as any)?.name || 'Sin rol'}
 					</span>
 				</div>
@@ -100,11 +100,10 @@ export default function UserRow({ user, onView, onEdit, onDelete }: UserRowProps
 				<div className='text-left'>
 					<span
 						className={`px-2 py-1 rounded-full text-xs font-medium
-            ${
-				user.status
-					? 'bg-green-500/10 text-green-400 border border-green-500/20'
-					: 'bg-red-500/10 text-red-400 border border-red-500/20'
-			}`}>
+            ${user.status
+								? 'bg-green-500/10 text-green-400 border border-green-500/20'
+								: 'bg-red-500/10 text-red-400 border border-red-500/20'
+							}`}>
 						{user.status ? 'Activo' : 'Inactivo'}
 					</span>
 				</div>
@@ -164,11 +163,10 @@ export default function UserRow({ user, onView, onEdit, onDelete }: UserRowProps
 						<div className='flex items-center gap-2 mt-2'>
 							<span
 								className={`text-[10px] px-2 py-0.5 rounded-full
-                ${
-					user.status
-						? 'bg-green-500/10 text-green-400 border border-green-500/20'
-						: 'bg-red-500/10 text-red-400 border border-red-500/20'
-				}`}>
+                ${user.status
+										? 'bg-green-500/10 text-green-400 border border-green-500/20'
+										: 'bg-red-500/10 text-red-400 border border-red-500/20'
+									}`}>
 								{user.status ? 'Activo' : 'Inactivo'}
 							</span>
 							<span

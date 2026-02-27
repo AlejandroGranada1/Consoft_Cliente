@@ -29,12 +29,16 @@ export default function RoleRow({ role, onView, onEdit, onDelete }: RoleRowProps
       <div className='hidden md:grid grid-cols-6 place-items-center py-4 px-4
         rounded-xl border border-white/10 bg-white/5
         hover:bg-white/8 transition-all duration-200'>
-        
-        <p className='text-sm text-white/90 font-medium'>{role.name}</p>
-        <p className='text-sm text-white/60 truncate max-w-[150px]'>{role.description || '-'}</p>
+
+        <div className='min-w-0 w-full text-center'>
+          <p className='text-sm text-white/90 font-medium truncate'>{role.name}</p>
+        </div>
+        <div className='min-w-0 w-full text-center'>
+          <p className='text-sm text-white/60 truncate' title={role.description || ''}>{role.description || '-'}</p>
+        </div>
         <p className='text-sm text-white/60'>{role.usersCount || 0}</p>
         <p className='text-sm text-white/60'>{formatDate(role.createdAt)}</p>
-        
+
         <div>
           <span className={`px-3 py-1 rounded-full text-xs font-medium
             ${role.status
@@ -76,7 +80,7 @@ export default function RoleRow({ role, onView, onEdit, onDelete }: RoleRowProps
           <div>
             <h3 className='text-white font-medium'>{role.name}</h3>
             <p className='text-xs text-white/40 mt-1'>{role.description || 'Sin descripción'}</p>
-            
+
             <div className='flex items-center gap-3 mt-3'>
               <span className={`text-xs px-2 py-1 rounded-full
                 ${role.status

@@ -11,11 +11,11 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 
   const handleDeleteUser = async () => {
     if (!extraProps?._id) return;
-    
+
     setDeleteLoading(true);
     const result = await deleteElement('Usuario', `/api/users/${extraProps._id}`, updateList!);
     setDeleteLoading(false);
-    
+
     if (result) {
       onClose();
     }
@@ -34,14 +34,14 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 
   return createPortal(
     <>
-		<div
-			className='fixed inset-0 z-50 flex items-center justify-center p-4'
-			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+      <div
+        className='fixed inset-0 z-50 flex items-center justify-center p-4'
+        style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
         <div className="w-full max-w-[600px] rounded-2xl border border-white/10
           shadow-[0_8px_32px_rgba(0,0,0,0.3)]
           flex flex-col max-h-[90vh]"
           style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-          
+
           {/* Header */}
           <header className="relative px-6 py-5 border-b border-white/10">
             <button
@@ -66,8 +66,8 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
                   Nombre
                 </label>
                 <div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-                  text-sm text-white/90">
-                  {extraProps.name}
+                  text-sm text-white/90 truncate">
+                  <span className="truncate">{extraProps.name}</span>
                 </div>
               </div>
 
@@ -93,9 +93,9 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
                 Correo electrónico
               </label>
               <div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-                text-sm text-white/90 flex items-center gap-2">
-                <Mail size={14} className="text-white/40" />
-                {extraProps.email}
+                text-sm text-white/90 flex items-center gap-2 overflow-hidden">
+                <Mail size={14} className="text-white/40 shrink-0" />
+                <span className="truncate">{extraProps.email}</span>
               </div>
             </div>
 
@@ -106,9 +106,9 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
                   Teléfono
                 </label>
                 <div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-                  text-sm text-white/70 flex items-center gap-2">
-                  <Phone size={14} className="text-white/40" />
-                  {extraProps.phone || 'No registrado'}
+                  text-sm text-white/70 flex items-center gap-2 overflow-hidden">
+                  <Phone size={14} className="text-white/40 shrink-0" />
+                  <span className="truncate">{extraProps.phone || 'No registrado'}</span>
                 </div>
               </div>
 
@@ -117,9 +117,9 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
                   Rol
                 </label>
                 <div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-                  text-sm text-white/70 flex items-center gap-2">
-                  <Shield size={14} className="text-white/40" />
-                  {(extraProps.role as Role)?.name || 'Sin rol'}
+                  text-sm text-white/70 flex items-center gap-2 overflow-hidden">
+                  <Shield size={14} className="text-white/40 shrink-0" />
+                  <span className="truncate">{(extraProps.role as Role)?.name || 'Sin rol'}</span>
                 </div>
               </div>
             </div>
@@ -130,9 +130,9 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
                 Dirección
               </label>
               <div className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-                text-sm text-white/70 flex items-center gap-2">
-                <MapPin size={14} className="text-white/40" />
-                {extraProps.address || 'No registrada'}
+                text-sm text-white/70 flex items-center gap-2 overflow-hidden">
+                <MapPin size={14} className="text-white/40 shrink-0" />
+                <span className="truncate">{extraProps.address || 'No registrada'}</span>
               </div>
             </div>
 
@@ -160,12 +160,12 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
             </div>
 
             {/* Resumen */}
-            <div className="p-4 rounded-xl border border-white/10 bg-white/5">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm font-medium text-white">Resumen del usuario</p>
-                  <p className="text-xs text-white/40 mt-1">{extraProps.name}</p>
-                  <p className="text-xs text-white/40">{extraProps.email}</p>
+            <div className="p-4 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+              <div className="flex justify-between items-center gap-4">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-white truncate">Resumen del usuario</p>
+                  <p className="text-xs text-white/40 mt-1 truncate">{extraProps.name}</p>
+                  <p className="text-xs text-white/40 truncate">{extraProps.email}</p>
                 </div>
                 <span className="text-xs px-3 py-1.5 rounded-full
                   bg-[#C8A882]/10 text-[#C8A882] border border-[#C8A882]/20">
@@ -213,7 +213,7 @@ function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
         updateList={updateList}
       />
     </>,
-    document.body 
+    document.body
   );
 }
 
