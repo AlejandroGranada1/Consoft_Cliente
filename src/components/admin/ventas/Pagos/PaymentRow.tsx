@@ -54,34 +54,41 @@ export default function PaymentRow({ p, onView }: PaymentRowProps) {
 	return (
 		<div className='relative group'>
 			{/* Versión Desktop */}
-			<div className='hidden md:grid grid-cols-8 place-items-center py-3 px-4
+			<div className='hidden md:grid grid-cols-7 place-items-center py-3 px-4
 				rounded-xl border border-white/10 bg-white/5
 				hover:bg-white/8 transition-all duration-200'>
 
 				{/* ID Pedido */}
-				<p className="text-sm text-white/60 font-mono">
-					#{p.summary._id.slice(-6).toUpperCase()}
-				</p>
+				<div className='min-w-0 w-full text-center'>
+					<p className="text-sm text-white/60 font-mono truncate">
+						#{p.summary._id.slice(-6).toUpperCase()}
+					</p>
+				</div>
 
 				{/* Monto Total */}
-				<p className="text-sm text-white/90 font-medium">
-					{formatCurrency(p.summary.total)}
-				</p>
-				
+				<div className='min-w-0 w-full text-center'>
+					<p className="text-sm text-white/90 font-medium truncate">
+						{formatCurrency(p.summary.total)}
+					</p>
+				</div>
+
 
 				{/* Valor Pago */}
-				<p className="text-sm text-[#C8A882] font-semibold">
-					{formatCurrency(p.payment.amount)}
-				</p>
+				<div className='min-w-0 w-full text-center'>
+					<p className="text-sm text-[#C8A882] font-semibold truncate">
+						{formatCurrency(p.payment.amount)}
+					</p>
+				</div>
 
 				{/* Pendiente */}
-				<p className={`text-sm font-medium ${
-					p.summary.total - p.payment.amount > 0 
-						? 'text-yellow-400' 
+				<div className='min-w-0 w-full text-center'>
+					<p className={`text-sm font-medium truncate ${p.summary.total - p.payment.amount > 0
+						? 'text-yellow-400'
 						: 'text-green-400'
-				}`}>
-					{formatCurrency(p.summary.total - p.payment.amount)}
-				</p>
+						}`}>
+						{formatCurrency(p.summary.total - p.payment.amount)}
+					</p>
+				</div>
 
 				{/* Fecha Pago */}
 				<p className="text-sm text-white/60">

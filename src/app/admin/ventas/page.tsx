@@ -5,6 +5,7 @@ import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
 import Pagination from '@/components/Global/Pagination';
 import SaleRow from '@/components/admin/ventas/Ventas/SaleRow';
+import SaleDetailsModal from '@/components/admin/ventas/Ventas/SaleDetailsModal';
 
 function SalesPage() {
 	const [sales, setSales] = useState<Sale[]>([]);
@@ -14,11 +15,12 @@ function SalesPage() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 5;
 
+	const fetchSales = async () => {
+		const response = await api.get('/api/sales');
+		setSales(response.data.sales);
+	};
+
 	useEffect(() => {
-		const fetchSales = async () => {
-			const response = await api.get('/api/sales');
-			setSales(response.data.sales);
-		};
 		fetchSales();
 	}, []);
 
@@ -96,13 +98,14 @@ function SalesPage() {
 				{/* Tabla */}
 				<section className="w-full mx-auto flex-1 flex flex-col">
 					{/* Encabezado tabla - solo desktop */}
-					<div className="hidden md:grid grid-cols-6 place-items-center py-4 px-4
+					<div className="hidden md:grid grid-cols-7 place-items-center py-4 px-4
 						border-b border-white/10 text-[11px] tracking-[.08em] uppercase text-white/40 font-medium">
 						<p>ID Venta</p>
 						<p>Cliente</p>
 						<p>Total</p>
 						<p>Pagado</p>
-						<p>Estado</p>
+						<p>Estado del pago</p>
+						<p>Estado del pedido</p>
 						<p>Acciones</p>
 					</div>
 
@@ -146,6 +149,13 @@ function SalesPage() {
 					<div className="h-8 md:h-12" />
 				</section>
 			</div>
+
+			<SaleDetailsModal
+				isOpen={detailsModal}
+				onClose={() => setDetailsModal(false)}
+				extraProps={Sale}
+				updateList={fetchSales}
+			/>
 		</div>
 	);
 }
