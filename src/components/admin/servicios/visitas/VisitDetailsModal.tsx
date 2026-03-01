@@ -10,15 +10,17 @@ import {
 	AlertCircle,
 	Mail,
 	Phone,
+	FileText,
 } from 'lucide-react';
 import { DefaultModalProps, Visit } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
 import { updateElement } from '../../global/alerts';
 import Swal from 'sweetalert2';
 import { createPortal } from 'react-dom';
+import EditVisitModal from './EditVisitModal';
 
 function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Visit>) {
-	const [editModal, setEditModal] = useState(false);
+	const [showEditModal, setShowEditModal] = useState(false);
 	const [status, setStatus] = useState(extraProps?.status || 'Programada');
 	const [visitData, setVisitData] = useState<Visit>({
 		_id: extraProps?._id || undefined,
@@ -154,9 +156,16 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 					<header className='relative px-6 py-5 border-b border-white/10'>
 						<div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2'>
 							<button
+								onClick={() => setShowEditModal(true)}
+								className='p-2 rounded-lg text-white/40 hover:text-[#C8A882]
+										hover:bg-white/5 transition-all duration-200'
+								title='Editar visita'>
+								<Edit2 size={18} />
+							</button>
+							<button
 								onClick={onClose}
 								className='p-2 rounded-lg text-white/40 hover:text-white/70
-									hover:bg-white/5 transition-all duration-200'>
+										hover:bg-white/5 transition-all duration-200'>
 								<X size={18} />
 							</button>
 						</div>
@@ -222,18 +231,33 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 							</div>
 						</div>
 
-						{/* Dirección */}
-						<div className='rounded-xl border border-white/10 bg-white/5 p-4'>
-							<h3 className='text-sm font-medium text-white mb-3 flex items-center gap-2'>
-								<MapPin
-									size={16}
-									className='text-[#C8A882]'
-								/>
-								Dirección de la visita
-							</h3>
-							<p className='text-sm text-white/90 line-clamp-3 break-words'>
-								{extraProps?.address || 'No especificada'}
-							</p>
+						{/* Dirección y Descripción */}
+						<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+							<div className='rounded-xl border border-white/10 bg-white/5 p-4'>
+								<h3 className='text-sm font-medium text-white mb-3 flex items-center gap-2'>
+									<MapPin
+										size={16}
+										className='text-[#C8A882]'
+									/>
+									Dirección de la visita
+								</h3>
+								<p className='text-sm text-white/90 line-clamp-3 break-words'>
+									{extraProps?.address || 'No especificada'}
+								</p>
+							</div>
+
+							<div className='rounded-xl border border-white/10 bg-white/5 p-4'>
+								<h3 className='text-sm font-medium text-white mb-3 flex items-center gap-2'>
+									<FileText
+										size={16}
+										className='text-[#C8A882]'
+									/>
+									Descripción / Notas
+								</h3>
+								<p className='text-sm text-white/90 line-clamp-3 break-words'>
+									{extraProps?.description || 'Sin descripción adicional'}
+								</p>
+							</div>
 						</div>
 
 						{/* Fecha y hora */}
@@ -369,8 +393,17 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 							</div>
 						</div>
 
-						{/* Botón cerrar */}
-						<div className='flex justify-end pt-4 border-t border-white/10'>
+						<div className='flex justify-end gap-3 pt-4 border-t border-white/10'>
+							<button
+								type='button'
+								onClick={() => setShowEditModal(true)}
+								className='px-5 py-2.5 rounded-lg
+									bg-[#8B5E3C] hover:bg-[#6F452A]
+									text-white text-sm font-medium
+									transition-all duration-200 flex items-center gap-2'>
+								<Edit2 size={16} />
+								Editar fecha y hora
+							</button>
 							<button
 								type='button'
 								onClick={onClose}
@@ -385,6 +418,16 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 					</div>
 				</div>
 			</div>
+
+			<EditVisitModal
+				isOpen={showEditModal}
+				onClose={() => setShowEditModal(false)}
+				extraProps={extraProps}
+				updateList={() => {
+					updateList?.();
+					onClose();
+				}}
+			/>
 		</>,
 		document.body,
 	);

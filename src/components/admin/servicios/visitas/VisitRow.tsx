@@ -1,16 +1,17 @@
 'use client';
 
 import { Visit } from '@/lib/types';
-import { Eye, Trash2, MoreVertical, MapPin, Calendar, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Eye, Trash2, MoreVertical, MapPin, Calendar, Clock, CheckCircle, XCircle, AlertCircle, Edit2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface VisitRowProps {
 	visit: Visit;
 	onView: () => void;
+	onEdit: () => void;
 	onDelete: () => void;
 }
 
-export default function VisitRow({ visit, onView, onDelete }: VisitRowProps) {
+export default function VisitRow({ visit, onView, onEdit, onDelete }: VisitRowProps) {
 	const [showActions, setShowActions] = useState(false);
 
 	const getStatusIcon = () => {
@@ -98,6 +99,13 @@ export default function VisitRow({ visit, onView, onDelete }: VisitRowProps) {
 				{/* Acciones */}
 				<div className="flex items-center gap-2">
 					<button
+						onClick={onEdit}
+						className="p-1.5 rounded-lg text-white/40 hover:text-[#C8A882]
+							hover:bg-white/5 transition-all duration-200"
+						title="Reprogramar">
+						<Edit2 size={16} />
+					</button>
+					<button
 						onClick={onView}
 						className="p-1.5 rounded-lg text-white/40 hover:text-[#C8A882]
 							hover:bg-white/5 transition-all duration-200"
@@ -164,6 +172,13 @@ export default function VisitRow({ visit, onView, onDelete }: VisitRowProps) {
 				{showActions && (
 					<div className='absolute right-4 mt-2 w-32 rounded-lg
 						border border-white/10 bg-[#252320] shadow-lg z-10'>
+						<button
+							onClick={() => { onEdit(); setShowActions(false); }}
+							className='w-full px-4 py-2 text-left text-sm text-white/70
+								hover:bg-white/5 rounded-lg
+								flex items-center gap-2'>
+							<Edit2 size={14} /> Reprogramar
+						</button>
 						<button
 							onClick={() => { onDelete(); setShowActions(false); }}
 							className='w-full px-4 py-2 text-left text-sm text-red-400
