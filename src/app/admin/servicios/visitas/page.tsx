@@ -3,6 +3,7 @@ import { Search, Plus, MapPin } from 'lucide-react';
 import { Visit } from '@/lib/types';
 import CreateVisitModal from '@/components/admin/servicios/visitas/CreateVisitModal';
 import VisitDetailsModal from '@/components/admin/servicios/visitas/VisitDetailsModal';
+import EditVisitModal from '@/components/admin/servicios/visitas/EditVisitModal';
 import React, { useState, useEffect } from 'react';
 import api from '@/components/Global/axios';
 import { deleteElement } from '@/components/admin/global/alerts';
@@ -12,6 +13,7 @@ import Pagination from '@/components/Global/Pagination';
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
+	const [editModal, setEditModal] = useState(false);
 	const [visits, setVisits] = useState<Visit[]>([]);
 	const [visit, setVisit] = useState<Visit>();
 	const [filterText, setFilterText] = useState('');
@@ -144,6 +146,10 @@ function Page() {
 										setDetailsModal(true);
 										setVisit(visitItem);
 									}}
+									onEdit={() => {
+										setEditModal(true);
+										setVisit(visitItem);
+									}}
 									onDelete={() => handleDeleteVisit(visitItem._id!)}
 								/>
 							))
@@ -185,6 +191,12 @@ function Page() {
 				<VisitDetailsModal
 					isOpen={detailsModal}
 					onClose={() => setDetailsModal(false)}
+					extraProps={visit}
+					updateList={() => fetchVisits()}
+				/>
+				<EditVisitModal
+					isOpen={editModal}
+					onClose={() => setEditModal(false)}
 					extraProps={visit}
 					updateList={() => fetchVisits()}
 				/>
