@@ -21,6 +21,7 @@ const initialState: Role = {
 function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role>) {
 	const [roleData, setRoleData] = useState<Role>(initialState);
 	const [expandedModule, setExpandedModule] = useState<string | null>(null);
+	const createRole = useCreateRole();
 	const { data } = useGetPermissions();
 	const permissions = (data?.permisos as GroupPermission[]) || [];
 
@@ -63,7 +64,6 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 		}));
 	};
 
-	const createRole = useCreateRole();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
