@@ -5,19 +5,25 @@ import { Menu, X } from 'lucide-react';
 import UserMenu from '../UserMenu';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { useUser } from '@/providers/userContext';
 
-const NAV_LINKS = [
-  { href: '/client',             label: 'Inicio' },
-  { href: '/client/agendarcita', label: 'Agendar Cita' },
-  { href: '/client/productos',   label: 'Referencias' },
-  { href: '/client/servicios',   label: 'Servicios' },
-];
 
 export default function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled]     = useState(false);
+  const { user } = useUser();
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
+
+  const NAV_LINKS = [
+  { href: '/client',             label: 'Inicio' },
+ ...(user?.role !== 'ADMIN'
+      ? [{ href: '/client/agendarcita', label: 'Agendar Cita' }]
+      : []),
+  { href: '/client/productos',   label: 'Referencias' },
+  { href: '/client/servicios',   label: 'Servicios' },
+];
+
   const isHome = pathname === '/client' || pathname === '/client/agendarcita' || pathname === '/client/productos' || pathname === '/client/servicios' || pathname === '/client/perfil' || pathname === '/client/carrito' || pathname === '/client/pedidos' || pathname === '/client/notificaciones' || pathname.startsWith('/client/productos/' ) || pathname.startsWith('/client/auth/' ) || pathname.startsWith('/client/pagos/') || pathname.startsWith('/client/pagos/') || pathname.startsWith('/client/pedidos/') ;
 
   useEffect(() => {

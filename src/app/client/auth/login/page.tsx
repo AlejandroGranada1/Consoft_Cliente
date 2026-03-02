@@ -16,7 +16,7 @@ export default function LoginPage() {
   const router = useRouter();
   const googleLogin = useGoogleLogin();
   const login = useLogin();
-  const { loadUser } = useUser();
+  const { user, loadUser } = useUser();
 
   const [loginData, setLoginData] = useState({ email: '', password: '' });
 
@@ -35,6 +35,7 @@ export default function LoginPage() {
       const response = await login.mutateAsync(loginData);
       if (response.status === 200) {
         await loadUser();
+        user?.role === 'admin' ? router.push('/admin') :
         router.push('/client');
       }
     } catch (error: any) {
