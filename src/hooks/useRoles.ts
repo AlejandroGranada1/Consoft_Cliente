@@ -19,10 +19,10 @@ export const useCreateRole = () => {
 		mutationFn: async (newRole: {
 			_id: string;
 			name: string;
-			description: string;
+			description?: string;
 			status: boolean;
 			permissions: Permission[];
-			createdAt: Date;
+			createdAt: string | Date;
 			usersCount: number;
 		}) => {
 			const { data } = await api.post('/api/roles', newRole);

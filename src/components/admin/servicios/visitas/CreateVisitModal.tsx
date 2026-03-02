@@ -204,11 +204,11 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 		<div
 			className='fixed inset-0 z-50 flex items-center justify-center p-4'
 			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-			
+
 			<div className="w-full max-w-3xl rounded-2xl border border-white/10
 				shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
 				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-				
+
 				{/* Header */}
 				<header className="relative px-6 py-5 border-b border-white/10">
 					<button
@@ -402,16 +402,15 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 										key={service._id}
 										type="button"
 										onClick={() => handleServiceToggle(service._id!)}
-										className={`p-3 rounded-xl border transition-all duration-200 text-left ${
-											visitData.services.includes(service._id!)
+										className={`p-3 rounded-xl border transition-all duration-200 text-left ${visitData.services.includes(service._id!)
 												? 'bg-[#C8A882]/10 border-[#C8A882]/50'
 												: 'bg-white/5 border-white/10 hover:bg-white/8'
-										}`}>
+											}`}>
 										<div className="flex items-start gap-2">
 											<input
 												type="checkbox"
 												checked={visitData.services.includes(service._id!)}
-												onChange={() => {}}
+												onChange={() => { }}
 												className="mt-1 w-3.5 h-3.5 rounded border-white/30 bg-white/5 text-[#C8A882] focus:ring-[#C8A882]"
 											/>
 											<div>

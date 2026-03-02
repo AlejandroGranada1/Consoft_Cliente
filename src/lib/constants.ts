@@ -1,14 +1,20 @@
 export const MODULE_TRANSLATIONS: Record<string, string> = {
-    Users: 'Usuarios',
-    Roles: 'Roles',
-    Products: 'Productos',
-    Categories: 'Categorías',
-    Services: 'Servicios',
-    Visits: 'Visitas',
-    Orders: 'Pedidos',
-    Quotations: 'Cotizaciones',
-    Dashboard: 'Panel de Control',
-    Auth: 'Autenticación',
+    roles: "Roles",
+    sales: "Ventas",
+    orders: "Pedidos",
+    permissions: "Permisos",
+    dashboard: "Dashboard",
+    users: "Usuarios",
+    payments: "Pagos",
+    categories: "Categorias",
+    visits: "Visitas",
+    services: "Servicios",
+    products: "Productos",
+    quotations: "Cotizaciones"
+
 };
 
-export const translateModule = (module: string) => MODULE_TRANSLATIONS[module] || module;
+export const translateModule = (module: string) => {
+    if (!module) return module;
+    return MODULE_TRANSLATIONS[module.toLowerCase()] || module;
+};

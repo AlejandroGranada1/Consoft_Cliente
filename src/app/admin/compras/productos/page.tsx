@@ -197,6 +197,7 @@ function Page() {
 					isOpen={detailsModal}
 					onClose={() => setDetailsModal(false)}
 					extraProps={product}
+					updateList={fetchProducts}
 				/>
 				<EditProductModal
 					isOpen={editModal}

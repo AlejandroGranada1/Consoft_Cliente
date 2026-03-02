@@ -110,8 +110,8 @@ function ProductDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 								<div className='flex items-center gap-3'>
 									<div
 										className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${extraProps.status
-												? 'bg-green-500/10 text-green-400 border border-green-500/20'
-												: 'bg-red-500/10 text-red-400 border border-red-500/20'
+											? 'bg-green-500/10 text-green-400 border border-green-500/20'
+											: 'bg-red-500/10 text-red-400 border border-red-500/20'
 											}`}>
 										<span
 											className={`w-2 h-2 rounded-full ${extraProps.status ? 'bg-green-400' : 'bg-red-400'
@@ -167,8 +167,8 @@ function ProductDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 								<div className='text-right'>
 									<span
 										className={`text-xs px-3 py-1.5 rounded-full ${extraProps.status
-												? 'bg-green-500/10 text-green-400 border border-green-500/20'
-												: 'bg-red-500/10 text-red-400 border border-red-500/20'
+											? 'bg-green-500/10 text-green-400 border border-green-500/20'
+											: 'bg-red-500/10 text-red-400 border border-red-500/20'
 											}`}>
 										{extraProps.status ? 'Activo' : 'Inactivo'}
 									</span>
