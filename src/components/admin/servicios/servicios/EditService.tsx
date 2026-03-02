@@ -15,9 +15,9 @@ function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ser
 
 	useEffect(() => {
 		if (isOpen && extraProps) setServiceData(extraProps);
-		if (!isOpen) {
-			setServiceData(initialState);
-			setImageFile(null);
+		if (!isOpen) { 
+			setServiceData(initialState); 
+			setImageFile(null); 
 		}
 	}, [isOpen, extraProps]);
 
@@ -90,11 +90,11 @@ function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ser
 		<div
 			className='fixed inset-0 z-50 flex items-center justify-center p-4'
 			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-
+			
 			<div className="w-full max-w-3xl rounded-2xl border border-white/10
 				shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
 				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-
+				
 				{/* Header */}
 				<header className="relative px-6 py-5 border-b border-white/10">
 					<button
@@ -108,17 +108,18 @@ function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ser
 						<Wrench size={18} className="text-[#C8A882]" />
 						Editar servicio
 					</h2>
-					<span className={`absolute left-4 top-1/2 -translate-y-1/2 px-2 py-1 rounded-full text-[10px] font-medium ${serviceData.status
-							? 'bg-green-500/10 text-green-400 border border-green-500/20'
+					<span className={`absolute left-4 top-1/2 -translate-y-1/2 px-2 py-1 rounded-full text-[10px] font-medium ${
+						serviceData.status 
+							? 'bg-green-500/10 text-green-400 border border-green-500/20' 
 							: 'bg-red-500/10 text-red-400 border border-red-500/20'
-						}`}>
+					}`}>
 						{serviceData.status ? 'Activo' : 'Inactivo'}
 					</span>
 				</header>
 
 				{/* Body - Grid de 2 columnas */}
 				<div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-y-auto">
-
+					
 					{/* Formulario */}
 					<form id="edit-service-form" onSubmit={handleSubmit} className="p-6 space-y-5">
 
@@ -205,22 +206,22 @@ function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ser
 						</div>
 
 						{/* Resumen de cambios */}
-						{(serviceData.name !== extraProps?.name ||
-							serviceData.description !== extraProps?.description ||
-							serviceData.status !== extraProps?.status ||
-							imageFile) && (
-								<div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-									<div className="flex items-start gap-2">
-										<AlertCircle size={16} className="text-yellow-400 shrink-0 mt-0.5" />
-										<div>
-											<span className="text-xs font-medium text-yellow-400">Cambios sin guardar</span>
-											<p className="text-[10px] text-yellow-400/70 mt-1">
-												Hay modificaciones que no se han guardado
-											</p>
-										</div>
+						{(serviceData.name !== extraProps?.name || 
+						  serviceData.description !== extraProps?.description || 
+						  serviceData.status !== extraProps?.status ||
+						  imageFile) && (
+							<div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+								<div className="flex items-start gap-2">
+									<AlertCircle size={16} className="text-yellow-400 shrink-0 mt-0.5" />
+									<div>
+										<span className="text-xs font-medium text-yellow-400">Cambios sin guardar</span>
+										<p className="text-[10px] text-yellow-400/70 mt-1">
+											Hay modificaciones que no se han guardado
+										</p>
 									</div>
 								</div>
-							)}
+							</div>
+						)}
 					</form>
 
 					{/* Preview de imagen */}
@@ -229,7 +230,7 @@ function EditServiceModal({ isOpen, onClose, extraProps }: DefaultModalProps<Ser
 							<Eye size={16} className="text-[#C8A882]" />
 							Vista previa
 						</h3>
-
+						
 						{serviceData.imageUrl ? (
 							<div className="w-full space-y-3">
 								<div className="rounded-xl border border-white/10 overflow-hidden bg-white/5 p-2">

@@ -4,7 +4,7 @@ import { X, Shield, Package, Check, Users, FileText, Lock, ChevronDown, ChevronU
 import { DefaultModalProps, GroupPermission, Permission, Role } from '@/lib/types';
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
-import { useGetPermissions, useCreateRole } from '@/hooks/apiHooks';
+import { useGetPermissions } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
 import { translateModule } from '@/lib/constants';
 
@@ -21,7 +21,6 @@ const initialState: Role = {
 function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role>) {
 	const [roleData, setRoleData] = useState<Role>(initialState);
 	const [expandedModule, setExpandedModule] = useState<string | null>(null);
-	const createRole = useCreateRole();
 	const { data } = useGetPermissions();
 	const permissions = (data?.permisos as GroupPermission[]) || [];
 
@@ -64,8 +63,7 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 		}));
 	};
 
-
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
 		if (!roleData.name.trim()) {
@@ -90,31 +88,8 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 			return;
 		}
 
-		try {
-			await createRole.mutateAsync(roleData);
-			Swal.fire({
-				toast: true,
-				animation: false,
-				timerProgressBar: true,
-				showConfirmButton: false,
-				title: 'Rol creado exitosamente',
-				icon: 'success',
-				position: 'top-right',
-				timer: 1500,
-				background: '#1e1e1c',
-				color: '#fff',
-			});
-			if (updateList) updateList();
-			handleClose();
-		} catch (error) {
-			Swal.fire({
-				title: 'Error',
-				text: 'No se pudo crear el rol',
-				icon: 'error',
-				background: '#1e1e1c',
-				color: '#fff',
-			});
-		}
+		// Aquí iría tu función createElement adaptada
+		handleClose();
 	};
 
 	return createPortal(

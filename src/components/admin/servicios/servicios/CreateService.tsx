@@ -14,9 +14,9 @@ function CreateServiceModal({ isOpen, onClose }: DefaultModalProps<Service>) {
 	const addService = useAddService();
 
 	useEffect(() => {
-		if (!isOpen) {
-			setServiceData(initialState);
-			setImageFile(null);
+		if (!isOpen) { 
+			setServiceData(initialState); 
+			setImageFile(null); 
 		}
 	}, [isOpen]);
 
@@ -91,11 +91,11 @@ function CreateServiceModal({ isOpen, onClose }: DefaultModalProps<Service>) {
 		<div
 			className='fixed inset-0 z-50 flex items-center justify-center p-4'
 			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-
+			
 			<div className="w-full max-w-3xl rounded-2xl border border-white/10
 				shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
 				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-
+				
 				{/* Header */}
 				<header className="relative px-6 py-5 border-b border-white/10">
 					<button
@@ -113,7 +113,7 @@ function CreateServiceModal({ isOpen, onClose }: DefaultModalProps<Service>) {
 
 				{/* Body - Grid de 2 columnas */}
 				<div className="grid grid-cols-1 md:grid-cols-2 flex-1 overflow-y-auto">
-
+					
 					{/* Formulario */}
 					<form id="create-service-form" onSubmit={handleSubmit} className="p-6 space-y-5">
 
@@ -217,10 +217,11 @@ function CreateServiceModal({ isOpen, onClose }: DefaultModalProps<Service>) {
 										</p>
 									</div>
 									<div className="text-right">
-										<span className={`text-[10px] px-2 py-1 rounded-full ${serviceData.status
-												? 'bg-green-500/10 text-green-400 border border-green-500/20'
+										<span className={`text-[10px] px-2 py-1 rounded-full ${
+											serviceData.status 
+												? 'bg-green-500/10 text-green-400 border border-green-500/20' 
 												: 'bg-white/10 text-white/40 border border-white/20'
-											}`}>
+										}`}>
 											{serviceData.status ? 'Activo' : 'Inactivo'}
 										</span>
 									</div>
@@ -235,7 +236,7 @@ function CreateServiceModal({ isOpen, onClose }: DefaultModalProps<Service>) {
 							<Eye size={16} className="text-[#C8A882]" />
 							Vista previa
 						</h3>
-
+						
 						{serviceData.imageUrl ? (
 							<div className="w-full space-y-3">
 								<div className="rounded-xl border border-white/10 overflow-hidden bg-white/5 p-2">

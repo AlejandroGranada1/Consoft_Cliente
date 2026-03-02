@@ -10,7 +10,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 	const { data: usersData, isLoading: usersLoading } = useGetUsers();
 	const { data: servicesData, isLoading: servicesLoading } = useGetServices();
 	const createOrderMutation = useCreateOrder();
-
+	
 	// Estados para el abono (ahora opcional)
 	const [initialPayment, setInitialPayment] = useState(0);
 	const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer'>('cash');
@@ -44,10 +44,10 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 	});
 
 	const selectedUser = users.find((u: UserType) => u._id === orderData.user);
-
+	
 	const total = orderData.items.reduce((sum, item) => sum + (item.valor || 0), 0);
 	const minimumRequired = total * 0.3;
-
+	
 	// Determinar el estado del pedido basado en el abono
 	const getOrderStatus = () => {
 		if (initialPayment >= minimumRequired) return 'En proceso';
@@ -180,7 +180,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 				background: '#1e1e1c',
 				color: '#fff',
 			});
-
+			
 			if (!result.isConfirmed) return;
 		}
 
@@ -260,7 +260,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
         shadow-[0_8px_32px_rgba(0,0,0,0.3)]
         flex flex-col max-h-[90vh]'
 				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-
+				
 				{/* Header */}
 				<header className='relative px-6 py-5 border-b border-white/10'>
 					<button
@@ -277,7 +277,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 				</header>
 
 				<form onSubmit={handleSubmit} className='p-6 overflow-y-auto space-y-5'>
-
+					
 					{/* Cliente */}
 					<div className='space-y-2'>
 						<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
@@ -567,19 +567,21 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 									<button
 										type='button'
 										onClick={() => setPaymentMethod('cash')}
-										className={`p-3 rounded-lg border transition ${paymentMethod === 'cash'
+										className={`p-3 rounded-lg border transition ${
+											paymentMethod === 'cash'
 												? 'border-[#C8A882] bg-[#C8A882]/10 text-white'
 												: 'border-white/10 bg-white/5 text-white/40'
-											}`}>
+										}`}>
 										💵 Efectivo
 									</button>
 									<button
 										type='button'
 										onClick={() => setPaymentMethod('transfer')}
-										className={`p-3 rounded-lg border transition ${paymentMethod === 'transfer'
+										className={`p-3 rounded-lg border transition ${
+											paymentMethod === 'transfer'
 												? 'border-[#C8A882] bg-[#C8A882]/10 text-white'
 												: 'border-white/10 bg-white/5 text-white/40'
-											}`}>
+										}`}>
 										🏦 Transferencia
 									</button>
 								</div>
