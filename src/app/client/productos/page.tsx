@@ -77,7 +77,7 @@ export default function ProductsPage() {
         {/* ── HEADER ── */}
         <header className="max-w-xl space-y-4">
           <span className="inline-block bg-white/10 backdrop-blur border border-white/15 text-white text-[11px] font-medium tracking-[.07em] uppercase px-4 py-1.5 rounded-full">
-            Colección 2025
+            Colección {new Date().getFullYear()}
           </span>
 
           <h1 className="font-serif text-white leading-tight" style={{ fontSize: 'clamp(2rem, 4.5vw, 3.4rem)' }}>
