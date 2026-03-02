@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { useGetPermissions, useUpdateRole } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
+import { translateModule } from '@/lib/constants';
 
 function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Role>) {
 	const [roleData, setRoleData] = useState<Role | null>(null);
@@ -358,7 +359,7 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 														/>
 													</label>
 													<span className='text-sm font-medium text-white'>
-														{group.module}
+														{translateModule(group.module)}
 													</span>
 												</div>
 
