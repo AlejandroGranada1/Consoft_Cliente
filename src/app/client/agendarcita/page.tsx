@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, TimePicker } from '@/components/agenda';
-import { useCreateVisit, useCreateVisitForMe } from '@/hooks/apiHooks';
+import { useCreateVisit, useCreateVisitForMe, useGetAvailableSlots } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import { format } from 'date-fns';
 import { MapPin, FileText, ArrowRight, User, Mail, Phone } from 'lucide-react';
@@ -50,7 +50,16 @@ export default function ScheduleSection() {
 	const createMyVisit = useCreateVisit();
 
 	const [date, setDate] = useState<Date | undefined>(undefined);
+
+	const { data: slotsData, isLoading: isLoadingSlots } = useGetAvailableSlots(
+		date ? format(date, 'yyyy-MM-dd') : undefined
+	);
 	const [time, setTime] = useState<string | null>(null);
+
+	useEffect(() => {
+		setTime(null);
+	}, [date]);
+
 	const [description, setDescription] = useState('');
 	const [service, setService] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,20 +107,19 @@ export default function ScheduleSection() {
 		const payload = isLogged
 			? { ...basePayload }
 			: {
-					...basePayload,
-					userName: userName.trim(),
-					userEmail: userEmail.trim(),
-					userPhone: userPhone.trim(),
-				};
+				...basePayload,
+				userName: userName.trim(),
+				userEmail: userEmail.trim(),
+				userPhone: userPhone.trim(),
+			};
 
 		const result = await showAlert({
 			title: '¿Confirmar visita?',
 			html: `<div style="text-align:left;margin-top:1rem;font-size:.9rem;line-height:1.8">
-        ${
-			!isLogged
-				? `<p><strong>Nombre:</strong> ${userName}</p><p><strong>Email:</strong> ${userEmail}</p><p><strong>Teléfono:</strong> ${userPhone}</p>`
-				: `<p><strong>Solicitante:</strong> ${user?.email}</p>`
-		}
+        ${!isLogged
+					? `<p><strong>Nombre:</strong> ${userName}</p><p><strong>Email:</strong> ${userEmail}</p><p><strong>Teléfono:</strong> ${userPhone}</p>`
+					: `<p><strong>Solicitante:</strong> ${user?.email}</p>`
+				}
         <p><strong>Dirección:</strong> ${userAddress}</p>
         <p><strong>Fecha:</strong> ${date.toLocaleDateString()}</p>
         <p><strong>Hora:</strong> ${time}</p>
@@ -313,6 +321,8 @@ export default function ScheduleSection() {
 								<TimePicker
 									selectedTime={time}
 									onSelect={setTime}
+									availableSlots={slotsData?.availableSlots}
+									isLoading={isLoadingSlots}
 								/>
 							</div>
 						</div>

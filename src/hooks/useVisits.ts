@@ -39,3 +39,14 @@ export const useCreateVisitForMe = () => {
 		},
 	});
 };
+export const useGetAvailableSlots = (date: string | undefined) => {
+	return useQuery({
+		queryKey: ['available-slots', date],
+		queryFn: async () => {
+			if (!date) return { availableSlots: [] };
+			const { data } = await api.get(`/api/visits/available-slots?date=${date}`);
+			return data;
+		},
+		enabled: !!date,
+	});
+};

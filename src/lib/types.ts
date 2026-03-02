@@ -90,6 +90,7 @@ export interface Visit {
 	visitTime: string
 	address: string;
 	status: string;
+	description?: string;
 	isGuest?: boolean;
 	guestInfo?: {
 		email: string;
@@ -133,27 +134,27 @@ export interface Order {
 // lib/types.ts - Agregar o actualizar esta interfaz
 
 export interface PedidoUI {
-  id: string;
-  nombre: string;
-  estado: string; // 'Pendiente', 'Pendiente (abono parcial)', 'En proceso', 'Completado', 'Cancelado'
-  valor: string;
-  restante: string;
-  dias: string;
-  requiereAbono: boolean;
-  porcentajeAbono?: number;
-  raw: {
-    _id: string;
-    total: number;
-    initialPaymentAmount: number;
-    payments: Array<{
-      amount: number;
-      status: string;
-      method: string;
-      paidAt: string;
-    }>;
-    status: string;
-    // ... otras propiedades que necesites
-  };
+	id: string;
+	nombre: string;
+	estado: string; // 'Pendiente', 'Pendiente (abono parcial)', 'En proceso', 'Completado', 'Cancelado'
+	valor: string;
+	restante: string;
+	dias: string;
+	requiereAbono: boolean;
+	porcentajeAbono?: number;
+	raw: {
+		_id: string;
+		total: number;
+		initialPaymentAmount: number;
+		payments: Array<{
+			amount: number;
+			status: string;
+			method: string;
+			paidAt: string;
+		}>;
+		status: string;
+		// ... otras propiedades que necesites
+	};
 }
 export type OrderWithPartialUser = Omit<Order, 'user'> & { user: string | Partial<User> };
 
