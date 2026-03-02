@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 import { useGetPermissions } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
+import { translateModule } from '@/lib/constants';
 
 const initialState: Role = {
 	_id: crypto.randomUUID(),
@@ -217,7 +218,7 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 														/>
 													</label>
 													<span className='text-sm font-medium text-white'>
-														{group.module}
+														{translateModule(group.module)}
 													</span>
 												</div>
 

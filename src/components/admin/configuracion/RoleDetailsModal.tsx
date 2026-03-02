@@ -5,6 +5,7 @@ import { DefaultModalProps, Role } from '@/lib/types';
 import React, { useState } from 'react';
 import EditRoleModal from './EditRoleModal';
 import { createPortal } from 'react-dom';
+import { translateModule } from '@/lib/constants';
 
 function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Role>) {
 	const [editModal, setEditModal] = useState(false);
@@ -172,7 +173,7 @@ function RoleDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultMo
 													onClick={() => toggleModule(module)}
 												>
 													<h4 className='text-sm font-medium text-white'>
-														{module}
+														{translateModule(module)}
 													</h4>
 													<div className='flex items-center gap-3'>
 														<span
