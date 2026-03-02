@@ -121,7 +121,6 @@ export async function updateElement(
 					timerProgressBar: 'swal2-progress-bar',
 				},
 			});
-			updateList!();
 
 			return response.data;
 		} catch (error) {

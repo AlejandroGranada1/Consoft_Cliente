@@ -1,53 +1,79 @@
 'use client';
 
 import Link from 'next/link';
-import React from 'react';
 import { usePathname } from 'next/navigation';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
-interface SubRouteProps {
-    value: string;
-    icon: React.ReactNode;
-    href?: string;
+interface Route {
+  value: string;
+  href: string;
+  description?: string;
 }
 
 interface SidebarLinkProps {
-    groupTitle: string;
-    routes: SubRouteProps[];
+  groupTitle: string;
+  icon: React.ReactNode;
+  routes: Route[];
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-function SidebarLink({ groupTitle, routes }: SidebarLinkProps) {
-    const pathname = usePathname(); // ruta actual
+export default function SidebarLink({ groupTitle, icon, routes, isOpen, onToggle }: SidebarLinkProps) {
+  const pathname = usePathname();
 
-    return (
-        <div className='px-4 py-3'>
-            {/* título del grupo */}
-            <h3 className='text-gray-400 text-xs uppercase tracking-wide mb-2'>{groupTitle}</h3>
+  const isActive = routes.some(route => pathname === route.href);
 
-            {/* links */}
-            <ul className='flex flex-col gap-1'>
-                {routes.map((route, i) => {
-                    const isActive = pathname === route.href;
-
-                    return (
-                        <li key={i}>
-                            <Link
-                                href={route.href || '#'}
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition
-                                    ${
-                                        isActive
-                                            ? 'border-2 border-brown text-brown-700 bg-brown-50'
-                                            : 'text-gray-700 hover:bg-gray-100 hover:text-black'
-                                    }
-                                `}>
-                                <span className='text-lg'>{route.icon}</span>
-                                <span>{route.value}</span>
-                            </Link>
-                        </li>
-                    );
-                })}
-            </ul>
+  return (
+    <div className="mb-1">
+      <button
+        onClick={onToggle}
+        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl
+          transition-all duration-200 group
+          ${isActive 
+            ? 'bg-[#C8A882]/10 text-[#C8A882]' 
+            : 'text-white/60 hover:bg-white/5 hover:text-white'
+          }`}
+      >
+        <div className="flex items-center gap-3">
+          <span className={`transition-colors ${isActive ? 'text-[#C8A882]' : 'text-white/40 group-hover:text-white/60'}`}>
+            {icon}
+          </span>
+          <span className="text-sm font-medium">{groupTitle}</span>
         </div>
-    );
-}
+        {isOpen ? 
+          <ChevronDown size={16} className="text-white/40" /> : 
+          <ChevronRight size={16} className="text-white/40" />
+        }
+      </button>
 
-export default SidebarLink;
+      {isOpen && (
+        <div className="mt-1 ml-11 space-y-0.5 animate-in slide-in-from-left-2 duration-200">
+          {routes.map((route) => {
+            const active = pathname === route.href;
+            return (
+              <Link
+                key={route.href}
+                href={route.href}
+                className={`block px-3 py-2 rounded-lg text-xs transition-all duration-200
+                  ${active
+                    ? 'bg-[#C8A882]/10 text-[#C8A882]'
+                    : 'text-white/40 hover:bg-white/5 hover:text-white/80'
+                  }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className={`w-1 h-1 rounded-full ${active ? 'bg-[#C8A882]' : 'bg-white/20'}`} />
+                  <span>{route.value}</span>
+                </div>
+                {route.description && (
+                  <p className="text-[10px] text-white/20 mt-0.5 ml-3">
+                    {route.description}
+                  </p>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

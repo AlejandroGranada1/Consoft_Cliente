@@ -1,10 +1,10 @@
 'use client';
-import { X } from 'lucide-react';
+import { X, User, Mail, Lock, UserCircle, Save, Shield } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-
 import { createElement } from '@/components/admin/global/alerts';
 import api from '@/components/Global/axios';
 import { DefaultModalProps } from '@/lib/types';
+import { createPortal } from 'react-dom';
 
 function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>) {
 	const [userData, setUserData] = useState({
@@ -15,8 +15,8 @@ function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>
 	});
 
 	const [roles, setRoles] = useState<{ _id: string; name: string }[]>([]);
+	const [loading, setLoading] = useState(false);
 
-	// 🔹 Cargar roles cuando se abre el modal
 	useEffect(() => {
 		if (!isOpen) return;
 
@@ -31,14 +31,19 @@ function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>
 				}
 			} catch (err) {
 				console.error('Error al obtener roles:', err);
-				Swal.fire('Error', 'No se pudieron cargar los roles', 'error');
+				Swal.fire({
+					title: 'Error',
+					text: 'No se pudieron cargar los roles',
+					icon: 'error',
+					background: '#1e1e1c',
+					color: '#fff',
+				});
 			}
 		};
 
 		fetchRoles();
 	}, [isOpen]);
 
-	// 🔹 Limpiar modal al cerrar
 	useEffect(() => {
 		if (!isOpen) {
 			setUserData({
@@ -61,113 +66,239 @@ function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>
 
 		const { name, email, password, role } = userData;
 
-		// 🔹 Alertas por campos vacíos
 		if (!name || !email || !password || !role) {
-			return Swal.fire('Campos incompletos', 'Todos los campos son obligatorios', 'warning');
+			return Swal.fire({
+				title: 'Campos incompletos',
+				text: 'Todos los campos son obligatorios',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		}
 
+		setLoading(true);
 		try {
 			await createElement('usuario', '/api/users', userData, updateList!);
+
+			Swal.fire({
+				toast: true,
+				animation: false,
+				timerProgressBar: true,
+				showConfirmButton: false,
+				title: 'Usuario creado exitosamente',
+				icon: 'success',
+				position: 'top-right',
+				timer: 1500,
+				background: '#1e1e1c',
+				color: '#fff',
+			});
+
 			onClose();
 		} catch (error) {
 			console.error('Error al crear usuario:', error);
-			Swal.fire('Error', 'Hubo un problema al crear el usuario', 'error');
+			Swal.fire({
+				title: 'Error',
+				text: 'Hubo un problema al crear el usuario',
+				icon: 'error',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	if (!isOpen) return null;
 
-	return (
-		<div className='modal-bg fixed inset-0 flex items-center justify-center bg-black/20 z-50'>
-			<div className='modal-frame bg-white rounded-xl shadow-lg p-6 w-full max-w-lg relative'>
-				<header className='w-fit mx-auto'>
+	return createPortal(
+		<div
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+			<div
+				className='w-full max-w-[500px] rounded-2xl border border-white/10
+        shadow-[0_8px_32px_rgba(0,0,0,0.3)]
+        flex flex-col max-h-[90vh]'
+				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
+				{/* Header */}
+				<header className='relative px-6 py-5 border-b border-white/10'>
 					<button
 						onClick={onClose}
-						className='absolute top-4 left-4 text-2xl text-gray-500 hover:text-black cursor-pointer'>
-						<X />
+						className='absolute left-4 top-1/2 -translate-y-1/2
+              p-2 rounded-lg text-white/40 hover:text-white/70
+              hover:bg-white/5 transition-all duration-200'>
+						<X size={18} />
 					</button>
-					<h1 className='text-xl font-semibold mb-4'>AGREGAR NUEVO USUARIO</h1>
+					<h2 className='text-lg font-medium text-white text-center flex items-center justify-center gap-2'>
+						<UserCircle
+							size={18}
+							className='text-[#C8A882]'
+						/>
+						Crear nuevo usuario
+					</h2>
 				</header>
 
-				<form onSubmit={handleSubmit} className='space-y-4'>
+				<form
+					onSubmit={handleSubmit}
+					className='p-6 overflow-y-auto space-y-5'>
 					{/* Nombre */}
-					<div className='flex flex-col'>
-						<label htmlFor='name'>Nombre</label>
+					<div className='space-y-2'>
+						<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+							Nombre completo *
+						</label>
 						<input
-							id='name'
 							name='name'
-							type='text'
-							placeholder='Nombre'
 							value={userData.name}
 							onChange={handleChange}
-							className='border px-3 py-2 rounded-md'
+							placeholder='Ej: Juan Pérez'
+							className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                text-sm text-white placeholder:text-white/30
+                focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                transition-all duration-200'
 						/>
 					</div>
 
 					{/* Email */}
-					<div className='flex flex-col'>
-						<label htmlFor='email'>Correo Electrónico</label>
+					<div className='space-y-2'>
+						<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+							Correo electrónico *
+						</label>
 						<input
-							id='email'
 							name='email'
 							type='email'
-							placeholder='Correo Electrónico'
 							value={userData.email}
 							onChange={handleChange}
-							className='border px-3 py-2 rounded-md'
+							placeholder='ejemplo@correo.com'
+							className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                text-sm text-white placeholder:text-white/30
+                focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                transition-all duration-200'
 						/>
 					</div>
 
 					{/* Password */}
-					<div className='flex flex-col'>
-						<label htmlFor='password'>Contraseña</label>
+					<div className='space-y-2'>
+						<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+							Contraseña *
+						</label>
 						<input
-							id='password'
 							name='password'
 							type='password'
-							placeholder='********'
 							value={userData.password}
 							onChange={handleChange}
-							className='border px-3 py-2 rounded-md'
+							placeholder='••••••••'
+							className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                text-sm text-white placeholder:text-white/30
+                focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                transition-all duration-200'
 						/>
+						<p className='text-xs text-white/30 mt-1'>Mínimo 6 caracteres</p>
 					</div>
 
 					{/* Rol */}
-					<div className='flex flex-col'>
-						<label htmlFor='role'>Rol</label>
+					<div className='space-y-2'>
+						<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+							Rol *
+						</label>
 						<select
-							id='role'
 							name='role'
 							value={userData.role}
 							onChange={handleChange}
-							className='border px-3 py-2 rounded-md'>
-							<option value=''>Seleccionar rol</option>
-							{roles.map((role) => (
-								<option key={role._id} value={role._id}>
-									{role.name}
+							className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                text-sm text-white placeholder:text-white/30
+                focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                transition-all duration-200 appearance-none'>
+							<option
+								value=''
+								className='bg-[#1e1e1c]'>
+								Seleccionar rol
+							</option>
+							{roles.length === 0 ? (
+								<option
+									value=''
+									disabled
+									className='bg-[#1e1e1c]'>
+									Cargando roles...
 								</option>
-							))}
+							) : (
+								roles.map((role) => (
+									<option
+										key={role._id}
+										value={role._id}
+										className='bg-[#1e1e1c]'>
+										{role.name}
+									</option>
+								))
+							)}
 						</select>
 					</div>
 
+					{/* Resumen */}
+					<div className='p-4 rounded-xl border border-white/10 bg-white/5 mt-4'>
+						<div className='flex justify-between items-center'>
+							<div>
+								<p className='text-xs font-medium text-white/70'>Resumen</p>
+								<p className='text-xs text-white/40 mt-1'>
+									{userData.name || 'Nombre no especificado'}
+								</p>
+								<p className='text-xs text-white/40'>
+									{userData.email || 'Email no especificado'}
+								</p>
+							</div>
+							{userData.role && roles.find((r) => r._id === userData.role) && (
+								<span
+									className='text-xs px-3 py-1.5 rounded-full
+                  bg-[#C8A882]/10 text-[#C8A882] border border-[#C8A882]/20'>
+									{roles.find((r) => r._id === userData.role)?.name}
+								</span>
+							)}
+						</div>
+					</div>
+
 					{/* Botones */}
-					<div className='w-full flex justify-between mt-6'>
+					<div className='flex justify-end gap-3 pt-4 border-t border-white/10'>
 						<button
 							type='button'
 							onClick={onClose}
-							className='px-10 py-2 rounded-lg border border-gray bg-gray cursor-pointer'>
+							className='px-5 py-2.5 rounded-lg
+                border border-white/15 bg-white/5
+                text-white/70 text-sm
+                hover:bg-white/10 hover:text-white
+                transition-all duration-200'>
 							Cancelar
 						</button>
-
 						<button
 							type='submit'
-							className='px-10 py-2 rounded-lg border border-brown text-brown cursor-pointer'>
-							Guardar
+							disabled={
+								loading ||
+								!userData.name ||
+								!userData.email ||
+								!userData.password ||
+								!userData.role
+							}
+							className='px-5 py-2.5 rounded-lg
+                bg-[#8B5E3C] hover:bg-[#6F452A]
+                text-white text-sm font-medium
+                shadow-lg shadow-[#8B5E3C]/20
+                disabled:opacity-50 disabled:cursor-not-allowed
+                flex items-center gap-2
+                transition-all duration-200'>
+							{loading ? (
+								<>
+									<span className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></span>
+									Creando...
+								</>
+							) : (
+								<>
+									<Save size={14} />
+									Crear Usuario
+								</>
+							)}
 						</button>
 					</div>
 				</form>
 			</div>
-		</div>
+		</div>,
+    document.body
 	);
 }
 

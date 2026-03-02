@@ -5,14 +5,14 @@ interface QRProps {
 }
 
 function QR({ type }: QRProps) {
-	const src = type === 'Nequi' ? '/pagos/qrnequi.png' : '/pagos/qrbanco.png';
+	const src = type === 'Nequi' ? '/pagos/nequi.webp' : '/pagos/bancolombia.png';
 
 	return (
 		<Image
 			src={src}
 			alt={`Codigo QR de ${type}`}
-			width={400}
-			height={400}
+			width={250}
+			height={250}
 			priority
 		/>
 	);

@@ -1,27 +1,17 @@
 'use client';
-import { X, User, MapPin, Calendar, Clock, CheckSquare, Plus, Minus } from 'lucide-react';
+import { X, User, MapPin, Calendar, Clock, CheckSquare, Plus, Minus, Save, AlertCircle } from 'lucide-react';
 import { DefaultModalProps, Visit, Service, User as UserType } from '@/lib/types';
 import React, { useState } from 'react';
 import { useGetUsers, useGetServices } from '@/hooks/apiHooks';
 import { useCreateVisit } from '@/hooks/apiHooks';
+import { createPortal } from 'react-dom';
 
-// Horarios disponibles
 const AVAILABLE_TIMES = [
-	'08:00',
-	'09:00',
-	'10:00',
-	'11:00',
-	'12:00',
-	'13:00',
-	'14:00',
-	'15:00',
-	'16:00',
-	'17:00',
-	'18:00',
+	'08:00', '09:00', '10:00', '11:00', '12:00',
+	'13:00', '14:00', '15:00', '16:00', '17:00', '18:00'
 ];
 
 function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Visit>) {
-	// Hooks para datos
 	const { data: usersData, isLoading: usersLoading } = useGetUsers();
 	const { data: servicesData, isLoading: servicesLoading } = useGetServices();
 	const createVisitMutation = useCreateVisit();
@@ -29,15 +19,14 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 	const users = usersData?.users || [];
 	const services = servicesData?.services || [];
 
-	// Estado del formulario
 	const [visitData, setVisitData] = useState({
-		user: '', // Solo ID del usuario
+		user: '',
 		address: '',
-		visitDate: new Date().toISOString().split('T')[0], // Fecha actual
-		scheduledTime: '10:00', // Hora por defecto
+		visitDate: new Date().toISOString().split('T')[0],
+		scheduledTime: '10:00',
 		status: 'Programada',
 		notes: '',
-		services: [] as string[], // IDs de servicios seleccionados
+		services: [] as string[],
 		selectedServices: [] as Array<{
 			id: string;
 			name: string;
@@ -45,10 +34,9 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 		}>,
 	});
 
-	// Usuario seleccionado para mostrar información
+	const [customService, setCustomService] = useState('');
 	const selectedUser = users.find((u: UserType) => u._id === visitData.user);
 
-	// Cambiar inputs
 	const handleChange = (
 		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
 	) => {
@@ -56,12 +44,10 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 		setVisitData((prev) => ({
 			...prev,
 			[name]: value,
-			// Auto-completar dirección si se selecciona un usuario con dirección
 			...(name === 'user' && selectedUser?.address ? { address: selectedUser.address } : {}),
 		}));
 	};
 
-	// Manejar selección de servicios
 	const handleServiceToggle = (serviceId: string) => {
 		setVisitData((prev) => {
 			const service = services.find((s: Service) => s._id === serviceId);
@@ -70,21 +56,19 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 			const isAlreadySelected = prev.services.includes(serviceId);
 
 			if (isAlreadySelected) {
-				// Remover servicio
 				return {
 					...prev,
 					services: prev.services.filter((id) => id !== serviceId),
 					selectedServices: prev.selectedServices.filter((s) => s.id !== serviceId),
 				};
 			} else {
-				// Agregar servicio
 				return {
 					...prev,
 					services: [...prev.services, serviceId],
 					selectedServices: [
 						...prev.selectedServices,
 						{
-							id: service._id,
+							id: service._id!,
 							name: service.name,
 							description: service.description,
 						},
@@ -94,8 +78,6 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 		});
 	};
 
-	// Agregar servicio personalizado (si el usuario quiere escribir uno)
-	const [customService, setCustomService] = useState('');
 	const handleAddCustomService = () => {
 		if (!customService.trim()) return;
 
@@ -114,7 +96,6 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 		setCustomService('');
 	};
 
-	// Remover servicio seleccionado
 	const removeSelectedService = (serviceId: string) => {
 		setVisitData((prev) => ({
 			...prev,
@@ -123,31 +104,45 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 		}));
 	};
 
-	// Enviar formulario
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		// Validaciones
 		if (!visitData.user) {
-			alert('Por favor selecciona un cliente');
-			return;
+			const Swal = (await import('sweetalert2')).default;
+			return Swal.fire({
+				title: 'Campo requerido',
+				text: 'Por favor selecciona un cliente',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		}
 
 		if (!visitData.address) {
-			alert('Por favor ingresa una dirección');
-			return;
+			const Swal = (await import('sweetalert2')).default;
+			return Swal.fire({
+				title: 'Campo requerido',
+				text: 'Por favor ingresa una dirección',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		}
 
 		if (!visitData.visitDate) {
-			alert('Por favor selecciona una fecha');
-			return;
+			const Swal = (await import('sweetalert2')).default;
+			return Swal.fire({
+				title: 'Campo requerido',
+				text: 'Por favor selecciona una fecha',
+				icon: 'warning',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		}
 
 		try {
-			// Combinar fecha y hora
 			const scheduledDateTime = `${visitData.visitDate}T${visitData.scheduledTime}:00`;
 
-			// Preparar datos para enviar
 			const visitToCreate = {
 				user: visitData.user,
 				address: visitData.address,
@@ -155,7 +150,6 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 				status: visitData.status,
 				notes: visitData.notes || undefined,
 				services: visitData.services,
-				// Si hay servicios personalizados, enviarlos como texto
 				customServices: visitData.selectedServices
 					.filter((s) => s.id.startsWith('custom-'))
 					.map((s) => s.name),
@@ -163,7 +157,20 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 
 			await createVisitMutation.mutateAsync(visitToCreate);
 
-			// Resetear formulario
+			const Swal = (await import('sweetalert2')).default;
+			Swal.fire({
+				toast: true,
+				animation: false,
+				timerProgressBar: true,
+				showConfirmButton: false,
+				title: 'Visita programada exitosamente',
+				icon: 'success',
+				position: 'top-right',
+				timer: 1500,
+				background: '#1e1e1c',
+				color: '#fff',
+			});
+
 			setVisitData({
 				user: '',
 				address: '',
@@ -176,61 +183,76 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 			});
 			setCustomService('');
 
-			// Cerrar modal y actualizar lista
 			onClose();
 			if (updateList) updateList();
 		} catch (error) {
 			console.error('Error al crear visita:', error);
-			alert('Error al crear la visita. Por favor intenta nuevamente.');
+			const Swal = (await import('sweetalert2')).default;
+			Swal.fire({
+				title: 'Error',
+				text: 'No se pudo crear la visita',
+				icon: 'error',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		}
 	};
 
 	if (!isOpen) return null;
 
-	return (
-		<div className='modal-bg'>
-			<div className='modal-frame w-[800px] p-6'>
-				<header className='relative mb-6'>
+	return createPortal(
+		<div
+			className='fixed inset-0 z-50 flex items-center justify-center p-4'
+			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+			
+			<div className="w-full max-w-3xl rounded-2xl border border-white/10
+				shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
+				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
+				
+				{/* Header */}
+				<header className="relative px-6 py-5 border-b border-white/10">
 					<button
 						onClick={onClose}
-						className='absolute top-0 left-0 p-1 text-gray-500 hover:text-black cursor-pointer hover:bg-gray-100 rounded-full'>
-						<X size={20} />
+						className="absolute right-4 top-1/2 -translate-y-1/2
+							p-2 rounded-lg text-white/40 hover:text-white/70
+							hover:bg-white/5 transition-all duration-200">
+						<X size={18} />
 					</button>
-					<h1 className='text-2xl font-bold text-center text-gray-800'>
-						Programar Nueva Visita
-					</h1>
-					<p className='text-center text-gray-600 text-sm mt-1'>
+					<h2 className="text-lg font-medium text-white text-center flex items-center justify-center gap-2">
+						<MapPin size={18} className="text-[#C8A882]" />
+						Programar nueva visita
+					</h2>
+					<p className="text-center text-white/40 text-xs mt-1">
 						Programa una visita para tomar medidas o realizar servicios
 					</p>
 				</header>
 
-				<form
-					onSubmit={handleSubmit}
-					className='space-y-6'>
+				<form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-6">
+
 					{/* Información del cliente */}
-					<div className='bg-gray-50 p-4 rounded-lg border'>
-						<h3 className='font-semibold text-lg mb-3 flex items-center gap-2'>
-							<User size={18} />
-							Información del Cliente *
+					<div className="rounded-xl border border-white/10 bg-white/5 p-4">
+						<h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+							<User size={16} className="text-[#C8A882]" />
+							Información del cliente *
 						</h3>
 
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1'>Seleccionar cliente</label>
+						<div className="space-y-2">
 							<select
-								name='user'
+								name="user"
 								value={visitData.user}
 								onChange={handleChange}
-								className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown'
+								className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+									text-sm text-white
+									focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+									transition-all duration-200 appearance-none"
 								required
 								disabled={usersLoading}>
-								<option value=''>Seleccione un cliente</option>
+								<option value="" className="bg-[#1e1e1c]">Seleccione un cliente</option>
 								{usersLoading ? (
-									<option>Cargando clientes...</option>
+									<option value="" disabled className="bg-[#1e1e1c]">Cargando...</option>
 								) : (
 									users.map((user: UserType) => (
-										<option
-											key={user._id}
-											value={user._id}>
+										<option key={user._id} value={user._id} className="bg-[#1e1e1c]">
 											{user.name} - {user.email}
 										</option>
 									))
@@ -238,21 +260,19 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 							</select>
 
 							{selectedUser && (
-								<div className='mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100'>
-									<div className='grid grid-cols-2 gap-3'>
+								<div className="mt-3 p-3 rounded-lg bg-[#C8A882]/10 border border-[#C8A882]/20">
+									<div className="grid grid-cols-2 gap-3 text-xs">
 										<div>
-											<p className='text-xs text-gray-600'>Nombre</p>
-											<p className='font-medium'>{selectedUser.name}</p>
+											<p className="text-white/40">Nombre</p>
+											<p className="text-white/90 font-medium">{selectedUser.name}</p>
 										</div>
 										<div>
-											<p className='text-xs text-gray-600'>Teléfono</p>
-											<p className='font-medium'>
-												{selectedUser.phone || 'No registrado'}
-											</p>
+											<p className="text-white/40">Teléfono</p>
+											<p className="text-white/90">{selectedUser.phone || 'No registrado'}</p>
 										</div>
-										<div className='col-span-2'>
-											<p className='text-xs text-gray-600'>Email</p>
-											<p className='font-medium'>{selectedUser.email}</p>
+										<div className="col-span-2">
+											<p className="text-white/40">Email</p>
+											<p className="text-white/90">{selectedUser.email}</p>
 										</div>
 									</div>
 								</div>
@@ -260,56 +280,55 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 						</div>
 					</div>
 
-					{/* Dirección de la visita */}
-					<div className='bg-gray-50 p-4 rounded-lg border'>
-						<h3 className='font-semibold text-lg mb-3 flex items-center gap-2'>
-							<MapPin size={18} />
-							Dirección de la Visita *
+					{/* Dirección */}
+					<div className="rounded-xl border border-white/10 bg-white/5 p-4">
+						<h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+							<MapPin size={16} className="text-[#C8A882]" />
+							Dirección de la visita *
 						</h3>
 
-						<div className='flex flex-col'>
-							<label className='font-medium mb-1'>Dirección completa</label>
+						<div className="space-y-2">
 							<textarea
-								name='address'
-								placeholder='Ingresa la dirección completa donde se realizará la visita'
+								name="address"
+								placeholder="Ingresa la dirección completa donde se realizará la visita"
 								value={visitData.address}
 								onChange={handleChange}
-								className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown min-h-20 resize-none'
+								className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+									text-sm text-white placeholder:text-white/30
+									focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+									transition-all duration-200 resize-none"
 								rows={3}
 								required
 							/>
 
-							{selectedUser?.address &&
-								visitData.address !== selectedUser.address && (
-									<div className='mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded'>
-										<p className='text-xs text-yellow-700'>
-											⚠️ La dirección difiere de la registrada del cliente:{' '}
-											{selectedUser.address}
-										</p>
-										<button
-											type='button'
-											onClick={() =>
-												setVisitData((prev) => ({
-													...prev,
-													address: selectedUser.address || prev.address,
-												}))
-											}
-											className='text-xs text-blue-600 hover:underline mt-1'>
-											Usar dirección registrada
-										</button>
-									</div>
-								)}
+							{selectedUser?.address && visitData.address !== selectedUser.address && (
+								<div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+									<p className="text-xs text-yellow-400 flex items-center gap-1">
+										<AlertCircle size={12} />
+										Dirección difiere de la registrada: {selectedUser.address}
+									</p>
+									<button
+										type="button"
+										onClick={() => setVisitData((prev) => ({ ...prev, address: selectedUser.address! }))}
+										className="text-xs text-[#C8A882] hover:underline mt-1">
+										Usar dirección registrada
+									</button>
+								</div>
+							)}
 
-							<div className='mt-3'>
-								<label className='font-medium mb-1'>
-									Notas adicionales (opcional)
+							<div className="mt-3">
+								<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block mb-2">
+									Notas adicionales
 								</label>
 								<textarea
-									name='notes'
-									placeholder='Instrucciones especiales, referencias, etc.'
+									name="notes"
+									placeholder="Instrucciones especiales, referencias, etc."
 									value={visitData.notes}
 									onChange={handleChange}
-									className='border px-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-brown min-h-4 resize-none'
+									className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+										text-sm text-white placeholder:text-white/30
+										focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+										transition-all duration-200 resize-none"
 									rows={2}
 								/>
 							</div>
@@ -317,170 +336,150 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 					</div>
 
 					{/* Fecha y hora */}
-					<div className='grid grid-cols-2 gap-6'>
-						<div className='bg-gray-50 p-4 rounded-lg border'>
-							<h3 className='font-semibold text-lg mb-3 flex items-center gap-2'>
-								<Calendar size={18} />
+					<div className="grid grid-cols-2 gap-4">
+						<div className="rounded-xl border border-white/10 bg-white/5 p-4">
+							<h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+								<Calendar size={16} className="text-[#C8A882]" />
 								Fecha *
 							</h3>
-
-							<div className='flex flex-col'>
-								<label className='font-medium mb-1'>Seleccionar fecha</label>
-								<input
-									type='date'
-									name='visitDate'
-									value={visitData.visitDate}
-									onChange={handleChange}
-									min={new Date().toISOString().split('T')[0]}
-									className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown'
-									required
-								/>
-								<p className='text-xs text-gray-500 mt-2'>
-									Fecha seleccionada:{' '}
-									{new Date(visitData.visitDate).toLocaleDateString('es-ES', {
-										weekday: 'long',
-										day: 'numeric',
-										month: 'long',
-										year: 'numeric',
-									})}
-								</p>
-							</div>
+							<input
+								type="date"
+								name="visitDate"
+								value={visitData.visitDate}
+								onChange={handleChange}
+								min={new Date().toISOString().split('T')[0]}
+								className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+									text-sm text-white
+									focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+									transition-all duration-200"
+								required
+							/>
 						</div>
 
-						<div className='bg-gray-50 p-4 rounded-lg border'>
-							<h3 className='font-semibold text-lg mb-3 flex items-center gap-2'>
-								<Clock size={18} />
+						<div className="rounded-xl border border-white/10 bg-white/5 p-4">
+							<h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+								<Clock size={16} className="text-[#C8A882]" />
 								Hora *
 							</h3>
-
-							<div className='flex flex-col'>
-								<label className='font-medium mb-1'>Seleccionar hora</label>
-								<select
-									name='scheduledTime'
-									value={visitData.scheduledTime}
-									onChange={handleChange}
-									className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown'
-									required>
-									{AVAILABLE_TIMES.map((time) => (
-										<option
-											key={time}
-											value={time}>
-											{time} horas
-										</option>
-									))}
-								</select>
-								<p className='text-xs text-gray-500 mt-2'>
-									Horario de trabajo: 8:00 AM - 6:00 PM
-								</p>
-							</div>
+							<select
+								name="scheduledTime"
+								value={visitData.scheduledTime}
+								onChange={handleChange}
+								className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+									text-sm text-white
+									focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+									transition-all duration-200 appearance-none"
+								required>
+								{AVAILABLE_TIMES.map((time) => (
+									<option key={time} value={time} className="bg-[#1e1e1c]">
+										{time} horas
+									</option>
+								))}
+							</select>
+							<p className="text-xs text-white/30 mt-2">Horario: 8:00 AM - 6:00 PM</p>
 						</div>
 					</div>
 
-					{/* Servicios requeridos */}
-					<div className='bg-gray-50 p-4 rounded-lg border'>
-						<h3 className='font-semibold text-lg mb-3 flex items-center gap-2'>
-							<CheckSquare size={18} />
-							Servicios Requeridos
+					{/* Servicios */}
+					<div className="rounded-xl border border-white/10 bg-white/5 p-4">
+						<h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+							<CheckSquare size={16} className="text-[#C8A882]" />
+							Servicios requeridos
 						</h3>
 
-						<p className='text-sm text-gray-600 mb-4'>
+						<p className="text-xs text-white/40 mb-4">
 							Selecciona los servicios que se realizarán en la visita (opcional)
 						</p>
 
-						{/* Lista de servicios disponibles */}
 						{servicesLoading ? (
-							<div className='text-center py-4'>
-								<p className='text-gray-500'>Cargando servicios...</p>
+							<div className="text-center py-4">
+								<p className="text-white/30">Cargando servicios...</p>
 							</div>
 						) : (
-							<div className='grid grid-cols-2 gap-3 mb-6'>
+							<div className="grid grid-cols-2 gap-3 mb-6 max-h-60 overflow-y-auto pr-2">
 								{services.slice(0, 8).map((service: Service) => (
-									<div
+									<button
 										key={service._id}
-										className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+										type="button"
+										onClick={() => handleServiceToggle(service._id!)}
+										className={`p-3 rounded-xl border transition-all duration-200 text-left ${
 											visitData.services.includes(service._id!)
-												? 'bg-blue-50 border-blue-300'
-												: 'bg-white border-gray-200 hover:bg-gray-50'
-										}`}
-										onClick={() => handleServiceToggle(service._id!)}>
-										<div className='flex items-center gap-2'>
+												? 'bg-[#C8A882]/10 border-[#C8A882]/50'
+												: 'bg-white/5 border-white/10 hover:bg-white/8'
+										}`}>
+										<div className="flex items-start gap-2">
 											<input
-												type='checkbox'
+												type="checkbox"
 												checked={visitData.services.includes(service._id!)}
 												onChange={() => {}}
-												className='h-4 w-4 text-brown focus:ring-brown border-gray-300 rounded'
+												className="mt-1 w-3.5 h-3.5 rounded border-white/30 bg-white/5 text-[#C8A882] focus:ring-[#C8A882]"
 											/>
 											<div>
-												<p className='font-medium text-sm'>
-													{service.name}
-												</p>
+												<p className="text-xs font-medium text-white">{service.name}</p>
 												{service.description && (
-													<p
-														className='text-xs text-gray-500 truncate'
-														title={service.description}>
-														{service.description.substring(0, 50)}...
+													<p className="text-[10px] text-white/40 mt-1 truncate max-w-[150px]">
+														{service.description.substring(0, 40)}...
 													</p>
 												)}
 											</div>
 										</div>
-									</div>
+									</button>
 								))}
 							</div>
 						)}
 
 						{/* Servicios personalizados */}
-						<div className='mt-4'>
-							<label className='font-medium mb-2 block'>
+						<div className="mt-4">
+							<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block mb-2">
 								Agregar servicio personalizado
 							</label>
-							<div className='flex gap-2'>
+							<div className="flex gap-2">
 								<input
-									type='text'
+									type="text"
 									value={customService}
 									onChange={(e) => setCustomService(e.target.value)}
-									placeholder='Ej: Medidas para closet, cotización mueble, etc.'
-									className='flex-1 border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown'
+									placeholder="Ej: Medidas para closet, cotización mueble, etc."
+									className="flex-1 rounded-xl border border-white/15 bg-white/5 px-4 py-3
+										text-sm text-white placeholder:text-white/30
+										focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+										transition-all duration-200"
 								/>
 								<button
-									type='button'
+									type="button"
 									onClick={handleAddCustomService}
 									disabled={!customService.trim()}
-									className={`px-4 py-2 rounded-md flex items-center gap-2 ${
-										!customService.trim()
-											? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-											: 'bg-brown text-white hover:bg-brown-dark'
-									}`}>
-									<Plus size={16} />
-									Agregar
+									className="px-4 py-3 rounded-xl
+										bg-[#8B5E3C] hover:bg-[#6F452A]
+										text-white text-sm font-medium
+										disabled:opacity-50 disabled:cursor-not-allowed
+										flex items-center gap-2
+										transition-all duration-200">
+									<Plus size={14} />
 								</button>
 							</div>
 						</div>
 
 						{/* Servicios seleccionados */}
 						{visitData.selectedServices.length > 0 && (
-							<div className='mt-4'>
-								<label className='font-medium mb-2 block'>
+							<div className="mt-4">
+								<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block mb-2">
 									Servicios seleccionados ({visitData.selectedServices.length})
 								</label>
-								<div className='space-y-2'>
+								<div className="space-y-2 max-h-40 overflow-y-auto pr-2">
 									{visitData.selectedServices.map((service) => (
-										<div
-											key={service.id}
-											className='flex justify-between items-center p-3 bg-white border rounded-lg'>
+										<div key={service.id}
+											className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
 											<div>
-												<p className='font-medium'>{service.name}</p>
+												<p className="text-xs font-medium text-white">{service.name}</p>
 												{service.description && (
-													<p className='text-xs text-gray-500'>
-														{service.description}
-													</p>
+													<p className="text-[10px] text-white/40">{service.description}</p>
 												)}
 											</div>
 											<button
-												type='button'
+												type="button"
 												onClick={() => removeSelectedService(service.id)}
-												className='p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full'
-												title='Remover servicio'>
-												<Minus size={16} />
+												className="p-1 rounded-lg text-white/40 hover:text-red-400 hover:bg-white/5 transition">
+												<Minus size={14} />
 											</button>
 										</div>
 									))}
@@ -490,84 +489,94 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 					</div>
 
 					{/* Estado */}
-					<div className='flex flex-col'>
-						<label className='font-medium mb-1'>Estado inicial de la visita</label>
+					<div className="space-y-2">
+						<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
+							Estado inicial de la visita
+						</label>
 						<select
-							name='status'
+							name="status"
 							value={visitData.status}
 							onChange={handleChange}
-							className='border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-brown w-64'>
-							<option value='Programada'>Programada</option>
-							<option value='Confirmada'>Confirmada</option>
-							<option value='En camino'>En camino</option>
+							className="w-64 rounded-xl border border-white/15 bg-white/5 px-4 py-3
+								text-sm text-white
+								focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+								transition-all duration-200 appearance-none">
+							<option value="Programada" className="bg-[#1e1e1c]">Programada</option>
+							<option value="Confirmada" className="bg-[#1e1e1c]">Confirmada</option>
+							<option value="En camino" className="bg-[#1e1e1c]">En camino</option>
 						</select>
-						<p className='text-xs text-gray-500 mt-1'>
-							Puedes cambiar el estado después de crear la visita
-						</p>
 					</div>
 
 					{/* Resumen */}
-					<div className='p-4 bg-green-50 border border-green-200 rounded-lg'>
-						<h4 className='font-semibold text-green-800 mb-2'>Resumen de la visita</h4>
-						<div className='grid grid-cols-2 gap-4 text-sm'>
-							<div>
-								<p className='text-gray-600'>Cliente:</p>
-								<p className='font-medium'>
-									{selectedUser?.name || 'No seleccionado'}
-								</p>
-							</div>
-							<div>
-								<p className='text-gray-600'>Fecha y hora:</p>
-								<p className='font-medium'>
-									{new Date(visitData.visitDate).toLocaleDateString('es-ES')} -{' '}
-									{visitData.scheduledTime}
-								</p>
-							</div>
-							<div className='col-span-2'>
-								<p className='text-gray-600'>Dirección:</p>
-								<p className='font-medium'>{visitData.address || 'No ingresada'}</p>
-							</div>
-							<div className='col-span-2'>
-								<p className='text-gray-600'>Servicios:</p>
-								<p className='font-medium'>
-									{visitData.selectedServices.length > 0
-										? visitData.selectedServices.map((s) => s.name).join(', ')
-										: 'Ninguno seleccionado'}
-								</p>
+					{selectedUser && (
+						<div className="p-4 rounded-xl bg-[#C8A882]/10 border border-[#C8A882]/20">
+							<h4 className="text-sm font-medium text-[#C8A882] mb-2">Resumen de la visita</h4>
+							<div className="grid grid-cols-2 gap-4 text-xs">
+								<div>
+									<p className="text-white/40">Cliente:</p>
+									<p className="text-white/90 font-medium">{selectedUser.name}</p>
+								</div>
+								<div>
+									<p className="text-white/40">Fecha y hora:</p>
+									<p className="text-white/90">
+										{new Date(visitData.visitDate).toLocaleDateString('es-CO')} - {visitData.scheduledTime}
+									</p>
+								</div>
+								<div className="col-span-2">
+									<p className="text-white/40">Dirección:</p>
+									<p className="text-white/90">{visitData.address || 'No ingresada'}</p>
+								</div>
+								{visitData.selectedServices.length > 0 && (
+									<div className="col-span-2">
+										<p className="text-white/40">Servicios:</p>
+										<p className="text-white/90">
+											{visitData.selectedServices.map(s => s.name).join(', ')}
+										</p>
+									</div>
+								)}
 							</div>
 						</div>
-					</div>
+					)}
 
 					{/* Botones */}
-					<div className='flex justify-between pt-4 border-t'>
+					<div className="flex justify-end gap-3 pt-4 border-t border-white/10">
 						<button
-							type='button'
+							type="button"
 							onClick={onClose}
-							className='px-6 py-2 border border-gray-400 rounded-md text-gray-600 hover:bg-gray-100 transition-colors'>
+							className="px-5 py-2.5 rounded-lg
+								border border-white/15 bg-white/5
+								text-white/70 text-sm
+								hover:bg-white/10 hover:text-white
+								transition-all duration-200">
 							Cancelar
 						</button>
 						<button
-							type='submit'
-							disabled={
-								createVisitMutation.isPending ||
-								!visitData.user ||
-								!visitData.address ||
-								!visitData.visitDate
-							}
-							className={`px-6 py-2 border border-brown rounded-md transition-colors flex items-center gap-2 ${
-								createVisitMutation.isPending ||
-								!visitData.user ||
-								!visitData.address ||
-								!visitData.visitDate
-									? 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-500'
-									: 'text-brown hover:bg-brown hover:text-white'
-							}`}>
-							{createVisitMutation.isPending ? 'Programando...' : 'Programar Visita'}
+							type="submit"
+							disabled={createVisitMutation.isPending || !visitData.user || !visitData.address || !visitData.visitDate}
+							className="px-5 py-2.5 rounded-lg
+								bg-[#8B5E3C] hover:bg-[#6F452A]
+								text-white text-sm font-medium
+								shadow-lg shadow-[#8B5E3C]/20
+								disabled:opacity-50 disabled:cursor-not-allowed
+								flex items-center gap-2
+								transition-all duration-200">
+							{createVisitMutation.isPending ? (
+								<>
+									<span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+									Programando...
+								</>
+							) : (
+								<>
+									<Save size={14} />
+									Programar Visita
+								</>
+							)}
 						</button>
 					</div>
 				</form>
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 }
 
