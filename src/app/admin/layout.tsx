@@ -29,6 +29,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 	if (!user) return null;
 
+		if (user.role?.name !== 'Administrador' && user.role?.name !== 'Master') {
+		router.replace('/client');
+		return null;
+	}
+
 	const handleLogout = async () => {
 		const Swal = (await import('sweetalert2')).default;
 		Swal.fire({
