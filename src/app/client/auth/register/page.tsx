@@ -6,6 +6,7 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import AuthInput from '@/components/auth/AuthInput';
 import AuthButton from '@/components/auth/AuthButton';
 import PasswordInput from '@/components/auth/PasswordInput';
+import { useUser } from '@/providers/userContext';
 import { useCreateUser } from '@/hooks/apiHooks';
 import Swal from 'sweetalert2';
 import Link from 'next/link';
@@ -13,6 +14,7 @@ import Link from 'next/link';
 export default function RegisterPage() {
   const router = useRouter();
   const registerUser = useCreateUser();
+  const { loadUser } = useUser();
 
   const [form, setForm] = useState({ email: '', name: '', password: '', confirmPassword: '' });
 
@@ -34,6 +36,7 @@ export default function RegisterPage() {
 
     try {
       await registerUser.mutateAsync({ name: form.name, email: form.email, password: form.password });
+      await loadUser();
       Swal.fire({ title: 'Registro exitoso', html: 'Por favor completa tu información de usuario para una mejor experiencia', icon: 'success', timer: 3000, showConfirmButton: false });
       router.push('/client/perfil');
     } catch (err: any) {

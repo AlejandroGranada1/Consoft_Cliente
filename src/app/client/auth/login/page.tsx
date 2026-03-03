@@ -34,9 +34,15 @@ export default function LoginPage() {
     try {
       const response = await login.mutateAsync(loginData);
       if (response.status === 200) {
-        await loadUser();
-        user?.role === 'admin' ? router.push('/admin') :
-        router.push('/client');
+        const userData = await loadUser();
+        if (userData) {
+          const userRole = userData.role?.name;
+          if (userRole === 'Administrador' || userRole === 'Master') {
+            router.push('/admin/configuracion');
+          } else {
+            router.push('/client');
+          }
+        }
       }
     } catch (error: any) {
       const message = error.response?.data?.message === 'Incorrect password, please try again'

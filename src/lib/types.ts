@@ -49,7 +49,7 @@ export interface User {
 	document: string;
 	address?: string;
 	phone?: string;
-	role: Role | string; // Role ID
+	role: Role  // Role ID
 	status: boolean;
 	registeredAt: string; // ISO date string
 	featuredProducts: Product[];
