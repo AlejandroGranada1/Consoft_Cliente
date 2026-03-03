@@ -56,7 +56,41 @@ export default function UserMenu({ floating = false }: UserMenuProps) {
 		(q: any) => notificationStatuses.includes(q.status) && q.status !== 'Carrito',
 	);
 
-	const isAdmin = (user.role as Role)?.name === 'Administrador';
+	const isAdmin = (user.role as Role)?.name === 'Administrador' || (user.role as Role)?.name === 'Master';
+
+	if (isAdmin) {
+		return (
+			<div className='flex items-center gap-8'>
+
+				<Link
+					href='/admin/configuracion'
+					className={
+						floating
+							? 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/15 border border-white/25 text-white text-sm hover:bg-white/25 transition-all duration-200'
+							: 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#F5EDE4] border border-[#E8DDD4] text-[#8B5E3C] text-sm hover:bg-[#E8DDD4] transition-all duration-200'
+					}>
+					<Settings size={16} />
+					<span>Panel Administrativo</span>
+				</Link>
+				<button
+					type='button'
+					onClick={() => {
+						logout.mutateAsync();
+						window.location.href = '/client/auth/login';
+					}}
+					className={
+						floating
+							? 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200 text-sm'
+							: 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-red-500 hover:bg-red-50 transition-all duration-200 text-sm'
+					}>
+					<LogOut size={16} />
+					<span>Salir</span>
+				</button>
+			</div>
+		);
+	}
+
+
 
 	return (
 		<div className='relative'>
@@ -100,18 +134,6 @@ export default function UserMenu({ floating = false }: UserMenuProps) {
 					)}
 				</Link>
 
-				{isAdmin && (
-					<Link
-						href='/admin/configuracion'
-						className={
-							floating
-								? 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/15 border border-white/25 text-white text-sm hover:bg-white/25 transition-all duration-200'
-								: 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#F5EDE4] border border-[#E8DDD4] text-[#8B5E3C] text-sm hover:bg-[#E8DDD4] transition-all duration-200'
-						}>
-						<Settings size={16} />
-						<span>Admin</span>
-					</Link>
-				)}
 
 				<button
 					type='button'

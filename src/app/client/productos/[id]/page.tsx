@@ -334,23 +334,6 @@ export default function ProductDetailPage() {
               {customizeAll ? 'Solicitar personalización' : 'Agregar al carrito'}
             </button>
 
-            {/* Trust strip */}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { icon: <ShieldCheck size={15} />, label: 'Garantía 2 años' },
-                { icon: <Truck size={15} />, label: 'Envío a domicilio' },
-                { icon: <Pencil size={15} />, label: 'Personalizable' },
-              ].map(({ icon, label }) => (
-                <div
-                  key={label}
-                  className="flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-3.5 text-center"
-                >
-                  <span className="text-[#C8A882]">{icon}</span>
-                  <span className="text-[11px] text-white/50 leading-snug">{label}</span>
-                </div>
-              ))}
-            </div>
-
           </div>
         </div>
       </div>

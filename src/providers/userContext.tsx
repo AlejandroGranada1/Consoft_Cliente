@@ -8,7 +8,7 @@ interface UserContextType {
 	user: Usertype | null;
 	loading: boolean;
 	setUser: (user: Usertype | null) => void;
-	loadUser: () => Promise<void>;
+	loadUser: () => Promise<Usertype | null>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -30,13 +30,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 	const [loading, setLoading] = useState(true);
 	const hasLoadedRef = useRef(false); // 👈 Evita cargas múltiples
 
-	const loadUser = useCallback(async () => {
+	const loadUser = useCallback(async (): Promise<Usertype | null> => {
 		try {
 			setLoading(true);
 			const userData = await fetchCurrentUser();
 			setUser(userData);
+			return userData;
 		} catch (_err) {
 			setUser(null);
+			return null;
 		} finally {
 			setLoading(false);
 		}

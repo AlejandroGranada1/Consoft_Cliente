@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { useMyOrders } from '@/hooks/apiHooks';
 import { PedidoUI } from '@/lib/types';
 import { useUser } from '@/providers/userContext';
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { PackageOpen, ChevronRight, ShoppingBag, AlertCircle, CheckCircle } from 'lucide-react';
+import { PackageOpen, ChevronRight, ChevronLeft, ShoppingBag, AlertCircle, CheckCircle, Filter } from 'lucide-react';
+
+const STATUS_OPTIONS = ['Todos', 'Pendiente', 'En proceso', 'Completado', 'Cancelado'];
 
 const getStatusStyle = (estado: string) => {
 	switch (estado?.toLowerCase()) {
@@ -26,7 +28,12 @@ export default function PedidosPage() {
 	const { user, loading } = useUser();
 	const router = useRouter();
 	const { data, isLoading, error } = useMyOrders();
-	console.log(data);
+
+	const [filterStatus, setFilterStatus] = useState('En proceso');
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 5;
+
+	const allOrders: PedidoUI[] = data ?? [];
 
 	useEffect(() => {
 		if (loading) return;
@@ -43,6 +50,22 @@ export default function PedidosPage() {
 		}
 	}, [user, loading, router]);
 
+	const filteredOrders = useMemo(() => {
+		if (filterStatus === 'Todos') return allOrders;
+		return allOrders.filter((p) => p.estado?.toLowerCase() === filterStatus.toLowerCase());
+	}, [allOrders, filterStatus]);
+
+	const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+	const paginatedOrders = useMemo(() => {
+		const start = (currentPage - 1) * itemsPerPage;
+		return filteredOrders.slice(start, start + itemsPerPage);
+	}, [filteredOrders, currentPage]);
+
+	const handleFilterChange = (status: string) => {
+		setFilterStatus(status);
+		setCurrentPage(1);
+	};
+
 	if (user === undefined)
 		return (
 			<div
@@ -57,10 +80,6 @@ export default function PedidosPage() {
 			</div>
 		);
 	if (user === null) return null;
-
-	const pedidos: PedidoUI[] = data ?? [];
-
-	console.log('Pedidos:', pedidos);
 
 	const cardStyle = { backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' };
 
@@ -92,11 +111,28 @@ export default function PedidosPage() {
 
 			<div className='relative z-10 max-w-5xl mx-auto w-full px-6 pt-24 pb-16 space-y-6'>
 				{/* Header */}
-				<div>
-					<span className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium'>
-						Historial
-					</span>
-					<h1 className='font-serif text-white text-2xl mt-1'>Mis pedidos</h1>
+				<div className='flex flex-col md:flex-row md:items-end justify-between gap-6'>
+					<div>
+						<span className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium'>
+							Historial
+						</span>
+						<h1 className='font-serif text-white text-2xl mt-1'>Mis pedidos</h1>
+					</div>
+
+					<div className='flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10'>
+						<Filter size={14} className='text-[#C8A882]' />
+						{STATUS_OPTIONS.map((status) => (
+							<button
+								key={status}
+								onClick={() => handleFilterChange(status)}
+								className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${filterStatus === status
+									? 'bg-[#8B5E3C] text-white shadow-lg'
+									: 'text-white/40 hover:text-white/70 hover:bg-white/5'
+									}`}>
+								{status}
+							</button>
+						))}
+					</div>
 				</div>
 
 				{/* Loading */}
@@ -119,7 +155,7 @@ export default function PedidosPage() {
 				)}
 
 				{/* Empty */}
-				{!isLoading && !error && pedidos.length === 0 && (
+				{!isLoading && !error && allOrders.length === 0 && (
 					<div
 						className='rounded-2xl border border-white/10 p-14 flex flex-col items-center gap-4'
 						style={cardStyle}>
@@ -138,20 +174,28 @@ export default function PedidosPage() {
 				)}
 
 				{/* Lista */}
-				{pedidos.length > 0 && (
+				{filteredOrders.length > 0 ? (
 					<div
 						className='rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]'
 						style={cardStyle}>
 						{/* Header tabla */}
-						<div className='px-6 py-4 border-b border-white/8 flex items-center gap-2'>
-							<PackageOpen
-								size={13}
-								className='text-[#C8A882]'
-							/>
-							<span className='text-[11px] font-medium text-white/50 uppercase tracking-wider'>
-								{pedidos.length} pedido{pedidos.length !== 1 ? 's' : ''} encontrado
-								{pedidos.length !== 1 ? 's' : ''}
-							</span>
+						<div className='px-6 py-4 border-b border-white/8 flex items-center justify-between'>
+							<div className='flex items-center gap-2'>
+								<PackageOpen
+									size={13}
+									className='text-[#C8A882]'
+								/>
+								<span className='text-[11px] font-medium text-white/50 uppercase tracking-wider'>
+									{filteredOrders.length} pedido
+									{filteredOrders.length !== 1 ? 's' : ''} {filterStatus !== 'Todos' && `en "${filterStatus}"`}
+								</span>
+							</div>
+
+							{totalPages > 1 && (
+								<div className='flex items-center gap-2 text-[11px] text-white/30'>
+									Página {currentPage} de {totalPages}
+								</div>
+							)}
 						</div>
 
 						{/* Desktop table */}
@@ -177,7 +221,7 @@ export default function PedidosPage() {
 									</tr>
 								</thead>
 								<tbody className='divide-y divide-white/6'>
-									{pedidos.map((p: PedidoUI) => (
+									{paginatedOrders.map((p: PedidoUI) => (
 										<tr
 											key={p.id}
 											className='hover:bg-white/5 transition'>
@@ -240,7 +284,7 @@ export default function PedidosPage() {
 
 						{/* Mobile cards */}
 						<div className='md:hidden divide-y divide-white/8'>
-							{pedidos.map((p: PedidoUI) => (
+							{paginatedOrders.map((p: PedidoUI) => (
 								<div
 									key={p.id}
 									className='px-5 py-4 space-y-3'>
@@ -286,7 +330,62 @@ export default function PedidosPage() {
 								</div>
 							))}
 						</div>
+
+						{/* Pagination Footer */}
+						{totalPages > 1 && (
+							<div className='px-6 py-4 border-t border-white/8 flex items-center justify-between bg-white/[0.02]'>
+								<button
+									onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+									disabled={currentPage === 1}
+									className='inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium text-white/50 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all'>
+									<ChevronLeft size={14} /> Anterior
+								</button>
+
+								<div className='flex items-center gap-1'>
+									{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+										<button
+											key={page}
+											onClick={() => setCurrentPage(page)}
+											className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${currentPage === page
+												? 'bg-[#8B5E3C] text-white'
+												: 'text-white/30 hover:text-white hover:bg-white/5'
+												}`}>
+											{page}
+										</button>
+									))}
+								</div>
+
+								<button
+									onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+									disabled={currentPage === totalPages}
+									className='inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium text-white/50 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all'>
+									Siguiente <ChevronRight size={14} />
+								</button>
+							</div>
+						)}
 					</div>
+				) : (
+					/* Empty state for filtered */
+					!isLoading && !error && (
+						<div
+							className='rounded-2xl border border-white/10 p-14 flex flex-col items-center gap-4'
+							style={cardStyle}>
+							<PackageOpen
+								size={40}
+								className='text-white/20'
+							/>
+							<p className='text-sm text-white/40'>
+								No se encontraron pedidos con el estado "{filterStatus}"
+							</p>
+							{filterStatus !== 'Todos' && (
+								<button
+									onClick={() => handleFilterChange('Todos')}
+									className='text-[#C8A882] text-xs font-medium hover:underline'>
+									Ver todos los pedidos
+								</button>
+							)}
+						</div>
+					)
 				)}
 			</div>
 		</div>
