@@ -71,15 +71,15 @@ function OrderDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 
   return createPortal(
     <>
-		<div
-			className='fixed inset-0 z-50 flex items-center justify-center p-4'
-			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-        
+      <div
+        className='fixed inset-0 z-50 flex items-center justify-center p-4'
+        style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+
         <div className="w-full max-w-[1000px] rounded-2xl border border-white/10
           shadow-[0_8px_32px_rgba(0,0,0,0.3)]
           flex flex-col max-h-[90vh]"
           style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-          
+
           {/* Header */}
           <header className="relative px-6 py-5 border-b border-white/10">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -186,42 +186,42 @@ function OrderDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
                 <DollarSign size={16} className="text-[#C8A882]" />
                 Información de Pago
               </h3>
-              
+
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-white/40">Total del pedido:</span>
                   <span className="text-lg font-bold text-[#C8A882]">{formatCurrency(total)}</span>
                 </div>
 
-                {totalPaid > 0 && (
-                  <>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-white/40">Pagado:</span>
-                      <span className="text-sm font-medium text-green-400">{formatCurrency(totalPaid)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-white/40">Restante:</span>
-                      <span className={`text-sm font-medium ${remaining > 0 ? 'text-orange-400' : 'text-green-400'}`}>
-                        {formatCurrency(remaining)}
-                      </span>
-                    </div>
+                <div className="flex justify-between items-center">
+                  <div className='flex flex-col'>
+                    <span className="text-xs text-white/40">Pagado (Total):</span>
+                    {extraProps.paidPending ? (
+                      <span className='text-[10px] text-yellow-500/80'>(Incluye {formatCurrency(extraProps.paidPending)} pendiente)</span>
+                    ) : null}
+                  </div>
+                  <span className="text-sm font-medium text-green-400">{formatCurrency(extraProps.paidTotal || totalPaid)}</span>
+                </div>
 
-                    {/* Barra de progreso */}
-                    <div className="pt-2">
-                      <div className="flex justify-between text-xs text-white/40 mb-1">
-                        <span>Progreso de pago</span>
-                        <span>{paymentPercentage}%</span>
-                      </div>
-                      <div className="w-full bg-white/10 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full ${
-                            paymentPercentage === 100 ? 'bg-green-500' : 'bg-blue-500'
-                          }`}
-                          style={{ width: `${paymentPercentage}%` }} />
-                      </div>
-                    </div>
-                  </>
-                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-white/40">Restante Proyectado:</span>
+                  <span className={`text-sm font-medium ${(extraProps.restanteConPendientes ?? remaining) > 0 ? 'text-orange-400' : 'text-green-400'}`}>
+                    {formatCurrency(extraProps.restanteConPendientes ?? remaining)}
+                  </span>
+                </div>
+
+                {/* Barra de progreso */}
+                <div className="pt-2">
+                  <div className="flex justify-between text-xs text-white/40 mb-1">
+                    <span>Progreso de pago</span>
+                    <span>{Math.round(((extraProps.paidTotal || totalPaid) / (extraProps.total || total)) * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-white/10 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${(extraProps.paidTotal || totalPaid) >= (extraProps.total || total) ? 'bg-green-500' : 'bg-[#C8A882]'}`}
+                      style={{ width: `${Math.min(100, Math.round(((extraProps.paidTotal || totalPaid) / (extraProps.total || total)) * 100))}%` }} />
+                  </div>
+                </div>
 
                 {extraProps.payments?.length > 0 && (
                   <div className="mt-3">
@@ -238,13 +238,19 @@ function OrderDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
                               {new Date(payment.paidAt).toLocaleDateString('es-CO')}
                             </span>
                           </div>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] ${
-                            payment.status === 'approved'
+                          <div className="flex flex-col items-end gap-1">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] ${['aprobado', 'approved', 'confirmado', 'pagado', 'paid'].includes(payment.status?.toLowerCase())
                               ? 'bg-green-500/10 text-green-400 border border-green-500/20'
                               : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                          }`}>
-                            {payment.status === 'approved' ? 'Aprobado' : 'Pendiente'}
-                          </span>
+                              }`}>
+                              {['aprobado', 'approved', 'confirmado', 'pagado', 'paid'].includes(payment.status?.toLowerCase()) ? 'Aprobado' : 'Pendiente'}
+                            </span>
+                            {payment.proyectado !== undefined && (
+                              <span className="text-[9px] text-white/30 font-mono">
+                                Saldo: {formatCurrency(payment.proyectado)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

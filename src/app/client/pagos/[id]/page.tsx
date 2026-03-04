@@ -6,7 +6,7 @@ import { useOcrReceipt, useSendPayment, useMyOrder } from '@/hooks/apiHooks';
 import { useUser } from '@/providers/userContext';
 import QR from '@/components/pagos/QR';
 import { AlertCircle, CheckCircle } from 'lucide-react';
-
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 export default function PagoPage() {
 	const router = useRouter();
 	const { id: pedidoId } = useParams();
@@ -21,14 +21,29 @@ export default function PagoPage() {
 	const [file, setFile] = useState<File | null>(null);
 	const [preview, setPreview] = useState<string | null>(null);
 	const [dragOver, setDragOver] = useState(false);
+	const [montoManual, setMontoManual] = useState<number>(0);
+
+	// Sincronizar monto manual con el OCR cuando termine de cargar
+	useEffect(() => {
+		if (ocr.data?.detectedAmount) {
+			setMontoManual(ocr.data.detectedAmount);
+		}
+	}, [ocr.data?.detectedAmount]);
 
 	// Calcular información del abono
 	const totalPedido = orderData?.raw?.total || 0;
-	const pagosRealizados = orderData?.raw?.payments?.reduce((sum: number, p: any) => sum + (p.amount || 0), 0) || 0;
+	const pagosRealizados = orderData?.raw?.payments?.reduce((sum: number, p: any) => {
+		// Solo sumamos los ya registrados para calcular el restante real antes de este pago
+		if (['aprobado', 'approved', 'confirmado', 'pagado', 'paid'].includes(p.status?.toLowerCase())) {
+			return sum + (p.amount || 0);
+		}
+		return sum;
+	}, 0) || 0;
 	const abonoInicial = orderData?.raw?.initialPayment?.amount || 0;
 	const porcentajeAbono = totalPedido > 0 ? (abonoInicial / totalPedido) * 100 : 0;
 	const necesitaAbono = abonoInicial < totalPedido * 0.3;
-	const restanteTotal = totalPedido - pagosRealizados;
+	const restanteActual = totalPedido - pagosRealizados - abonoInicial;
+	const restanteDespuesDePago = Math.max(0, restanteActual - montoManual);
 
 	/* ───────── AUTH ───────── */
 	useEffect(() => {
@@ -90,7 +105,7 @@ export default function PagoPage() {
 		sendPayment.mutate(
 			{
 				orderId: pedidoId as string,
-				amount: ocr.data?.detectedAmount || 0,
+				amount: montoManual,
 				receiptUrl: ocr.data?.receipt?.receiptUrl,
 				ocrText: ocr.data?.receipt?.ocrText,
 				method: metodo,
@@ -156,9 +171,9 @@ export default function PagoPage() {
 							<p className="text-xs text-white/60 mt-1">
 								Has abonado <span className="text-yellow-400 font-medium">${abonoInicial.toLocaleString('es-CO')}</span> ({porcentajeAbono.toFixed(0)}%).
 								Para iniciar producción necesitas completar el <span className="text-white/80 font-medium">30% (${(totalPedido * 0.3).toLocaleString('es-CO')})</span>.
-								{restanteTotal > 0 && (
+								{restanteActual > 0 && (
 									<span className="block mt-1 text-white/40">
-										Saldo total pendiente: ${restanteTotal.toLocaleString('es-CO')}
+										Saldo total pendiente: ${restanteActual.toLocaleString('es-CO')}
 									</span>
 								)}
 							</p>
@@ -281,8 +296,23 @@ export default function PagoPage() {
 							onDrop={handleDrop}
 						>
 							{preview ? (
-								<>
-									<img src={preview} alt="Comprobante" className="w-full h-44 object-contain block" />
+								<div className="relative">
+									<img
+										src={preview}
+										alt="Comprobante"
+										className={`w-full h-44 object-contain block transition-opacity duration-300 ${ocr.loading ? 'opacity-30' : 'opacity-100'}`}
+									/>
+
+									{/* Cargando sobre la imagen */}
+									{ocr.loading && (
+										<div className="absolute inset-0 flex items-center justify-center">
+											<div className="flex flex-col items-center gap-2">
+												<div className="animate-spin rounded-full h-8 w-8 border-2 border-[#8B5E3C] border-t-transparent" />
+												<p className="text-[10px] text-[#8B5E3C] uppercase tracking-widest font-bold">Analizando...</p>
+											</div>
+										</div>
+									)}
+
 									<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#111110]/90 to-transparent px-4 py-3 flex items-center justify-between">
 										<span className="text-xs text-[#c4a882] truncate max-w-[160px]">{file?.name}</span>
 										<label className="text-[11px] text-[#8B5E3C] underline cursor-pointer">
@@ -290,7 +320,7 @@ export default function PagoPage() {
 											<input type="file" accept="image/*" onChange={handleInputChange} className="hidden" />
 										</label>
 									</div>
-								</>
+								</div>
 							) : (
 								<>
 									<div className="h-44 flex flex-col items-center justify-center gap-2 text-[#4a3f35]">
@@ -321,14 +351,17 @@ export default function PagoPage() {
 
 								{/* Skeleton mientras carga */}
 								{ocr.loading && (
-									<div className="flex flex-col gap-2">
-										{[70, 50].map((w, i) => (
-											<div
-												key={i}
-												className="h-4 rounded-md bg-white/5 animate-pulse"
-												style={{ width: `${w}%` }}
-											/>
-										))}
+									<div className="flex flex-col gap-4 animate-pulse">
+										<div className="flex justify-between items-center">
+											<div className="h-3 w-24 bg-white/5 rounded-md" />
+											<div className="h-4 w-20 bg-white/10 rounded-md" />
+										</div>
+										<div className="h-px bg-white/5" />
+										<div className="flex justify-between items-center">
+											<div className="h-3 w-24 bg-white/5 rounded-md" />
+											<div className="h-4 w-28 bg-white/10 rounded-md" />
+										</div>
+										<div className="h-12 w-full bg-white/5 rounded-xl mt-2" />
 									</div>
 								)}
 
@@ -345,34 +378,38 @@ export default function PagoPage() {
 
 								{/* Datos detectados */}
 								{ocr.data && !ocr.loading && (
-									<div className="flex flex-col gap-3">
+									<div className="flex flex-col gap-4">
 
-										{/* Monto detectado */}
-										<div className="flex items-center justify-between">
-											<span className="text-xs text-[#6b5b4e]">Monto detectado</span>
-											<span className="text-sm font-medium text-[#c4a882] tabular-nums">
-												${ocr.data.detectedAmount.toLocaleString('es-CO')}
-											</span>
+										{/* Monto detectado (INPUT) */}
+										<div className="flex items-center justify-between gap-4 group/input">
+											<span className="text-xs text-[#6b5b4e] shrink-0 font-medium">Monto a abonar</span>
+											<div className="flex-1 max-w-[150px]">
+												<CurrencyInput
+													value={montoManual}
+													onChange={setMontoManual}
+													placeholder="0"
+												/>
+											</div>
 										</div>
 
 										<div className="h-px bg-white/5" />
 
-										{/* Saldo restante */}
+										{/* Saldo restante (DINÁMICO) */}
 										<div className="flex items-center justify-between">
 											<span className="text-xs text-[#6b5b4e]">Saldo restante</span>
-											<span className={`text-sm font-semibold tabular-nums ${ocr.data.projected.restanteAfter <= 0
+											<span className={`text-sm font-semibold tabular-nums ${restanteDespuesDePago <= 0
 												? 'text-emerald-400'
 												: 'text-[#e8e0d5]'
 												}`}>
-												{ocr.data.projected.restanteAfter <= 0
+												{restanteDespuesDePago <= 0
 													? 'Saldado ✓'
-													: `$${ocr.data.projected.restanteAfter.toLocaleString('es-CO')}`
+													: `$${restanteDespuesDePago.toLocaleString('es-CO')}`
 												}
 											</span>
 										</div>
 
 										{/* Badge pago total */}
-										{ocr.data.projected.restanteAfter <= 0 && (
+										{restanteDespuesDePago <= 0 && (
 											<div className="flex items-center gap-1.5 text-emerald-400/70 text-xs mt-1">
 												<svg width="11" height="11" viewBox="0 0 12 12" fill="none">
 													<path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -382,31 +419,28 @@ export default function PagoPage() {
 										)}
 
 										{/* Aviso saldo pendiente */}
-										{ocr.data.projected.restanteAfter > 0 && (
-											<div className="flex items-center gap-1.5 text-[#8B5E3C]/80 text-xs mt-1">
-												<svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-													<circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-													<path d="M8 5v3M8 10.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-												</svg>
-												Cuando el pago sea aprobado, quedará un saldo pendiente de ${ocr.data.projected.restanteAfter.toLocaleString('es-CO')}
+										{restanteDespuesDePago > 0 && (
+											<div className="flex items-center gap-1.5 text-[#8B5E3C]/80 text-[10px] mt-1 italic">
+												<AlertCircle size={10} />
+												Cuando se apruebe, quedará un saldo de ${restanteDespuesDePago.toLocaleString('es-CO')}
 											</div>
 										)}
 
 										{/* 🔥 Mensaje de abono si aplica */}
-										{necesitaAbono && ocr.data.detectedAmount > 0 && ocr.data.projected.restanteAfter > 0 && (
-											<div className="mt-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-												<p className="text-xs text-yellow-400 flex items-start gap-2">
-													<AlertCircle size={14} className="shrink-0 mt-0.5" />
+										{necesitaAbono && montoManual > 0 && restanteDespuesDePago > 0 && (
+											<div className="mt-2 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+												<p className="text-[11px] text-yellow-400 flex items-start gap-2">
+													<AlertCircle size={12} className="shrink-0 mt-0.5" />
 													<span>
 														<strong>Importante:</strong> Este pago será registrado como abono.
-														{abonoInicial + ocr.data.detectedAmount >= totalPedido * 0.3 ? (
+														{abonoInicial + montoManual >= totalPedido * 0.3 ? (
 															<span className="block mt-1 text-emerald-400">
 																✓ Con este pago alcanzarás el 30% y el pedido entrará en producción.
 															</span>
 														) : (
 															<span className="block mt-1">
-																Después de este pago, tu abono total será del {((abonoInicial + ocr.data.detectedAmount) / totalPedido * 100).toFixed(0)}%.
-																Faltan ${(totalPedido * 0.3 - (abonoInicial + ocr.data.detectedAmount)).toLocaleString('es-CO')} para el 30%.
+																Tu abono será del {((abonoInicial + montoManual) / totalPedido * 100).toFixed(0)}%.
+																Faltan ${(totalPedido * 0.3 - (abonoInicial + montoManual)).toLocaleString('es-CO')} para el 30%.
 															</span>
 														)}
 													</span>

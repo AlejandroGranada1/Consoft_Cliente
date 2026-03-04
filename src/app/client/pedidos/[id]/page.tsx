@@ -5,7 +5,7 @@ import { useMyOrder, useGetOrderReviews, useCreateOrderReview } from '@/hooks/ap
 import ItemCard from '@/components/pedidos/ItemCard';
 import { useUser } from '@/providers/userContext';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, CalendarDays, Tag, Wallet, PackageOpen, CreditCard, Star } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Tag, Wallet, PackageOpen, CreditCard, Star, CheckCircle, Clock } from 'lucide-react';
 
 const getStatusStyle = (estado: string) => {
   switch (estado?.toLowerCase()) {
@@ -177,6 +177,89 @@ export default function PedidoDetallePage() {
               <span className="text-[11px] uppercase tracking-wider font-medium">Precio acordado</span>
             </div>
             <p className="text-[#C8A882] text-xl font-semibold font-serif">{pedido.valor}</p>
+          </div>
+        </div>
+
+        {/* HISTORIAL DE PAGOS */}
+        <div className="rounded-2xl border border-white/10 p-6 md:p-8 space-y-6" style={cardStyle}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-serif text-xl tracking-wide text-white mb-1">Historial de Pagos</h3>
+              <p className="text-sm text-white/40">Seguimiento detallado de tus abonos.</p>
+            </div>
+            <div className="hidden sm:block text-right">
+              <span className="text-[10px] uppercase tracking-[.12em] text-[#C8A882]/60 block mb-1">Total Pagado</span>
+              <span className="text-2xl font-bold text-[#C8A882] font-serif">
+                ${Number(pedido.pagado || 0).toLocaleString('es-CO')}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Abono Inicial */}
+            {pedido.raw?.initialPayment && (
+              <div className="group flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500 shadow-lg shadow-green-500/5">
+                    <CheckCircle size={18} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white/90">Abono Inicial</p>
+                    <p className="text-[10px] text-white/30 uppercase tracking-wider">{pedido.raw.initialPayment.registeredAt ? new Date(pedido.raw.initialPayment.registeredAt).toLocaleDateString('es-CO') : 'Confirmado'}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-white group-hover:text-[#C8A882] transition-colors">${pedido.raw.initialPayment.amount.toLocaleString('es-CO')}</p>
+                  <p className="text-[9px] text-green-500/60 font-mono uppercase tracking-widest mt-0.5">Aprobado</p>
+                </div>
+              </div>
+            )}
+
+            {/* Pagos Adicionales */}
+            {(pedido.raw?.payments || []).length > 0 ? (
+              (pedido.raw.payments as any[]).map((p: any) => {
+                const isApproved = ['aprobado', 'approved', 'confirmado', 'pagado', 'paid'].includes(p.status?.toLowerCase());
+                return (
+                  <div key={p._id} className="group flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg ${isApproved
+                        ? 'bg-green-500/10 text-green-500 shadow-green-500/5'
+                        : 'bg-yellow-500/10 text-yellow-500 shadow-yellow-500/5'
+                        }`}>
+                        {isApproved ? <CheckCircle size={18} /> : <Clock size={18} />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white/90">Pago Adicional</p>
+                        <p className="text-[12px] text-white/30 uppercase tracking-wider">{new Date(p.paidAt).toLocaleDateString('es-CO')}</p>
+                      </div>
+                    </div>
+                    <div className="text-right flex flex-col items-end">
+                      <p className="text-sm font-bold text-white group-hover:text-[#C8A882] transition-colors font-mono">
+                        ${Number(p.amount).toLocaleString('es-CO')}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {p.proyectado !== undefined && (
+                          <span className="text-[12px] text-white/60 font-mono border-r border-white/10 pr-2">
+                            Saldo Pendiente: ${Number(p.proyectado).toLocaleString('es-CO')}
+                          </span>
+                        )}
+                        <span className={`text-[12px] font-mono uppercase tracking-widest ${isApproved ? 'text-green-500/60' : 'text-yellow-500/60'
+                          }`}>
+                          {isApproved ? 'Aprobado' : 'En Revisión'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              !pedido.raw?.initialPayment && (
+                <div className="py-12 text-center rounded-2xl border border-dashed border-white/10 bg-white/5">
+                  <CreditCard size={32} className="mx-auto text-white/10 mb-3" />
+                  <p className="text-[10px] text-white/30 uppercase tracking-[.2em]">Sin pagos registrados</p>
+                </div>
+              )
+            )}
           </div>
         </div>
 

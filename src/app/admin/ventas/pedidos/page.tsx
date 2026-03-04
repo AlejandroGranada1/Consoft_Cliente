@@ -164,9 +164,8 @@ function Page() {
             border-b border-white/10 text-[11px] tracking-[.08em] uppercase text-white/40 font-medium">
             <p>ID Pedido</p>
             <p>Cliente</p>
-            <p>Valor</p>
+            <p className="col-span-2">Información de Pago</p>
             <p>Estado</p>
-            <p>Pago</p>
             <p>Items</p>
             <p>Acciones</p>
           </div>

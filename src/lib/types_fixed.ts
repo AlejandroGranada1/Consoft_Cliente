@@ -9,7 +9,7 @@ export interface DefaultModalProps<T = {}> {
 	updateList?: () => void;
 }
 
-// ✅ Permissions
+// âœ… Permissions
 export interface Permission {
 	_id: string;
 	module: string; // e.g. "Users"
@@ -21,7 +21,7 @@ export interface GroupPermission {
 	permissions: Permission[];
 }
 
-// ✅ Roles
+// âœ… Roles
 export interface Role {
 	_id: string;
 	name: string;
@@ -38,7 +38,7 @@ export interface RoleOption {
 	name: string;
 }
 
-// ✅ Users
+// âœ… Users
 export interface User {
 	_id: string | undefined;
 	id: string;
@@ -55,7 +55,7 @@ export interface User {
 	featuredProducts: Product[];
 }
 
-// ✅ Categories
+// âœ… Categories
 export interface Category {
 	_id: string | undefined;
 	name: string;
@@ -63,7 +63,7 @@ export interface Category {
 	products: Product[];
 }
 
-// ✅ Products
+// âœ… Products
 export interface Product {
 	_id: string | undefined;
 	name: string;
@@ -73,7 +73,7 @@ export interface Product {
 	imageUrl?: string;
 }
 
-// ✅ Services
+// âœ… Services
 export interface Service {
 	_id: string | undefined;
 	name: string;
@@ -82,7 +82,7 @@ export interface Service {
 	status: boolean;
 }
 
-// ✅ Visits
+// âœ… Visits
 export interface Visit {
 	_id: string | undefined;
 	user: User; // User ID
@@ -101,11 +101,11 @@ export interface Visit {
 
 export interface OrderItem {
 	_id?: string;
-	id_servicio?: string | Service; // 🔥 AHORA OPCIONAL
+	id_servicio?: string | Service; // ðŸ”¥ AHORA OPCIONAL
 	detalles?: string;
 	valor: number;
 	adminNotes?: string;
-	imageUrl?: string; // 👈 SI SE USA, AGREGA ESTO TAMBIÉN
+	imageUrl?: string; // ðŸ‘ˆ SI SE USA, AGREGA ESTO TAMBIÃ‰N
 }
 
 //! PENDIENTE POR REVISION
@@ -135,11 +135,6 @@ export interface Order {
 	paidTotal?: number;
 	restante?: number;
 	restanteConPendientes?: number;
-	initialPayment?: {
-		amount: number;
-		method: string;
-		registeredAt?: string;
-	};
 }
 
 // lib/types.ts
@@ -195,7 +190,6 @@ export interface Payment {
 	method: string;
 	restante: number;
 	status: string;
-	proyectado?: number;
 }
 
 export interface PaymentSummary {
@@ -209,11 +203,6 @@ export interface PaymentSummary {
 	paidPending?: number;
 	paidTotal?: number;
 	restanteConPendientes?: number;
-	initialPayment?: {
-		amount: number;
-		method: string;
-		registeredAt?: string;
-	};
 }
 
 export type CartItem = {

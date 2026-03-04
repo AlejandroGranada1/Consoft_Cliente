@@ -1,12 +1,12 @@
 'use client';
-import { 
-	X, 
-	ImagePlus, 
-	Package, 
-	User, 
-	FileText, 
-	Plus, 
-	Minus, 
+import {
+	X,
+	ImagePlus,
+	Package,
+	User,
+	FileText,
+	Plus,
+	Minus,
 	Search,
 	Check,
 	AlertCircle,
@@ -20,6 +20,7 @@ import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import api from '@/components/Global/axios';
 import { createPortal } from 'react-dom';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 
 const initialItem = () => ({
 	tempId: crypto.randomUUID(),
@@ -206,7 +207,7 @@ function CreateQuotationModal({ isOpen, onClose, updateList }: DefaultModalProps
 			setIsPending(false);
 		}
 	};
-	
+
 	const filteredUsers = users.filter(
 		(u: any) =>
 			u.name?.toLowerCase().includes(userName.toLowerCase()) ||
@@ -224,7 +225,7 @@ function CreateQuotationModal({ isOpen, onClose, updateList }: DefaultModalProps
 			<div className="w-full max-w-3xl rounded-2xl border border-white/10
 				shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
 				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-				
+
 				{/* Header */}
 				<header className="relative px-6 py-5 border-b border-white/10">
 					<button
@@ -242,7 +243,7 @@ function CreateQuotationModal({ isOpen, onClose, updateList }: DefaultModalProps
 
 				{/* Body */}
 				<div className="overflow-y-auto flex-1 p-6 space-y-6">
-					
+
 					{/* Cliente */}
 					<div className="rounded-xl border border-white/10 bg-white/5 p-4">
 						<h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
@@ -270,7 +271,7 @@ function CreateQuotationModal({ isOpen, onClose, updateList }: DefaultModalProps
 										transition-all duration-200"
 								/>
 							</div>
-							
+
 							{!selectedUser && userName && filteredUsers.length > 0 && (
 								<div className="rounded-xl border border-white/10 bg-white/5 shadow-lg max-h-36 overflow-y-auto">
 									{filteredUsers.slice(0, 6).map((u: any) => (
@@ -293,7 +294,7 @@ function CreateQuotationModal({ isOpen, onClose, updateList }: DefaultModalProps
 									))}
 								</div>
 							)}
-							
+
 							{selectedUser && (
 								<div className="flex items-center justify-between rounded-xl border border-white/15 bg-white/5 px-4 py-3">
 									<div>
@@ -338,7 +339,7 @@ function CreateQuotationModal({ isOpen, onClose, updateList }: DefaultModalProps
 								<div
 									key={item.tempId}
 									className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-									
+
 									{/* Item header */}
 									<div className="flex items-center justify-between">
 										<span className="text-sm font-medium text-white/70">
@@ -476,21 +477,12 @@ function CreateQuotationModal({ isOpen, onClose, updateList }: DefaultModalProps
 											<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 												Precio unitario
 											</label>
-											<div className="relative">
-												<span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-white/40">
-													$
-												</span>
-												<input
-													type="number"
-													min={0}
-													value={item.price}
-													onChange={(e) => updateItem(item.tempId, 'price', Number(e.target.value))}
-													className="w-full rounded-xl border border-white/15 bg-white/5 pl-6 pr-4 py-2
-														text-sm text-white
-														focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
-														transition-all duration-200"
-												/>
-											</div>
+											<CurrencyInput
+												value={item.price}
+												onChange={(val) => updateItem(item.tempId, 'price', val)}
+												placeholder="0"
+												className="!py-2"
+											/>
 										</div>
 
 										<div className="space-y-2">

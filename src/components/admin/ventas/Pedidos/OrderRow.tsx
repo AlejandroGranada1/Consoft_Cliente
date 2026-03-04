@@ -15,7 +15,14 @@ export default function OrderRow({ order, onView, onEdit, onDelete }: OrderRowPr
   const [showActions, setShowActions] = useState(false);
 
   const user = order.user as User;
-  const total = order.items.reduce((sum, item) => sum + (item.valor || 0), 0);
+  const total = order.total || order.items.reduce((sum, item) => sum + (item.valor || 0), 0);
+  const totalPaid = (order.payments || []).reduce((sum, p) => {
+    const APPROVED = new Set(['aprobado', 'approved', 'confirmado', 'pagado', 'paid']);
+    const PENDING = new Set(['pendiente', 'pending', 'en_revision', 'en_proceso']);
+    const status = String(p.status || '').toLowerCase();
+    if (APPROVED.has(status) || PENDING.has(status)) return sum + (p.amount || 0);
+    return sum;
+  }, 0) + (order.initialPayment?.amount || 0);
   const itemsCount = order.items.length;
 
   const getStatusIcon = (status: string) => {
@@ -80,10 +87,32 @@ export default function OrderRow({ order, onView, onEdit, onDelete }: OrderRowPr
           </p>
         </div>
 
-        {/* Valor */}
-        <p className="text-sm text-[#C8A882] font-semibold">
-          {formatCurrency(total)}
-        </p>
+        {/* Resumen Pago */}
+        <div className='col-span-2 w-full px-4 space-y-1.5'>
+          <div className='flex justify-between items-center text-[10px]'>
+            <span className='text-white/40'>Progreso Pago</span>
+            <span className='text-[#C8A882] font-medium'>
+              {Math.round(((order.paidTotal || totalPaid || 0) / (total || 1)) * 100)}%
+            </span>
+          </div>
+          <div className='h-1.5 w-full bg-white/10 rounded-full overflow-hidden'>
+            <div
+              className='h-full bg-[#C8A882] transition-all duration-500'
+              style={{ width: `${Math.min(100, Math.round(((order.paidTotal || totalPaid || 0) / (total || 1)) * 100))}%` }}
+            />
+          </div>
+          <div className='flex justify-between text-[9px] tabular-nums'>
+            <div className='flex flex-col'>
+              <span className='text-green-400/80'>Pagado: {formatCurrency(order.payments.reduce((sum, acc) => sum + acc.amount, 0) || 0)}</span>
+              {order.paidPending ? (
+                <span className='text-yellow-400/60 text-[8px]'>({formatCurrency(order.paidApproved || 0)} apr.)</span>
+              ) : null}
+            </div>
+            <span className='text-white/40 font-medium'>
+              Restante: {formatCurrency(order.restanteConPendientes ?? (total - (order.paidTotal || 0)))}
+            </span>
+          </div>
+        </div>
 
         {/* Estado */}
         <div className="flex items-center gap-1.5">
@@ -92,11 +121,6 @@ export default function OrderRow({ order, onView, onEdit, onDelete }: OrderRowPr
             {order.status || 'Pendiente'}
           </span>
         </div>
-
-        {/* Pago */}
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getPaymentStatusColor(order.paymentStatus)}`}>
-          {order.paymentStatus || 'Pendiente'}
-        </span>
 
         {/* Items */}
         <div className="flex items-center gap-1.5">
