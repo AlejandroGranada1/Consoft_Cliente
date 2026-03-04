@@ -5,12 +5,13 @@ import React, { useEffect, useState } from 'react';
 import { useGetUsers, useGetServices } from '@/hooks/apiHooks';
 import { useCreateOrder } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 
 function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Order>) {
 	const { data: usersData, isLoading: usersLoading } = useGetUsers();
 	const { data: servicesData, isLoading: servicesLoading } = useGetServices();
 	const createOrderMutation = useCreateOrder();
-	
+
 	// Estados para el abono (ahora opcional)
 	const [initialPayment, setInitialPayment] = useState(0);
 	const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer'>('cash');
@@ -44,10 +45,10 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 	});
 
 	const selectedUser = users.find((u: UserType) => u._id === orderData.user);
-	
+
 	const total = orderData.items.reduce((sum, item) => sum + (item.valor || 0), 0);
 	const minimumRequired = total * 0.3;
-	
+
 	// Determinar el estado del pedido basado en el abono
 	const getOrderStatus = () => {
 		if (initialPayment >= minimumRequired) return 'En proceso';
@@ -180,7 +181,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 				background: '#1e1e1c',
 				color: '#fff',
 			});
-			
+
 			if (!result.isConfirmed) return;
 		}
 
@@ -260,7 +261,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
         shadow-[0_8px_32px_rgba(0,0,0,0.3)]
         flex flex-col max-h-[90vh]'
 				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-				
+
 				{/* Header */}
 				<header className='relative px-6 py-5 border-b border-white/10'>
 					<button
@@ -277,7 +278,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 				</header>
 
 				<form onSubmit={handleSubmit} className='p-6 overflow-y-auto space-y-5'>
-					
+
 					{/* Cliente */}
 					<div className='space-y-2'>
 						<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
@@ -451,17 +452,11 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 													<label className='text-[10px] text-white/40 mb-1 block'>
 														Valor ($) *
 													</label>
-													<input
-														type='number'
-														min='0'
-														step='1000'
-														value={item.valor || ''}
-														onChange={(e) => handleItemChange(idx, 'valor', e.target.value)}
-														className='w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2
-                              text-xs text-white
-                              focus:outline-none focus:border-[#C8A882]/50
-                              transition-all duration-200'
-														required
+													<CurrencyInput
+														value={item.valor}
+														onChange={(val) => handleItemChange(idx, 'valor', val)}
+														placeholder="0"
+														className="!py-2 !text-xs"
 													/>
 													{itemService?.price && item.valor !== itemService.price && (
 														<p className='text-[10px] text-yellow-400/70 mt-1'>
@@ -544,18 +539,11 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 								<label className='text-white/40 text-xs mb-1 block'>
 									Monto a abonar
 								</label>
-								<div className='relative'>
-									<span className='absolute left-3 top-1/2 -translate-y-1/2 text-white/40'>
-										$
-									</span>
-									<input
-										type='number'
-										value={initialPayment}
-										onChange={(e) => setInitialPayment(Number(e.target.value))}
-										className='w-full bg-white/5 border border-white/15 rounded-xl pl-8 pr-4 py-3 text-white'
-										placeholder='0'
-									/>
-								</div>
+								<CurrencyInput
+									value={initialPayment}
+									onChange={setInitialPayment}
+									placeholder="0"
+								/>
 							</div>
 
 							{/* Método de pago */}
@@ -567,21 +555,19 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 									<button
 										type='button'
 										onClick={() => setPaymentMethod('cash')}
-										className={`p-3 rounded-lg border transition ${
-											paymentMethod === 'cash'
-												? 'border-[#C8A882] bg-[#C8A882]/10 text-white'
-												: 'border-white/10 bg-white/5 text-white/40'
-										}`}>
+										className={`p-3 rounded-lg border transition ${paymentMethod === 'cash'
+											? 'border-[#C8A882] bg-[#C8A882]/10 text-white'
+											: 'border-white/10 bg-white/5 text-white/40'
+											}`}>
 										💵 Efectivo
 									</button>
 									<button
 										type='button'
 										onClick={() => setPaymentMethod('transfer')}
-										className={`p-3 rounded-lg border transition ${
-											paymentMethod === 'transfer'
-												? 'border-[#C8A882] bg-[#C8A882]/10 text-white'
-												: 'border-white/10 bg-white/5 text-white/40'
-										}`}>
+										className={`p-3 rounded-lg border transition ${paymentMethod === 'transfer'
+											? 'border-[#C8A882] bg-[#C8A882]/10 text-white'
+											: 'border-white/10 bg-white/5 text-white/40'
+											}`}>
 										🏦 Transferencia
 									</button>
 								</div>

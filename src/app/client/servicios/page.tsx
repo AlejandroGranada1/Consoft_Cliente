@@ -84,7 +84,19 @@ export default function ServiciosPage() {
   const { data, isLoading } = useGetServices();
   const services: Service[] = data?.data ?? [];
   const { data: reviewsData, isLoading: reviewsLoading } = useGetAllReviews();
-  const reviews = reviewsData || [];
+
+  // Curar reseñas para el carrusel: mayormente positivas, con un toque de realidad
+  const reviews = (() => {
+    if (!reviewsData) return [];
+    const sorted = [...reviewsData].sort((a, b) => b.rating - a.rating);
+    const positives = sorted.filter(r => r.rating >= 4);
+    const others = sorted.filter(r => r.rating < 4);
+
+    // Tomamos hasta 5 positivas y 2 de las "otras" para realismo
+    return [...positives.slice(0, 5), ...others.slice(0, 2)].sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  })();
 
   const VISIBLE = useVisibleCount(4, 2);
   const total = services.length;

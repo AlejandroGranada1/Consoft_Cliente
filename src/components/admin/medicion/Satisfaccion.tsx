@@ -101,16 +101,16 @@ function Satisfaccion() {
 				<div className='px-6 py-4 border-b border-white/10 bg-white/[0.02] flex items-center justify-between'>
 					<div className='flex items-center gap-2'>
 						<MessageSquare size={16} className='text-[#C8A882]' />
-						<h3 className='text-sm font-medium text-white uppercase tracking-wider'>Comentarios Recientes</h3>
+						<h3 className='text-sm font-medium text-white uppercase tracking-wider'>Reseñas Recientes</h3>
 					</div>
 					<span className='text-[10px] bg-white/10 text-white/60 px-2.5 py-1 rounded-full uppercase font-medium'>
-						{allReviews.length} Reseñas totales
+						Mostrando 4 de {allReviews.length} totales
 					</span>
 				</div>
 
 				<div className='divide-y divide-white/5'>
 					{allReviews.length > 0 ? (
-						allReviews.map((r: any, idx: number) => (
+						allReviews.slice(0, 4).map((r: any, idx: number) => (
 							<div key={r._id || idx} className='p-6 hover:bg-white/[0.02] transition-colors'>
 								<div className='flex flex-col md:flex-row md:items-start justify-between gap-4'>
 									<div className='space-y-3 flex-1'>

@@ -75,7 +75,7 @@ export async function createElement(
 					timerProgressBar: 'swal2-progress-bar',
 				},
 			});
-			updateList!();
+			updateList?.();
 			return response.data;
 		} catch (error) {
 			Swal.fire({
@@ -122,6 +122,7 @@ export async function updateElement(
 				},
 			});
 
+			updateList?.();
 			return response.data;
 		} catch (error) {
 			Swal.fire({

@@ -1,9 +1,9 @@
 'use client';
-import { 
-	X, 
-	Package, 
-	User, 
-	FileText, 
+import {
+	X,
+	Package,
+	User,
+	FileText,
 	Image as ImageIcon,
 	ChevronDown,
 	ChevronUp,
@@ -22,6 +22,7 @@ import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { formatCOP } from '@/lib/formatCOP';
 import { createPortal } from 'react-dom';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 
 function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps) {
 	const setQuote = useSetQuote();
@@ -34,7 +35,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
 	const quotation = extraProps as any;
 	const items = quotation?.items || [];
-	
+
 	const getImage = (url?: string) =>
 		url && url.trim() !== '' ? url : '/def_prod.png';
 
@@ -145,11 +146,11 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 		<div
 			className='fixed inset-0 z-50 flex items-center justify-center p-4'
 			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-			
+
 			<div className="w-full max-w-[1000px] rounded-2xl border border-white/10
 				shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col max-h-[90vh]"
 				style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-				
+
 				{/* Header */}
 				<header className="relative px-6 py-5 border-b border-white/10">
 					<button
@@ -166,7 +167,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 				</header>
 
 				<div className="p-6 overflow-y-auto space-y-6">
-					
+
 					{/* Información del cliente */}
 					<div className="rounded-xl border border-white/10 bg-white/5 p-4">
 						<div className="flex items-start justify-between">
@@ -208,19 +209,19 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
 						<div className="space-y-3 max-h-96 overflow-y-auto pr-2">
 							{items.map((item: any) => {
-								const itemName = item.isCustom 
-									? item.customDetails?.name 
+								const itemName = item.isCustom
+									? item.customDetails?.name
 									: item.product?.name;
-								
-								const itemImage = item.isCustom 
-									? item.customDetails?.referenceImage 
+
+								const itemImage = item.isCustom
+									? item.customDetails?.referenceImage
 									: item.product?.imageUrl;
 
 								return (
 									<div
 										key={item._id}
 										className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-										
+
 										{/* Header del producto (clickeable) */}
 										<button
 											type="button"
@@ -245,11 +246,10 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 												</div>
 											</div>
 											<div className="flex items-center gap-2">
-												<span className={`text-xs px-2 py-1 rounded-full ${
-													prices[item._id] > 0 
-														? 'bg-green-500/10 text-green-400 border border-green-500/20' 
-														: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-												}`}>
+												<span className={`text-xs px-2 py-1 rounded-full ${prices[item._id] > 0
+													? 'bg-green-500/10 text-green-400 border border-green-500/20'
+													: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+													}`}>
 													{formatCOP(prices[item._id])} c/u
 												</span>
 												{openItems[item._id] ? (
@@ -264,7 +264,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 										{openItems[item._id] && (
 											<div className="p-4 border-t border-white/10 bg-white/5">
 												<div className="grid grid-cols-[120px_1fr] gap-6">
-													
+
 													{/* Imagen grande */}
 													<div className="relative w-28 h-28 rounded-lg border border-white/10 overflow-hidden bg-white/5">
 														<Image
@@ -297,7 +297,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 																</span>
 															</div>
 														</div>
-														
+
 														{item.notes && (
 															<p className="text-sm bg-blue-500/10 text-blue-400 p-2 rounded-lg border border-blue-500/20">
 																<span className="font-medium">Notas del cliente:</span> {item.notes}
@@ -311,23 +311,11 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 															<label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
 																Valor unitario *
 															</label>
-															<div className="relative">
-																<span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-white/40">
-																	$
-																</span>
-																<input
-																	type="number"
-																	min="1"
-																	value={prices[item._id] || 0}
-																	onChange={(e) =>
-																		handlePrice(item._id, Number(e.target.value))
-																	}
-																	className="w-full rounded-xl border border-white/15 bg-white/5 pl-6 pr-3 py-2
-																		text-sm text-white
-																		focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
-																		transition-all duration-200"
-																/>
-															</div>
+															<CurrencyInput
+																value={prices[item._id] || 0}
+																onChange={(val) => handlePrice(item._id, val)}
+																placeholder="0"
+															/>
 														</div>
 
 														<div className="space-y-2">

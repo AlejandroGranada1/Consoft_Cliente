@@ -10,13 +10,17 @@ import {
   Upload,
   Image as ImageIcon,
   Save,
+  Calculator,
+  DollarSign,
+  CreditCard,
 } from 'lucide-react';
 import { DefaultModalProps, Order, Service, User as UserType } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
 import { useGetServices, useGetUsers, useUpdateOrder } from '@/hooks/apiHooks';
 import api from '@/components/Global/axios';
 import { createPortal } from 'react-dom';
-
+import { createElement } from '@/components/admin/global/alerts';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 interface EditOrderData {
   _id: string;
   user: string;
@@ -57,6 +61,11 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
   });
 
   const [uploadingImages, setUploadingImages] = useState(false);
+
+  // Estados para el registro de pago opcional
+  const [registerPayment, setRegisterPayment] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'card' | 'other'>('cash');
 
   const selectedUser = users.find((u: UserType) => u._id === orderData.user);
 
@@ -145,7 +154,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
       ...p,
       items: [...p.items, { id_servicio: '', detalles: '', valor: 0 }],
     }));
-  
+
   const removeItem = (i: number) =>
     setOrderData((p) => ({ ...p, items: p.items.filter((_, x) => x !== i) }));
 
@@ -164,6 +173,27 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
     }
   };
 
+  const handleRegisterPayment = async (orderId: string) => {
+    if (!registerPayment || paymentAmount <= 0) return;
+
+    try {
+      await createElement(
+        'Pago',
+        '/api/payments',
+        {
+          orderId,
+          amount: paymentAmount,
+          method: paymentMethod,
+          paidAt: new Date(),
+          status: 'aprobado', // Por defecto aprobado si lo registra el admin
+        }
+      );
+    } catch (error) {
+      console.error('Error al registrar el pago:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orderData._id) return;
@@ -177,6 +207,10 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
       });
 
       await uploadImages(orderData._id);
+
+      if (registerPayment) {
+        await handleRegisterPayment(orderData._id);
+      }
 
       Swal.fire({
         toast: true,
@@ -207,15 +241,15 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
   if (!isOpen) return null;
 
   return createPortal(
-		<div
-			className='fixed inset-0 z-50 flex items-center justify-center p-4'
-			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-      
+    <div
+      className='fixed inset-0 z-50 flex items-center justify-center p-4'
+      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+
       <div className="w-full max-w-[1000px] rounded-2xl border border-white/10
         shadow-[0_8px_32px_rgba(0,0,0,0.3)]
         flex flex-col max-h-[90vh]"
         style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-        
+
         {/* Header */}
         <header className="relative px-6 py-5 border-b border-white/10">
           <button
@@ -395,7 +429,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
                   return (
                     <div key={idx}
                       className="rounded-xl border border-white/10 bg-white/5 p-4">
-                      
+
                       {/* Fila principal */}
                       <div className="grid grid-cols-12 gap-3 mb-3">
                         {/* Servicio */}
@@ -429,17 +463,11 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
                           <label className="text-[10px] text-white/40 mb-1 block">
                             Valor ($) *
                           </label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="1000"
-                            value={item.valor || ''}
-                            onChange={(e) => handleItemChange(idx, 'valor', e.target.value)}
-                            className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2
-                              text-xs text-white
-                              focus:outline-none focus:border-[#C8A882]/50
-                              transition-all duration-200"
-                            required
+                          <CurrencyInput
+                            value={item.valor}
+                            onChange={(val) => handleItemChange(idx, 'valor', val)}
+                            placeholder="0"
+                            className="!py-2 !text-xs"
                           />
                         </div>
 
@@ -575,6 +603,69 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
             </div>
           </div>
 
+          {/* Sección de Registro de Pago (Opcional) */}
+          <div className="mt-6 p-4 rounded-xl border border-[#C8A882]/20 bg-[#C8A882]/5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-medium flex items-center gap-2">
+                <Calculator size={16} className="text-[#C8A882]" />
+                Registrar Pago (Opcional)
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-white/40">{registerPayment ? 'Activado' : 'Desactivado'}</span>
+                <button
+                  type="button"
+                  onClick={() => setRegisterPayment(!registerPayment)}
+                  className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${registerPayment ? 'bg-[#C8A882]' : 'bg-white/10'
+                    }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${registerPayment ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {registerPayment && (
+              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                {/* Monto del pago */}
+                <div>
+                  <label className="text-white/40 text-xs mb-1 block">
+                    Monto a registrar
+                  </label>
+                  <CurrencyInput
+                    value={paymentAmount}
+                    onChange={setPaymentAmount}
+                    placeholder="0"
+                  />
+                </div>
+
+                {/* Método de pago */}
+                <div>
+                  <label className="text-white/40 text-xs mb-1 block">
+                    Método de pago
+                  </label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value as any)}
+                    className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#C8A882]/50 transition-all appearance-none"
+                  >
+                    <option value="cash" className="bg-[#1e1e1c]">💵 Efectivo</option>
+                    <option value="transfer" className="bg-[#1e1e1c]">🏦 Transferencia</option>
+                    <option value="card" className="bg-[#1e1e1c]">💳 Tarjeta</option>
+                    <option value="other" className="bg-[#1e1e1c]">📝 Otro</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {!registerPayment && (
+              <p className="text-[10px] text-white/30 italic">
+                Activa esta opción para registrar un pago asociado inmediatamente a este pedido.
+              </p>
+            )}
+          </div>
+
           {/* Botones */}
           <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
             <button
@@ -589,7 +680,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
             </button>
             <button
               type="submit"
-              disabled={updateOrderMutation.isPending || uploadingImages || 
+              disabled={updateOrderMutation.isPending || uploadingImages ||
                 orderData.items.length === 0 || !orderData.user}
               className="px-5 py-2.5 rounded-lg
                 bg-[#8B5E3C] hover:bg-[#6F452A]

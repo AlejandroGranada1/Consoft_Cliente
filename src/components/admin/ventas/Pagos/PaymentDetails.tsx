@@ -84,32 +84,26 @@ function PaymentDetailsModal({
 	};
 
 	const getStatusBadge = (status: string) => {
-		switch (status) {
-			case 'aprobado':
-				return (
-					<span className='bg-green-500/10 text-green-400 border border-green-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'>
-						<CheckCircle size={12} /> Aprobado
-					</span>
-				);
-			case 'en_revision':
-				return (
-					<span className='bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'>
-						<AlertCircle size={12} /> En revisión
-					</span>
-				);
-			case 'rechazado':
-				return (
-					<span className='bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'>
-						<AlertCircle size={12} /> Rechazado
-					</span>
-				);
-			default:
-				return (
-					<span className='bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full text-xs font-medium'>
-						{status}
-					</span>
-				);
+		const s = status?.toLowerCase() || '';
+		if (['aprobado', 'approved', 'confirmado', 'pagado', 'paid'].includes(s)) {
+			return (
+				<span className='bg-green-500/10 text-green-400 border border-green-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'>
+					<CheckCircle size={12} /> Aprobado
+				</span>
+			);
 		}
+		if (['pendiente', 'pending', 'en_revision', 'en_proceso', 'processing'].includes(s)) {
+			return (
+				<span className='bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'>
+					<AlertCircle size={12} /> Pendiente
+				</span>
+			);
+		}
+		return (
+			<span className='bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1'>
+				<AlertCircle size={12} /> Rechazado
+			</span>
+		);
 	};
 
 	const formatCurrency = (value: number) => {
@@ -212,12 +206,11 @@ function PaymentDetailsModal({
 							<div
 								className={`w-full rounded-xl border border-white/15 px-4 py-3
 								text-sm font-semibold
-								${
-									order?.total! - payment?.amount! > 0
+								${order?.total! - (order?.payments?.reduce((acc, pay) => acc + pay.amount, 0) || 0) > 0
 										? 'bg-yellow-500/10 text-yellow-400'
 										: 'bg-green-500/10 text-green-400'
-								}`}>
-								{formatCurrency(order?.total! - payment?.amount!)}
+									}`}>
+								{formatCurrency(order?.total! - (order?.payments?.reduce((acc, pay) => acc + pay.amount, 0) || 0))}
 							</div>
 						</div>
 					</div>
@@ -294,22 +287,41 @@ function PaymentDetailsModal({
 					</div>
 
 					{/* Resumen */}
-					<div className='p-4 rounded-xl border border-white/10 bg-white/5'>
-						<div className='flex justify-between items-center mb-3'>
-							<p className='text-sm font-medium text-white'>Resumen del pago</p>
+					<div className='p-5 rounded-xl border border-white/10 bg-white/5 space-y-4'>
+						<div className='flex justify-between items-center'>
+							<p className='text-sm font-medium text-white'>Resumen del Pago solicitado</p>
 							{getStatusBadge(paymentData.status)}
 						</div>
-						<div className='grid grid-cols-3 gap-4 text-xs'>
+
+						{/* Progress Bar in Modal */}
+						<div className="space-y-2">
+							<div className="flex justify-between text-[11px] text-white/40 uppercase tracking-wider font-medium">
+								<span>Progreso del Pedido</span>
+								<span className="text-[#C8A882]">{order ? Math.round(((order.paidTotal || 0) / order.total) * 100) : 0}%</span>
+							</div>
+							<div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+								<div
+									className="h-full bg-[#C8A882] transition-all duration-500"
+									style={{ width: `${order ? Math.min(100, Math.round(((order.paidTotal || 0) / order.total) * 100)) : 0}%` }}
+								/>
+							</div>
+							<div className="flex justify-between text-[10px] tabular-nums text-white/60">
+								<span>Pagado (Total): {formatCurrency(order?.paidTotal || 0)}</span>
+								<span>Restante: {formatCurrency(order?.restanteConPendientes ?? 0)}</span>
+							</div>
+						</div>
+
+						<div className='grid grid-cols-3 gap-4 pt-2 border-t border-white/5 text-xs'>
 							<div>
 								<p className='text-white/40'>Pago #</p>
 								<p className='text-white/90 font-mono mt-1'>
-									{payment?._id.slice(-6)}
+									{payment?._id.slice(-6).toUpperCase()}
 								</p>
 							</div>
 							<div>
 								<p className='text-white/40'>Pedido #</p>
 								<p className='text-white/90 font-mono mt-1'>
-									{order?._id.slice(-6)}
+									{order?._id.slice(-6).toUpperCase()}
 								</p>
 							</div>
 							<div>
