@@ -101,11 +101,18 @@ export interface Visit {
 
 export interface OrderItem {
 	_id?: string;
-	id_servicio?: string | Service; // 🔥 AHORA OPCIONAL
+	id_servicio?: string | Service;
+	id_producto?: string | Product; // 👈 AÑADIDO: Referencia al producto del catálogo
+	customDetails?: {              // 👈 AÑADIDO: Detalles para productos personalizados
+		name: string;
+		description: string;
+		referenceImage: string;
+		woodType?: string;
+	};
 	detalles?: string;
 	valor: number;
 	adminNotes?: string;
-	imageUrl?: string; // 👈 SI SE USA, AGREGA ESTO TAMBIÉN
+	imageUrl?: string;
 }
 
 //! PENDIENTE POR REVISION

@@ -45,7 +45,7 @@ export const useMyOrders = () => {
 				let pagado = 0;
 				if (o.raw?.payments && Array.isArray(o.raw.payments)) {
 					pagado = o.raw.payments.reduce((acc: number, p: any) => {
-						if (p.status?.toLowerCase() === 'aprobado' || p.status?.toLowerCase() === 'confirmado') {
+						if (['aprobado', 'approved', 'confirmado', 'pagado', 'paid'].includes(p.status?.toLowerCase())) {
 							return acc + (Number(p.amount) || 0);
 						}
 						return acc;
@@ -62,16 +62,21 @@ export const useMyOrders = () => {
 				// 🔥 CORRECCIÓN: requiereAbono = lo pagado es MENOR al 30%
 				const requiereAbono = pagado < total * 0.3;
 
-				// Obtener nombre del primer item
-				let nombre = 'Pedido';
-				const firstItem = o.raw?.items?.[0] || o.items?.[0];
-				if (firstItem) {
-					if (firstItem.id_servicio && typeof firstItem.id_servicio === 'object' && firstItem.id_servicio?.name) {
-						nombre = firstItem.id_servicio.name;
-					} else if (firstItem.id_producto && typeof firstItem.id_producto === 'object' && firstItem.id_producto?.name) {
-						nombre = firstItem.id_producto.name;
-					} else if (firstItem.detalles) {
-						nombre = firstItem.detalles;
+				// Obtener nombre del pedido
+				let nombre = o.nombre || 'Pedido';
+				if (!o.nombre) {
+					const firstItem = o.raw?.items?.[0] || o.items?.[0];
+					if (firstItem) {
+						const isAdminFabricator = firstItem.id_servicio && String(firstItem.id_servicio?._id || firstItem.id_servicio) === '6999d686f21e5a62a1823865';
+
+						if (firstItem.id_producto && typeof firstItem.id_producto === 'object' && firstItem.id_producto?.name) {
+							nombre = firstItem.id_producto.name;
+						} else if (firstItem.id_servicio && typeof firstItem.id_servicio === 'object' && firstItem.id_servicio?.name && !isAdminFabricator) {
+							nombre = firstItem.id_servicio.name;
+						} else if (firstItem.detalles) {
+							const cleanDetalles = firstItem.detalles.replace('[Personalizado] ', '');
+							nombre = cleanDetalles.length > 30 ? cleanDetalles.substring(0, 30) + '...' : cleanDetalles;
+						}
 					}
 				}
 
@@ -101,7 +106,7 @@ export const useMyOrder = (id: string) => {
 			let pagado = 0;
 			if (o.payments && Array.isArray(o.payments)) {
 				pagado = o.payments.reduce((acc: number, p: any) => {
-					if (p.status?.toLowerCase() === 'aprobado' || p.status?.toLowerCase() === 'confirmado') {
+					if (['aprobado', 'approved', 'confirmado', 'pagado', 'paid'].includes(p.status?.toLowerCase())) {
 						return acc + (Number(p.amount) || 0);
 					}
 					return acc;
@@ -113,12 +118,20 @@ export const useMyOrder = (id: string) => {
 			const requiereAbono = pagado < total * 0.3;
 
 			// Obtener nombre
-			let nombre = 'Pedido';
-			const firstItem = o.items?.[0];
-			if (firstItem) {
-				if (firstItem.id_servicio?.name) nombre = firstItem.id_servicio.name;
-				else if (firstItem.id_producto?.name) nombre = firstItem.id_producto.name;
-				else if (firstItem.detalles) nombre = firstItem.detalles;
+			let nombre = o.nombre || 'Pedido';
+			if (!o.nombre) {
+				const firstItem = o.items?.[0];
+				if (firstItem) {
+					const isAdminFabricator = firstItem.id_servicio && String(firstItem.id_servicio?._id || firstItem.id_servicio) === '6999d686f21e5a62a1823865';
+					if (firstItem.id_producto?.name) {
+						nombre = firstItem.id_producto.name;
+					} else if (firstItem.id_servicio?.name && !isAdminFabricator) {
+						nombre = firstItem.id_servicio.name;
+					} else if (firstItem.detalles) {
+						const cleanDetalles = firstItem.detalles.replace('[Personalizado] ', '');
+						nombre = cleanDetalles.length > 30 ? cleanDetalles.substring(0, 30) + '...' : cleanDetalles;
+					}
+				}
 			}
 
 			return {
