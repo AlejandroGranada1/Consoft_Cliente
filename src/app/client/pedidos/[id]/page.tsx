@@ -90,10 +90,12 @@ export default function PedidoDetallePage() {
     </div>
   );
 
-  const productos = pedido.raw?.items ?? [];
-  const attachments = pedido.raw?.attachments ?? [];
-  const cardStyle = { backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' };
+  // El console.log muestra que pedido.raw tiene la estructura del pedido directamente
+  const productos = pedido.raw?.items || [];
+  const attachments = pedido.raw?.attachments || [];
 
+  const cardStyle = { backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' };
+  console.log(pedido)
   return (
     <div
       className="min-h-screen w-full relative flex flex-col"
@@ -187,11 +189,19 @@ export default function PedidoDetallePage() {
               <h3 className="font-serif text-xl tracking-wide text-white mb-1">Historial de Pagos</h3>
               <p className="text-sm text-white/40">Seguimiento detallado de tus abonos.</p>
             </div>
-            <div className="hidden sm:block text-right">
-              <span className="text-[10px] uppercase tracking-[.12em] text-[#C8A882]/60 block mb-1">Total Pagado</span>
-              <span className="text-2xl font-bold text-[#C8A882] font-serif">
-                ${Number(pedido.pagado || 0).toLocaleString('es-CO')}
-              </span>
+            <div className="hidden sm:flex items-center gap-6 text-right">
+              <div>
+                <span className="text-[10px] uppercase tracking-[.12em] text-white/40 block mb-1">Saldo Pendiente</span>
+                <span className="text-xl font-bold text-white font-serif tracking-wide">
+                  {pedido.restante?.replace(' COP', '')}
+                </span>
+              </div>
+              <div className="border-l border-white/10 pl-6">
+                <span className="text-[10px] uppercase tracking-[.12em] text-[#C8A882]/60 block mb-1">Total Pagado</span>
+                <span className="text-2xl font-bold text-[#C8A882] font-serif tracking-wide">
+                  ${Number(pedido.pagado || 0).toLocaleString('es-CO')}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -237,12 +247,7 @@ export default function PedidoDetallePage() {
                       <p className="text-sm font-bold text-white group-hover:text-[#C8A882] transition-colors font-mono">
                         ${Number(p.amount).toLocaleString('es-CO')}
                       </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        {p.proyectado !== undefined && (
-                          <span className="text-[12px] text-white/60 font-mono border-r border-white/10 pr-2">
-                            Saldo Pendiente: ${Number(p.proyectado).toLocaleString('es-CO')}
-                          </span>
-                        )}
+                      <div className="flex items-center justify-end gap-2 mt-1">
                         <span className={`text-[12px] font-mono uppercase tracking-widest ${isApproved ? 'text-green-500/60' : 'text-yellow-500/60'
                           }`}>
                           {isApproved ? 'Aprobado' : 'En Revisión'}

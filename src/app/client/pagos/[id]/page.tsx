@@ -31,18 +31,11 @@ export default function PagoPage() {
 	}, [ocr.data?.detectedAmount]);
 
 	// Calcular información del abono
-	const totalPedido = orderData?.raw?.total || 0;
-	const pagosRealizados = orderData?.raw?.payments?.reduce((sum: number, p: any) => {
-		// Solo sumamos los ya registrados para calcular el restante real antes de este pago
-		if (['aprobado', 'approved', 'confirmado', 'pagado', 'paid'].includes(p.status?.toLowerCase())) {
-			return sum + (p.amount || 0);
-		}
-		return sum;
-	}, 0) || 0;
-	const abonoInicial = orderData?.raw?.initialPayment?.amount || 0;
-	const porcentajeAbono = totalPedido > 0 ? (abonoInicial / totalPedido) * 100 : 0;
-	const necesitaAbono = abonoInicial < totalPedido * 0.3;
-	const restanteActual = totalPedido - pagosRealizados - abonoInicial;
+	const totalPedido = orderData?.total || 0;
+	const pagosRealizados = orderData?.pagado || 0;
+	const porcentajeAbono = totalPedido > 0 ? (pagosRealizados / totalPedido) * 100 : 0;
+	const necesitaAbono = orderData?.requiereAbono || false;
+	const restanteActual = totalPedido - pagosRealizados;
 	const restanteDespuesDePago = Math.max(0, restanteActual - montoManual);
 
 	/* ───────── AUTH ───────── */
@@ -169,7 +162,7 @@ export default function PagoPage() {
 						<div>
 							<p className="text-sm font-medium text-yellow-400">Abono inicial pendiente</p>
 							<p className="text-xs text-white/60 mt-1">
-								Has abonado <span className="text-yellow-400 font-medium">${abonoInicial.toLocaleString('es-CO')}</span> ({porcentajeAbono.toFixed(0)}%).
+								Has abonado <span className="text-yellow-400 font-medium">${pagosRealizados.toLocaleString('es-CO')}</span> ({porcentajeAbono.toFixed(0)}%).
 								Para iniciar producción necesitas completar el <span className="text-white/80 font-medium">30% (${(totalPedido * 0.3).toLocaleString('es-CO')})</span>.
 								{restanteActual > 0 && (
 									<span className="block mt-1 text-white/40">
@@ -433,14 +426,14 @@ export default function PagoPage() {
 													<AlertCircle size={12} className="shrink-0 mt-0.5" />
 													<span>
 														<strong>Importante:</strong> Este pago será registrado como abono.
-														{abonoInicial + montoManual >= totalPedido * 0.3 ? (
+														{pagosRealizados + montoManual >= totalPedido * 0.3 ? (
 															<span className="block mt-1 text-emerald-400">
 																✓ Con este pago alcanzarás el 30% y el pedido entrará en producción.
 															</span>
 														) : (
 															<span className="block mt-1">
-																Tu abono será del {((abonoInicial + montoManual) / totalPedido * 100).toFixed(0)}%.
-																Faltan ${(totalPedido * 0.3 - (abonoInicial + montoManual)).toLocaleString('es-CO')} para el 30%.
+																Tu abono será del {((pagosRealizados + montoManual) / totalPedido * 100).toFixed(0)}%.
+																Faltan ${(totalPedido * 0.3 - (pagosRealizados + montoManual)).toLocaleString('es-CO')} para el 30%.
 															</span>
 														)}
 													</span>

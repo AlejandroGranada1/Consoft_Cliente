@@ -2,7 +2,7 @@
 import { X, Plus, Minus, User, MapPin, Calendar, Package, DollarSign, Save, Calculator, AlertCircle } from 'lucide-react';
 import { DefaultModalProps, Order, Service, User as UserType } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
-import { useGetUsers, useGetServices } from '@/hooks/apiHooks';
+import { useGetUsers, useGetServices, useGetProducts } from '@/hooks/apiHooks';
 import { useCreateOrder } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
@@ -10,7 +10,10 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput';
 function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Order>) {
 	const { data: usersData, isLoading: usersLoading } = useGetUsers();
 	const { data: servicesData, isLoading: servicesLoading } = useGetServices();
+	const { data: productsData } = useGetProducts();
 	const createOrderMutation = useCreateOrder();
+
+	const products = productsData || [];
 
 	// Estados para el abono (ahora opcional)
 	const [initialPayment, setInitialPayment] = useState(0);
@@ -26,6 +29,8 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 		startedAt: string;
 		items: Array<{
 			id_servicio: string;
+			id_producto?: string; // 👈 AÑADIDO
+			customDetails?: any;  // 👈 AÑADIDO
 			detalles: string;
 			valor: number;
 			service?: Service;
@@ -80,8 +85,8 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 
 	const handleItemChange = (
 		index: number,
-		field: 'id_servicio' | 'detalles' | 'valor',
-		value: string | number,
+		field: string,
+		value: any,
 	) => {
 		const newItems = [...orderData.items];
 
@@ -96,12 +101,19 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 					service: selectedService,
 				};
 			} else {
-				newItems[index] = { ...newItems[index], [field]: value as string };
+				newItems[index] = { ...newItems[index], id_servicio: value as string };
 			}
+		} else if (field === 'id_producto') {
+			const p = products.find((x: any) => x._id === value);
+			newItems[index] = {
+				...newItems[index],
+				id_producto: value,
+				detalles: p ? (p.description ?? '') : newItems[index].detalles
+			};
 		} else if (field === 'valor') {
-			newItems[index] = { ...newItems[index], [field]: Number(value) };
+			newItems[index] = { ...newItems[index], valor: Number(value) };
 		} else {
-			newItems[index] = { ...newItems[index], [field]: value as string };
+			newItems[index] = { ...newItems[index], [field]: value };
 		}
 
 		setOrderData((prev) => ({ ...prev, items: newItems }));
@@ -110,7 +122,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 	const addItem = () => {
 		setOrderData((prev) => ({
 			...prev,
-			items: [...prev.items, { id_servicio: '', detalles: '', valor: 0, service: undefined }],
+			items: [...prev.items, { id_servicio: '', id_producto: '', detalles: '', valor: 0, service: undefined }],
 		}));
 	};
 
@@ -193,6 +205,8 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 				startedAt: orderData.startedAt,
 				items: orderData.items.map((item) => ({
 					id_servicio: item.id_servicio,
+					id_producto: item.id_producto || undefined,
+					customDetails: item.customDetails || undefined,
 					detalles: item.detalles,
 					valor: item.valor,
 				})),
@@ -468,18 +482,34 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 												{/* Detalles */}
 												<div className='col-span-4'>
 													<label className='text-[10px] text-white/40 mb-1 block'>
-														Detalles
+														Detalles / Producto Asociado
 													</label>
-													<textarea
-														placeholder='Notas...'
-														value={item.detalles || ''}
-														onChange={(e) => handleItemChange(idx, 'detalles', e.target.value)}
-														className='w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2
-                              text-xs text-white placeholder:text-white/30
-                              focus:outline-none focus:border-[#C8A882]/50
-                              transition-all duration-200 resize-none'
-														rows={2}
-													/>
+													<div className="space-y-2">
+														<select
+															value={item.id_producto || ''}
+															onChange={(e) => handleItemChange(idx, 'id_producto', e.target.value)}
+															className='w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2
+																text-[10px] text-white
+																focus:outline-none focus:border-[#C8A882]/50
+																transition-all duration-200'>
+															<option value="" className="bg-[#1e1e1c]">Vincular a producto (Opcional)</option>
+															{products.map((p: any) => (
+																<option key={p._id} value={p._id} className="bg-[#1e1e1c]">
+																	📦 {p.name}
+																</option>
+															))}
+														</select>
+														<textarea
+															placeholder='Notas adicionales...'
+															value={item.detalles || ''}
+															onChange={(e) => handleItemChange(idx, 'detalles', e.target.value)}
+															className='w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2
+																text-xs text-white placeholder:text-white/30
+																focus:outline-none focus:border-[#C8A882]/50
+																transition-all duration-200 resize-none'
+															rows={1}
+														/>
+													</div>
 												</div>
 
 												{/* Eliminar */}

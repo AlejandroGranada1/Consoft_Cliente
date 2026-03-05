@@ -29,7 +29,7 @@ export default function PedidosPage() {
 	const router = useRouter();
 	const { data, isLoading, error } = useMyOrders();
 
-	const [filterStatus, setFilterStatus] = useState('En proceso');
+	const [filterStatus, setFilterStatus] = useState('Todos');
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 5;
 

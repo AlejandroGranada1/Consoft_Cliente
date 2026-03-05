@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { DefaultModalProps, Order, Service, User as UserType } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
-import { useGetServices, useGetUsers, useUpdateOrder } from '@/hooks/apiHooks';
+import { useGetServices, useGetUsers, useUpdateOrder, useGetProducts } from '@/hooks/apiHooks';
 import api from '@/components/Global/axios';
 import { createPortal } from 'react-dom';
 import { createElement } from '@/components/admin/global/alerts';
@@ -30,6 +30,8 @@ interface EditOrderData {
   deliveredAt?: string;
   items: Array<{
     id_servicio: string;
+    id_producto?: string; // 👈 AÑADIDO
+    customDetails?: any;  // 👈 AÑADIDO
     detalles: string;
     valor: number;
     progressImage?: File | null;
@@ -44,10 +46,12 @@ interface EditOrderData {
 function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Order>) {
   const { data: servicesData, isLoading: servicesLoading } = useGetServices();
   const { data: usersData, isLoading: usersLoading } = useGetUsers();
+  const { data: productsData } = useGetProducts();
   const updateOrderMutation = useUpdateOrder();
 
   const services = servicesData?.data || [];
   const users = usersData?.users || [];
+  const products = productsData || [];
 
   const [orderData, setOrderData] = useState<EditOrderData>({
     _id: '',
@@ -80,6 +84,10 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
       id_servicio: typeof item.id_servicio === 'object'
         ? (item.id_servicio as Service)._id
         : item.id_servicio,
+      id_producto: typeof item.id_producto === 'object'
+        ? (item.id_producto as any)._id
+        : item.id_producto,
+      customDetails: item.customDetails || null,
       detalles: item.detalles || '',
       valor: item.valor || 0,
       progressImage: null,
@@ -166,6 +174,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
       for (const i of imgs) {
         const fd = new FormData();
         fd.append('product_images', i.progressImage as File);
+        if (i._id) fd.append('item_id', i._id);
         await api.post(`/api/orders/${orderId}/attachments`, fd);
       }
     } finally {
@@ -430,6 +439,20 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
                     <div key={idx}
                       className="rounded-xl border border-white/10 bg-white/5 p-4">
 
+                      {/* Info de Producto Asociado (si existe) */}
+                      {(item.id_producto || item.customDetails) && (
+                        <div className="mb-3 px-3 py-2 rounded-lg bg-[#C8A882]/10 border border-[#C8A882]/20 flex items-center gap-2">
+                          <Package size={14} className="text-[#C8A882]" />
+                          <span className="text-xs text-white/70">
+                            Producto asociado: <span className="text-white font-medium">
+                              {item.customDetails?.name ||
+                                products.find((p: any) => p._id === item.id_producto)?.name ||
+                                'Cargando nombre...'}
+                            </span>
+                          </span>
+                        </div>
+                      )}
+
                       {/* Fila principal */}
                       <div className="grid grid-cols-12 gap-3 mb-3">
                         {/* Servicio */}
@@ -645,16 +668,26 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
                   <label className="text-white/40 text-xs mb-1 block">
                     Método de pago
                   </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value as any)}
-                    className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#C8A882]/50 transition-all appearance-none"
-                  >
-                    <option value="cash" className="bg-[#1e1e1c]">💵 Efectivo</option>
-                    <option value="transfer" className="bg-[#1e1e1c]">🏦 Transferencia</option>
-                    <option value="card" className="bg-[#1e1e1c]">💳 Tarjeta</option>
-                    <option value="other" className="bg-[#1e1e1c]">📝 Otro</option>
-                  </select>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('cash')}
+                      className={`p-3 rounded-lg border transition ${paymentMethod === 'cash'
+                        ? 'border-[#C8A882] bg-[#C8A882]/10 text-white'
+                        : 'border-white/10 bg-white/5 text-white/40'
+                        }`}>
+                      💵 Efectivo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('transfer')}
+                      className={`p-3 rounded-lg border transition ${paymentMethod === 'transfer'
+                        ? 'border-[#C8A882] bg-[#C8A882]/10 text-white'
+                        : 'border-white/10 bg-white/5 text-white/40'
+                        }`}>
+                      🏦 Transferencia
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

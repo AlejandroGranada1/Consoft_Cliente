@@ -64,7 +64,21 @@ export default function NotificationCard({
 		});
 
 		if (result.isConfirmed) {
-			await setDesicion.mutateAsync({ quotationId: _id, decision: 'accepted' });
+			// Mapear items de cotización a estructura de items de pedido
+			const processedItems = items.map((item) => ({
+				id_producto: item.isCustom ? undefined : item.product?._id,
+				customDetails: item.isCustom ? item.customDetails : undefined,
+				detalles: item.adminNotes || '',
+				cantidad: item.quantity,
+				valor: (item as any).price || 0,
+			}));
+
+			await setDesicion.mutateAsync({
+				quotationId: _id,
+				decision: 'accepted',
+				items: processedItems // 👈 PASAMOS LOS ITEMS PARA QUE EL BACKEND LOS USE
+			});
+
 			await Swal.fire({
 				title: 'Aceptaste la cotización',
 				html: 'Se asignó tu cotización a un pedido, estaremos trabajando en ello',

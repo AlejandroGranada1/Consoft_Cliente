@@ -182,10 +182,11 @@ export const useMyQuotations = () => {
 
 export const useDecision = () => {
 	return useMutation({
-		mutationFn: async ({ quotationId, decision }: any) => {
-			console.log(decision);
+		mutationFn: async ({ quotationId, decision, items }: any) => {
+			console.log(decision, items);
 			const { data } = await api.post(`/api/quotations/${quotationId}/decision`, {
 				decision,
+				items, // 👈 ENVIAMOS LOS ITEMS SI EXISTEN
 			});
 			return data;
 		},
