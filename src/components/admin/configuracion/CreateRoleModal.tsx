@@ -4,7 +4,7 @@ import { X, Shield, Package, Check, Users, FileText, Lock, ChevronDown, ChevronU
 import { DefaultModalProps, GroupPermission, Permission, Role } from '@/lib/types';
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
-import { useGetPermissions } from '@/hooks/apiHooks';
+import { useGetPermissions, useCreateRole } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
 import { translateModule } from '@/lib/constants';
 
@@ -21,7 +21,9 @@ const initialState: Role = {
 function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role>) {
 	const [roleData, setRoleData] = useState<Role>(initialState);
 	const [expandedModule, setExpandedModule] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
 	const { data } = useGetPermissions();
+	const createRole = useCreateRole();
 	const permissions = (data?.permisos as GroupPermission[]) || [];
 
 	const toggleModule = (module: string) => {
@@ -63,7 +65,7 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 		}));
 	};
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
 		if (!roleData.name.trim()) {
@@ -73,6 +75,7 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 				icon: 'warning',
 				background: '#1e1e1c',
 				color: '#fff',
+				confirmButtonColor: '#8B5E3C',
 			});
 			return;
 		}
@@ -84,12 +87,58 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 				icon: 'warning',
 				background: '#1e1e1c',
 				color: '#fff',
+				confirmButtonColor: '#8B5E3C',
 			});
 			return;
 		}
 
-		// Aquí iría tu función createElement adaptada
-		handleClose();
+		try {
+			setIsLoading(true);
+
+			// Preparar datos para enviar (solo IDs de permisos)
+			const dataToSend = {
+				name: roleData.name.trim(),
+				description: roleData?.description?.trim(),
+				status: roleData.status,
+				permissions: roleData.permissions.map(p => p._id),
+			};
+
+			// Llamar a la API para crear el rol
+			await createRole.mutateAsync(dataToSend);
+
+			// Mostrar éxito
+			Swal.fire({
+				toast: true,
+				animation: false,
+				timerProgressBar: true,
+				title: '¡Rol creado exitosamente!',
+				icon: 'success',
+				background: '#1e1e1c',
+				color: '#fff',
+				confirmButtonColor: '#8B5E3C',
+				position: 'top-right',
+				timer: 1500,
+				showConfirmButton: false,
+			});
+
+			// Actualizar la lista y cerrar modal
+			updateList!();
+			handleClose();
+		} catch (error: any) {
+			console.error('Error creando rol:', error);
+			Swal.fire({
+				title: 'Error al crear el rol',
+				text: error.response?.data?.message || error.message || 'Intenta de nuevo',
+				icon: 'error',
+				background: '#1e1e1c',
+				position: 'top-right',
+				timer: 1500,
+				color: '#fff',
+				confirmButtonColor: '#8B5E3C',
+			});
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	return createPortal(
@@ -105,9 +154,10 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 				<header className='relative px-6 py-5 border-b border-white/10'>
 					<button
 						onClick={handleClose}
+						disabled={isLoading}
 						className='absolute left-4 top-1/2 -translate-y-1/2
               p-2 rounded-lg text-white/40 hover:text-white/70
-              hover:bg-white/5 transition-all duration-200'>
+              hover:bg-white/5 transition-all duration-200 disabled:opacity-50'>
 						<X size={18} />
 					</button>
 					<h2 className='text-lg font-medium text-white text-center flex items-center justify-center gap-2'>
@@ -132,9 +182,11 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 								value={roleData.name}
 								onChange={(e) => setRoleData({ ...roleData, name: e.target.value })}
 								placeholder='Ej: Administrador'
+								disabled={isLoading}
 								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
                   text-sm text-white placeholder:text-white/30
                   focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                  disabled:opacity-50 disabled:cursor-not-allowed
                   transition-all duration-200'
 							/>
 						</div>
@@ -149,9 +201,11 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 									setRoleData({ ...roleData, description: e.target.value })
 								}
 								placeholder='Breve descripción del rol'
+								disabled={isLoading}
 								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
                   text-sm text-white placeholder:text-white/30
                   focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                  disabled:opacity-50 disabled:cursor-not-allowed
                   transition-all duration-200'
 							/>
 						</div>
@@ -211,9 +265,11 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 															type='checkbox'
 															checked={groupSelected}
 															onChange={() => toggleGroup(group.module)}
+															disabled={isLoading}
 															className='w-4 h-4 rounded border-white/30
 																bg-white/5 text-[#C8A882]
 																focus:ring-[#C8A882] focus:ring-1 focus:ring-offset-0
+																disabled:opacity-50 disabled:cursor-not-allowed
 																transition-colors'
 														/>
 													</label>
@@ -260,9 +316,11 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 																		(x) => x._id === p._id,
 																	)}
 																	onChange={() => togglePermission(p)}
+																	disabled={isLoading}
 																	className='w-3.5 h-3.5 rounded border-white/30
 																		bg-white/5 text-[#C8A882]
-																		focus:ring-[#C8A882] focus:ring-1 focus:ring-offset-0'
+																		focus:ring-[#C8A882] focus:ring-1 focus:ring-offset-0
+																		disabled:opacity-50 disabled:cursor-not-allowed'
 																/>
 																<span className='text-xs text-white/70'>
 																	{p.action === 'view' && 'Ver'}
@@ -302,23 +360,33 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 						<button
 							type='button'
 							onClick={handleClose}
+							disabled={isLoading}
 							className='px-5 py-2.5 rounded-lg
                 border border-white/15 bg-white/5
                 text-white/70 text-sm
                 hover:bg-white/10 hover:text-white
+                disabled:opacity-50 disabled:cursor-not-allowed
                 transition-all duration-200'>
 							Cancelar
 						</button>
 						<button
 							type='submit'
-							disabled={!roleData.name.trim() || roleData.permissions.length === 0}
+							disabled={!roleData.name.trim() || roleData.permissions.length === 0 || isLoading}
 							className='px-5 py-2.5 rounded-lg
                 bg-[#8B5E3C] hover:bg-[#6F452A]
                 text-white text-sm font-medium
                 shadow-lg shadow-[#8B5E3C]/20
                 disabled:opacity-50 disabled:cursor-not-allowed
-                transition-all duration-200'>
-							Crear Rol
+                transition-all duration-200
+                flex items-center justify-center gap-2'>
+							{isLoading ? (
+								<>
+									<div className='w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin' />
+									Creando...
+								</>
+							) : (
+								'Crear Rol'
+							)}
 						</button>
 					</div>
 				</form>
