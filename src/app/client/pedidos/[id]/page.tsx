@@ -129,7 +129,7 @@ export default function PedidoDetallePage() {
               Volver a mis pedidos
             </button>
             <span className="block text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium mb-1">Detalle del pedido</span>
-            <h1 className="font-serif text-white text-2xl">{pedido.nombre}</h1>
+            <h1 className="font-serif text-white text-2xl">Items: {pedido.raw.items.length}</h1>
           </div>
           <span className={`mt-6 px-3 py-1.5 rounded-full text-xs font-medium border ${getStatusStyle(pedido.estado)}`}>
             {pedido.estado}
