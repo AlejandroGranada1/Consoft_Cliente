@@ -8,33 +8,56 @@ import EditOrderModal from '@/components/admin/ventas/Pedidos/EditOrderModal';
 import Pagination from '@/components/Global/Pagination';
 import OrderRow from '@/components/admin/ventas/Pedidos/OrderRow';
 import { useDeleteOrder, useGetOrders } from '@/hooks/useOrders';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 function Page() {
   const [createModal, setCreateModal] = useState(false);
   const [detailsModal, setDetailsModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [order, setOrder] = useState<Order>();
-  const [currentPage, setCurrentPage] = useState(1);
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const pageQuery = searchParams.get('page');
+  const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
   const itemsPerPage = 5;
 
-  const [filterText, setFilterText] = useState('');
-  const deleteOrder = useDeleteOrder();
-  const { data: orders, refetch } = useGetOrders();
+  useEffect(() => {
+    if (!searchParams.has('page')) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('page', '1');
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  }, [pathname, router, searchParams]);
 
-  const filteredOrders = orders?.filter(
-    (o: Order) =>
-      o._id?.toLowerCase().includes(filterText.toLowerCase()) ||
-      (o.user as User).name.toLowerCase().includes(filterText.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredOrders?.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentOrders = filteredOrders?.slice(startIndex, endIndex);
+  const initialSearch = searchParams.get('search') || '';
+  const [filterText, setFilterText] = useState(initialSearch);
+  const [appliedSearch, setAppliedSearch] = useState(initialSearch);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [filterText]);
+    const timeout = setTimeout(() => {
+      if (appliedSearch !== filterText) {
+        setAppliedSearch(filterText);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', '1');
+        if (filterText) {
+          params.set('search', filterText);
+        } else {
+          params.delete('search');
+        }
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      }
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [filterText, appliedSearch, pathname, router, searchParams]);
+
+  const deleteOrder = useDeleteOrder();
+  const { data, refetch } = useGetOrders(currentPage, itemsPerPage, appliedSearch);
+  
+  const currentOrders = data?.orders || [];
+  const totalPages = data?.pagination?.pages || 0;
 
   const handleDeleteOrder = async (id: string) => {
     const Swal = (await import('sweetalert2')).default;
@@ -122,7 +145,7 @@ function Page() {
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={18} />
               <datalist id="orders">
-                {orders?.map((o: Order) => (
+                {currentOrders?.map((o: Order) => (
                   <option key={o._id} value={o._id}></option>
                 ))}
               </datalist>
@@ -205,7 +228,11 @@ function Page() {
               <Pagination
                 count={totalPages}
                 page={currentPage}
-                onChange={(_, newPage) => setCurrentPage(newPage)}
+                onChange={(_, newPage) => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set('page', newPage.toString());
+                  router.push(`${pathname}?${params.toString()}`, { scroll: false });
+                }}
                 className=""
               />
             </div>

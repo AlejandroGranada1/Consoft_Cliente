@@ -38,6 +38,7 @@ function PaymentDetailsModal({
 		paidAt: payment?.paidAt || new Date(),
 		restante: order ? order.total - (payment?.amount || 0) : 0,
 		status: payment?.status || '',
+		reference: payment?.reference || '',
 	});
 
 	const [updating, setUpdating] = useState(false);
@@ -151,13 +152,17 @@ function PaymentDetailsModal({
 					<div className='grid grid-cols-2 gap-4'>
 						<div className='space-y-2'>
 							<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
-								ID Pago
+								Nº Comprobante / Referencia
 							</label>
-							<div
+							<input
+								type='text'
+								value={paymentData.reference}
+								onChange={(e) => setPaymentData(prev => ({ ...prev, reference: e.target.value }))}
+								placeholder={payment?._id.slice(-6).toUpperCase()}
 								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-								text-sm text-white/90 font-mono'>
-								{payment?._id.slice(-6)}
-							</div>
+								text-sm text-white/90 font-mono focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8 transition-all duration-200'
+								disabled={updating}
+							/>
 						</div>
 
 						<div className='space-y-2'>
@@ -313,9 +318,9 @@ function PaymentDetailsModal({
 
 						<div className='grid grid-cols-3 gap-4 pt-2 border-t border-white/5 text-xs'>
 							<div>
-								<p className='text-white/40'>Pago #</p>
+								<p className='text-white/40'>Comprobante #</p>
 								<p className='text-white/90 font-mono mt-1'>
-									{payment?._id.slice(-6).toUpperCase()}
+									{payment?.reference || payment?._id.slice(-6).toUpperCase()}
 								</p>
 							</div>
 							<div>
@@ -345,7 +350,7 @@ function PaymentDetailsModal({
 							<ArrowLeft size={14} />
 							Cerrar
 						</button>
-						{paymentData.status !== payment?.status && (
+						{(paymentData.status !== payment?.status || paymentData.reference !== (payment?.reference || '')) && (
 							<button
 								type='button'
 								onClick={handleSubmit}

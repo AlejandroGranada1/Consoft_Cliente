@@ -154,7 +154,7 @@ export default function PaymentRow({ p, onView }: PaymentRowProps) {
 							<CreditCard size={18} />
 						</div>
 						<div>
-							<p className="text-[10px] text-white/30 uppercase font-black">Ref #{p.payment._id.slice(-6).toUpperCase()}</p>
+							<p className="text-[10px] text-white/30 uppercase font-black">Ref #{p.payment.reference || p.payment._id.slice(-6).toUpperCase()}</p>
 							<p className="text-xs font-bold text-white/90">Pedido #{p.summary._id.slice(-6).toUpperCase()}</p>
 						</div>
 					</div>

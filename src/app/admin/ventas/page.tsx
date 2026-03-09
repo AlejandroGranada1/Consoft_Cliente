@@ -6,38 +6,72 @@ import React, { useEffect, useState } from 'react';
 import Pagination from '@/components/Global/Pagination';
 import SaleRow from '@/components/admin/ventas/Ventas/SaleRow';
 import SaleDetailsModal from '@/components/admin/ventas/Ventas/SaleDetailsModal';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 function SalesPage() {
-	const [sales, setSales] = useState<Sale[]>([]);
-	const [Sale, setSale] = useState<Sale>();
+	const [Item, setItem] = useState<Sale>();
 	const [detailsModal, setDetailsModal] = useState(false);
-	const [filterText, setFilterText] = useState('');
-	const [currentPage, setCurrentPage] = useState(1);
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+
+	const pageQuery = searchParams.get('page');
+	const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
 	const itemsPerPage = 5;
 
+	useEffect(() => {
+		if (!searchParams.has('page')) {
+			const params = new URLSearchParams(searchParams.toString());
+			params.set('page', '1');
+			router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+		}
+	}, [pathname, router, searchParams]);
+
+	const initialSearch = searchParams.get('search') || '';
+	const [filterText, setFilterText] = useState(initialSearch);
+	const [appliedSearch, setAppliedSearch] = useState(initialSearch);
+
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			if (appliedSearch !== filterText) {
+				setAppliedSearch(filterText);
+				const params = new URLSearchParams(searchParams.toString());
+				params.set('page', '1');
+				if (filterText) {
+					params.set('search', filterText);
+				} else {
+					params.delete('search');
+				}
+				router.push(`${pathname}?${params.toString()}`, { scroll: false });
+			}
+		}, 400);
+		return () => clearTimeout(timeout);
+	}, [filterText, appliedSearch, pathname, router, searchParams]);
+
+	const [data, setData] = useState<{ sales: Sale[]; pagination: { pages: number } }>({ sales: [], pagination: { pages: 0 } });
+
 	const fetchSales = async () => {
-		const response = await api.get('/api/sales');
-		setSales(response.data.sales);
+		try {
+			const queryParams = new URLSearchParams({
+				page: String(currentPage),
+				limit: String(itemsPerPage),
+			});
+			if (appliedSearch) queryParams.append('search', appliedSearch);
+
+			const response = await api.get(`/api/sales?${queryParams.toString()}`);
+			setData(response.data);
+		} catch (error) {
+			console.error("Error fetching sales:", error);
+			setData({ sales: [], pagination: { pages: 0 } });
+		}
 	};
 
 	useEffect(() => {
 		fetchSales();
-	}, []);
+	}, [currentPage, appliedSearch]);
 
-	const filteredSales = sales.filter(
-		(s) =>
-			s.order._id?.toLowerCase().includes(filterText.toLowerCase()) ||
-			s.user?.name.toLowerCase().includes(filterText.toLowerCase())
-	);
-
-	const totalPages = Math.ceil(filteredSales.length / itemsPerPage);
-	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const currentSales = filteredSales.slice(startIndex, endIndex);
-
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [filterText]);
+	const currentSales = data.sales || [];
+	const totalPages = data.pagination?.pages || 0;
 
 	return (
 		<div
@@ -118,7 +152,7 @@ function SalesPage() {
 									sale={sale}
 									onView={() => {
 										setDetailsModal(true);
-										setSale(sale);
+										setItem(sale);
 									}}
 								/>
 							))
@@ -139,7 +173,11 @@ function SalesPage() {
 							<Pagination
 								count={totalPages}
 								page={currentPage}
-								onChange={(_, newPage) => setCurrentPage(newPage)}
+								onChange={(_, newPage) => {
+									const params = new URLSearchParams(searchParams.toString());
+									params.set('page', newPage.toString());
+									router.push(`${pathname}?${params.toString()}`, { scroll: false });
+								}}
 								className=""
 							/>
 						</div>
@@ -153,7 +191,7 @@ function SalesPage() {
 			<SaleDetailsModal
 				isOpen={detailsModal}
 				onClose={() => setDetailsModal(false)}
-				extraProps={Sale}
+				extraProps={Item}
 				updateList={fetchSales}
 			/>
 		</div>

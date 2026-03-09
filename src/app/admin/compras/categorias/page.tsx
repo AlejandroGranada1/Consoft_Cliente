@@ -9,52 +9,83 @@ import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
 import CategoryRow from '@/components/admin/compras/categorias/CategoryRow';
 import Pagination from '@/components/Global/Pagination';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 function Page() {
-	const [categories, setCategories] = useState<Category[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [editModal, setEditModal] = useState(false);
 	const [category, setCategory] = useState<Category>();
-	const [filter, setFilter] = useState('');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-	const [currentPage, setCurrentPage] = useState(1);
-	const itemsPerPage = 10;
+  const pageQuery = searchParams.get('page');
+  const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    if (!searchParams.has('page')) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('page', '1');
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  }, [pathname, router, searchParams]);
+
+  const initialSearch = searchParams.get('search') || '';
+  const [filterText, setFilterText] = useState(initialSearch);
+  const [appliedSearch, setAppliedSearch] = useState(initialSearch);
+
+
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (appliedSearch !== filterText) {
+        setAppliedSearch(filterText);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', '1');
+        if (filterText) {
+          params.set('search', filterText);
+        } else {
+          params.delete('search');
+        }
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      }
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [filterText, appliedSearch, pathname, router, searchParams]);
 
 	const fetchCategories = async () => {
 		try {
 			setLoading(true);
-			const response = await api.get('/api/categories');
-			setCategories(response.data.categories);
+			const queryParams = new URLSearchParams({
+				page: String(currentPage),
+				limit: String(itemsPerPage),
+			});
+			if (appliedSearch) queryParams.append('search', appliedSearch);
+
+			const response = await api.get(`/api/categories?${queryParams.toString()}`);
+			return response.data;
 		} catch (error) {
 			console.error('Error al obtener categorías', error);
+			return { categories: [], pagination: { pages: 0 } };
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	useEffect(() => {
-		fetchCategories();
-	}, []);
-
-	const filteredCategories = categories.filter(
-		(c) =>
-			c.name.toLowerCase().includes(filter.toLowerCase()) ||
-			c.description?.toLowerCase().includes(filter.toLowerCase())
-	);
-
-	const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
-	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const currentCategories = filteredCategories.slice(startIndex, endIndex);
+	const [data, setData] = useState<{ categories: Category[]; pagination: { pages: number } }>({ categories: [], pagination: { pages: 0 } });
 
 	useEffect(() => {
-		setCurrentPage(1);
-	}, [filter]);
+		fetchCategories().then(res => setData(res));
+	}, [currentPage, appliedSearch, searchParams]);
+
+	const currentCategories = data.categories || [];
+	const totalPages = data.pagination?.pages || 0;
 
 	const handleDeleteCategory = (categoryId: string) => {
-		deleteElement('Categoría', `/api/categories/${categoryId}`, fetchCategories);
+		deleteElement('Categoría', `/api/categories/${categoryId}`, () => fetchCategories().then(res => setData(res)));
 	};
 
 	return (
@@ -101,8 +132,8 @@ function Page() {
 							<input
 								type="text"
 								placeholder="Buscar por nombre o descripción..."
-								value={filter}
-								onChange={(e) => setFilter(e.target.value)}
+								value={filterText}
+								onChange={(e) => setFilterText(e.target.value)}
 								className="w-full pl-10 pr-4 py-3 rounded-xl
 									border border-white/15 bg-white/5
 									text-sm text-white placeholder:text-white/30
@@ -172,12 +203,16 @@ function Page() {
 					{/* Paginación */}
 					{totalPages > 1 && (
 						<div className="mt-8 pt-4 border-t border-white/10">
-							<Pagination
-								count={totalPages}
-								page={currentPage}
-								onChange={(_, newPage) => setCurrentPage(newPage)}
-								className=""
-							/>
+							              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={(_, newPage) => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set('page', newPage.toString());
+                  router.push(`${pathname}?${params.toString()}`, { scroll: false });
+                }}
+                className=""
+              />
 						</div>
 					)}
 

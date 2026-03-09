@@ -12,7 +12,12 @@ export default function AdminChatsPage() {
 	const [selectedChat, setSelectedChat] = useState<any>(null);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [showProducts, setShowProducts] = useState(false);
-	const { data, refetch } = useGetAllCarts();
+	
+	// Server-side paginated queries
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 20; // Chats aren't natively paginated right now in UI but hooking up the API wrapper
+
+	const { data, refetch } = useGetAllCarts(currentPage, itemsPerPage);
 	const { data: messagesData } = useGetMessages(selectedChat?._id || '');
 
 	const [newMessage, setNewMessage] = useState('');

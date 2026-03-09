@@ -9,31 +9,56 @@ import { useDeleteService, useGetServices } from '@/hooks/apiHooks';
 import ServiceRow from '@/components/admin/servicios/servicios/ServiceRow';
 import Pagination from '@/components/Global/Pagination';
 import Swal from 'sweetalert2';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [editModal, setEditModal] = useState(false);
 	const [service, setService] = useState<Service>();
-	const [filterText, setFilterText] = useState('');
-	const [currentPage, setCurrentPage] = useState(1);
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+
+	const pageQuery = searchParams.get('page');
+	const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
 	const itemsPerPage = 5;
 
-	const { data } = useGetServices();
+	useEffect(() => {
+		if (!searchParams.has('page')) {
+			const params = new URLSearchParams(searchParams.toString());
+			params.set('page', '1');
+			router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+		}
+	}, [pathname, router, searchParams]);
+
+	const initialSearch = searchParams.get('search') || '';
+	const [filterText, setFilterText] = useState(initialSearch);
+	const [appliedSearch, setAppliedSearch] = useState(initialSearch);
+
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			if (appliedSearch !== filterText) {
+				setAppliedSearch(filterText);
+				const params = new URLSearchParams(searchParams.toString());
+				params.set('page', '1');
+				if (filterText) {
+					params.set('search', filterText);
+				} else {
+					params.delete('search');
+				}
+				router.push(`${pathname}?${params.toString()}`, { scroll: false });
+			}
+		}, 400);
+		return () => clearTimeout(timeout);
+	}, [filterText, appliedSearch, pathname, router, searchParams]);
+
+	const { data: servicesData } = useGetServices(currentPage, itemsPerPage, appliedSearch);
 	const deleteService = useDeleteService();
-	const services = data?.data || [];
+	const currentServices = servicesData?.data || [];
+	const totalPages = servicesData?.pagination?.pages || 0;
 
-	const filteredServices = services.filter(
-		(s: Service) =>
-			s.name.toLowerCase().includes(filterText.toLowerCase()) ||
-			s.description?.toLowerCase().includes(filterText.toLowerCase()),
-	);
 
-	const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
-	const startIndex = (currentPage - 1) * itemsPerPage;
-	const currentServices = filteredServices.slice(startIndex, startIndex + itemsPerPage);
-
-	useEffect(() => { setCurrentPage(1); }, [filterText]);
 
 	const handleDeleteService = async (serviceToDelete: Service) => {
 		const result = await Swal.fire({
@@ -186,7 +211,11 @@ function Page() {
 							<Pagination
 								count={totalPages}
 								page={currentPage}
-								onChange={(_, newPage) => setCurrentPage(newPage)}
+								onChange={(_, newPage) => {
+									const params = new URLSearchParams(searchParams.toString());
+									params.set('page', newPage.toString());
+									router.push(`${pathname}?${params.toString()}`, { scroll: false });
+								}}
 								className=""
 							/>
 						</div>

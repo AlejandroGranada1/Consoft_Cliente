@@ -2,11 +2,17 @@ import api from '@/components/Global/axios';
 import { Service } from '@/lib/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useGetServices = () => {
+export const useGetServices = (page: number = 1, limit: number = 20, search: string = '') => {
 	return useQuery({
-		queryKey: ['services'],
+		queryKey: ['services', page, limit, search],
 		queryFn: async () => {
-			const { data } = await api.get('/api/services');
+			const queryParams = new URLSearchParams({
+				page: String(page),
+				limit: String(limit)
+			});
+			if (search) queryParams.append('search', search);
+
+			const { data } = await api.get(`/api/services?${queryParams.toString()}`);
 			return data;
 		},
 		staleTime: 1000 * 60 * 5,

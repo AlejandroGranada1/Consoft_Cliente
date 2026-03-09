@@ -3,16 +3,40 @@ import { Product } from '@/lib/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 type ProductsResponse = {
-	ok: string;
+	ok: boolean;
 	products: Product[];
+	pagination: {
+		page: number;
+		limit: number;
+		total: number;
+		pages: number;
+	};
 };
 
-export const useGetProducts = () => {
+export const useGetCategories = () => {
 	return useQuery({
-		queryKey: ['products'],
+		queryKey: ['categories'],
 		queryFn: async () => {
-			const response = await api.get<ProductsResponse>('/api/products');
-			return response.data.products;
+			const { data } = await api.get('/api/categories');
+			return data;
+		},
+		staleTime: 1000 * 60 * 10,
+	});
+};
+
+export const useGetProducts = (page: number = 1, limit: number = 20, search: string = '', category: string = '') => {
+	return useQuery({
+		queryKey: ['products', page, limit, search, category],
+		queryFn: async () => {
+			const queryParams = new URLSearchParams({
+				page: String(page),
+				limit: String(limit)
+			});
+			if (search) queryParams.append('search', search);
+			if (category) queryParams.append('category', category);
+
+			const response = await api.get<any>(`/api/products?${queryParams.toString()}`);
+			return response.data;
 		},
 		staleTime: 1000 * 60 * 5,
 	});

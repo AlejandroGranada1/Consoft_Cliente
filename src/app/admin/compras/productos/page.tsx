@@ -9,6 +9,7 @@ import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
 import ProductRow from '@/components/admin/compras/productos/ProductRow';
 import Pagination from '@/components/Global/Pagination';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
@@ -16,46 +17,76 @@ function Page() {
 	const [editModal, setEditModal] = useState(false);
 	const [product, setProduct] = useState<Product>();
 
-	const [products, setProducts] = useState<Product[]>([]);
-	const [filterText, setFilterText] = useState('');
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+
+	const pageQuery = searchParams.get('page');
+	const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
+	const itemsPerPage = 5;
+
+	useEffect(() => {
+		if (!searchParams.has('page')) {
+			const params = new URLSearchParams(searchParams.toString());
+			params.set('page', '1');
+			router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+		}
+	}, [pathname, router, searchParams]);
+
+	const initialSearch = searchParams.get('search') || '';
+	const [filterText, setFilterText] = useState(initialSearch);
+	const [appliedSearch, setAppliedSearch] = useState(initialSearch);
 	const [loading, setLoading] = useState(true);
 
-	const [currentPage, setCurrentPage] = useState(1);
-	const itemsPerPage = 5;
+
+
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			if (appliedSearch !== filterText) {
+				setAppliedSearch(filterText);
+				const params = new URLSearchParams(searchParams.toString());
+				params.set('page', '1');
+				if (filterText) {
+					params.set('search', filterText);
+				} else {
+					params.delete('search');
+				}
+				router.push(`${pathname}?${params.toString()}`, { scroll: false });
+			}
+		}, 400);
+		return () => clearTimeout(timeout);
+	}, [filterText, appliedSearch, pathname, router, searchParams]);
 
 	const fetchProducts = async () => {
 		try {
 			setLoading(true);
-			const response = await api.get('/api/products');
-			setProducts(response.data.products);
+			const queryParams = new URLSearchParams({
+				page: String(currentPage),
+				limit: String(itemsPerPage),
+			});
+			if (appliedSearch) queryParams.append('search', appliedSearch);
+
+			const response = await api.get(`/api/products?${queryParams.toString()}`);
+			return response.data;
 		} catch (err) {
 			console.error('Error al traer productos', err);
+			return { products: [], pagination: { pages: 0 } };
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	useEffect(() => {
-		fetchProducts();
-	}, []);
-
-	const filteredProducts = products.filter(
-		(p) =>
-			p.name.toLowerCase().includes(filterText.toLowerCase()) ||
-			p.description?.toLowerCase().includes(filterText.toLowerCase())
-	);
-
-	const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const currentProducts = filteredProducts.slice(startIndex, endIndex);
+	const [data, setData] = useState<{ products: Product[]; pagination: { pages: number } }>({ products: [], pagination: { pages: 0 } });
 
 	useEffect(() => {
-		setCurrentPage(1);
-	}, [filterText]);
+		fetchProducts().then(res => setData(res));
+	}, [currentPage, appliedSearch, searchParams]);
+
+	const currentProducts = data.products || [];
+	const totalPages = data.pagination?.pages || 0;
 
 	const handleDeleteProduct = (productId: string) => {
-		deleteElement('Producto', `/api/products/${productId}`, fetchProducts);
+		deleteElement('Producto', `/api/products/${productId}`, () => fetchProducts().then(res => setData(res)));
 	};
 
 	return (
@@ -177,7 +208,11 @@ function Page() {
 							<Pagination
 								count={totalPages}
 								page={currentPage}
-								onChange={(_, newPage) => setCurrentPage(newPage)}
+								onChange={(_, newPage) => {
+									const params = new URLSearchParams(searchParams.toString());
+									params.set('page', newPage.toString());
+									router.push(`${pathname}?${params.toString()}`, { scroll: false });
+								}}
 								className=""
 							/>
 						</div>

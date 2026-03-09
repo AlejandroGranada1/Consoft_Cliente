@@ -1,11 +1,17 @@
 import api from '@/components/Global/axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-export const useGetUsers = () => {
+export const useGetUsers = (page: number = 1, limit: number = 20, search: string = '') => {
 	return useQuery({
-		queryKey: ['users'],
+		queryKey: ['users', page, limit, search],
 		queryFn: async () => {
-			const { data } = await api.get('/api/users');
+			const queryParams = new URLSearchParams({
+				page: String(page),
+				limit: String(limit)
+			});
+			if (search) queryParams.append('search', search);
+
+			const { data } = await api.get(`/api/users?${queryParams.toString()}`);
 			return data;
 		},
 		staleTime: 1000 * 60 * 5,

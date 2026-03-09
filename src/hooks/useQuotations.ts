@@ -5,11 +5,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
    ADMIN — GET ALL CARTS / QUOTATIONS
 ========================= */
 
-export const useGetAllCarts = () => {
+export const useGetAllCarts = (page: number = 1, limit: number = 20, search: string = '', status: string = '') => {
 	return useQuery({
-		queryKey: ['allCarts'],
+		queryKey: ['allCarts', page, limit, search, status],
 		queryFn: async () => {
-			const { data } = await api.get('/api/quotations');
+			const queryParams = new URLSearchParams({
+				page: String(page),
+				limit: String(limit)
+			});
+			if (search) queryParams.append('search', search);
+			if (status) queryParams.append('status', status);
+
+			const { data } = await api.get(`/api/quotations?${queryParams.toString()}`);
 			return data;
 		},
 	});

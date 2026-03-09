@@ -1,4 +1,4 @@
-﻿export interface pagination {
+export interface pagination {
 	size: number;
 }
 
@@ -202,6 +202,7 @@ export interface Payment {
 	method: string;
 	restante: number;
 	status: string;
+	reference?: string;
 	proyectado?: number;
 }
 

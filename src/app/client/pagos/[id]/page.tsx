@@ -22,13 +22,17 @@ export default function PagoPage() {
 	const [preview, setPreview] = useState<string | null>(null);
 	const [dragOver, setDragOver] = useState(false);
 	const [montoManual, setMontoManual] = useState<number>(0);
+	const [referenceManual, setReferenceManual] = useState<string>('');
 
-	// Sincronizar monto manual con el OCR cuando termine de cargar
+	// Sincronizar monto y referencia manual con el OCR cuando termine de cargar
 	useEffect(() => {
 		if (ocr.data?.detectedAmount) {
 			setMontoManual(ocr.data.detectedAmount);
 		}
-	}, [ocr.data?.detectedAmount]);
+		if (ocr.data?.detectedReference) {
+			setReferenceManual(ocr.data.detectedReference);
+		}
+	}, [ocr.data?.detectedAmount, ocr.data?.detectedReference]);
 
 	// Calcular información del abono
 	const totalPedido = orderData?.total || 0;
@@ -102,6 +106,7 @@ export default function PagoPage() {
 				receiptUrl: ocr.data?.receipt?.receiptUrl,
 				ocrText: ocr.data?.receipt?.ocrText,
 				method: metodo,
+				reference: referenceManual,
 			},
 			{
 				onSuccess: async () => {
@@ -373,7 +378,6 @@ export default function PagoPage() {
 								{ocr.data && !ocr.loading && (
 									<div className="flex flex-col gap-4">
 
-										{/* Monto detectado (INPUT) */}
 										<div className="flex items-center justify-between gap-4 group/input">
 											<span className="text-xs text-[#6b5b4e] shrink-0 font-medium">Monto a abonar</span>
 											<div className="flex-1 max-w-[150px]">
@@ -381,6 +385,22 @@ export default function PagoPage() {
 													value={montoManual}
 													onChange={setMontoManual}
 													placeholder="0"
+												/>
+											</div>
+										</div>
+
+										<div className="h-px bg-white/5" />
+
+										{/* Referencia detectada */}
+										<div className="flex items-center justify-between gap-4 group/input">
+											<span className="text-xs text-[#6b5b4e] shrink-0 font-medium">Nº Comprobante</span>
+											<div className="flex-1 max-w-[150px]">
+												<input
+													type="text"
+													value={referenceManual}
+													onChange={(e) => setReferenceManual(e.target.value)}
+													placeholder="Referencia..."
+													className="w-full bg-[#1e1c1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-[#e8e0d5] focus:border-[#8B5E3C] outline-none transition-all"
 												/>
 											</div>
 										</div>

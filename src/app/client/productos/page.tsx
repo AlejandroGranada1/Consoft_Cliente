@@ -1,38 +1,67 @@
 'use client';
 
 import ProductCard from '@/components/productos/ProductCard';
-import { useGetProducts } from '@/hooks/apiHooks';
-import { Category } from '@/lib/types';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useState, useMemo, useEffect } from 'react';
+import { useGetProducts, useGetCategories } from '@/hooks/apiHooks';
+import Pagination from '@/components/Global/Pagination';
 import { Plus, Sparkles, Search, ChevronRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState, useMemo } from 'react';
+import { Category } from '@/lib/types';
 
 export default function ProductsPage() {
-  const router = useRouter();
-  const { data: products, isLoading, refetch } = useGetProducts();
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+	const pageQuery = searchParams.get('page');
+	const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
+	const itemsPerPage = 6; // Usar un múltiplo común para grids
 
-  const categories = useMemo(() => {
-    if (!products) return [];
-    const cats = new Set<string>();
-    products.forEach(p => {
-      const catName = (p.category as Category)?.name;
-      if (catName) cats.add(catName);
-    });
-    return Array.from(cats).sort();
-  }, [products]);
+	useEffect(() => {
+		if (!searchParams.has('page')) {
+			const params = new URLSearchParams(searchParams.toString());
+			params.set('page', '1');
+			router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+		}
+	}, [pathname, router, searchParams]);
 
-  const filteredProducts = useMemo(() => {
-    if (!products) return [];
-    return products.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const catName = (p.category as Category)?.name || 'Sin categoría';
-      const matchesCategory = selectedCategory ? catName === selectedCategory : true;
-      return matchesSearch && matchesCategory;
-    });
-  }, [products, searchTerm, selectedCategory]);
+	const initialSearch = searchParams.get('search') || '';
+	const [filterText, setFilterText] = useState(initialSearch);
+	const [appliedSearch, setAppliedSearch] = useState(initialSearch);
+
+	const selectedCategory = searchParams.get('category') || null;
+
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			if (appliedSearch !== filterText) {
+				setAppliedSearch(filterText);
+				const params = new URLSearchParams(searchParams.toString());
+				params.set('page', '1');
+				if (filterText) params.set('search', filterText);
+				else params.delete('search');
+				router.push(`${pathname}?${params.toString()}`, { scroll: false });
+			}
+		}, 400);
+		return () => clearTimeout(timeout);
+	}, [filterText, appliedSearch, pathname, router, searchParams]);
+
+	const { data: productsData, isLoading, refetch } = useGetProducts(currentPage, itemsPerPage, appliedSearch, selectedCategory || '');
+	const { data: categoriesData } = useGetCategories();
+
+	const categories = useMemo(() => {
+		return (categoriesData?.categories || []).map((c: any) => c.name).sort();
+	}, [categoriesData]);
+
+	const currentProducts = productsData?.products || [];
+	const totalPages = productsData?.pagination?.pages || 0;
+
+	const handleCategoryChange = (cat: string | null) => {
+		const params = new URLSearchParams(searchParams.toString());
+		params.set('page', '1');
+		if (cat) params.set('category', cat);
+		else params.delete('category');
+		router.push(`${pathname}?${params.toString()}`, { scroll: false });
+	};
 
   if (isLoading) return (
     <div
@@ -102,8 +131,8 @@ export default function ProductsPage() {
                 <input
                   type="text"
                   placeholder="Buscar productos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/10 transition-all duration-200 shadow-sm"
                 />
               </div>
@@ -114,7 +143,7 @@ export default function ProductsPage() {
               <h3 className="text-[11px] font-medium tracking-[.07em] uppercase text-white/50">Categorías</h3>
               <div className="flex flex-col space-y-1 shrink-0 bg-white/[0.02] border border-white/5 rounded-2xl p-2">
                 <button
-                  onClick={() => setSelectedCategory(null)}
+                  onClick={() => handleCategoryChange(null)}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${selectedCategory === null
                     ? 'bg-[#C8A882]/15 text-[#C8A882] font-medium'
                     : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -125,7 +154,7 @@ export default function ProductsPage() {
                 {categories.map(cat => (
                   <button
                     key={cat}
-                    onClick={() => setSelectedCategory(cat)}
+                    onClick={() => handleCategoryChange(cat)}
                     className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-left transition-all duration-200 ${selectedCategory === cat
                       ? 'bg-[#C8A882]/15 text-[#C8A882] font-medium'
                       : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -146,32 +175,50 @@ export default function ProductsPage() {
                 {selectedCategory || 'Todos los productos'}
               </h2>
               <span className="text-[11px] uppercase tracking-wider text-white/35 font-medium shrink-0">
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'resultado' : 'resultados'}
+                {productsData?.pagination?.total || 0} {productsData?.pagination?.total === 1 ? 'resultado' : 'resultados'}
               </span>
             </div>
 
-            {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product._id}
-                    id={product._id!}
-                    name={product.name}
-                    refetch={refetch}
-                    image={
-                      product.imageUrl && product.imageUrl.trim() !== ''
-                        ? product.imageUrl
-                        : '/def_prod.png'
-                    }
-                  />
-                ))}
+            {currentProducts.length > 0 ? (
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {currentProducts.map((product: any) => (
+                    <ProductCard
+                      key={product._id}
+                      id={product._id!}
+                      name={product.name}
+                      refetch={refetch}
+                      image={
+                        product.imageUrl && product.imageUrl.trim() !== ''
+                          ? product.imageUrl
+                          : '/def_prod.png'
+                      }
+                    />
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex justify-center pt-8 border-t border-white/5">
+                    <Pagination
+                      count={totalPages}
+                      page={currentPage}
+                      onChange={(_, newPage) => {
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set('page', newPage.toString());
+                        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center p-12 text-center border border-white/10 rounded-2xl bg-white/[0.02] border-dashed">
                 <Search size={32} className="text-white/20 mb-4" />
                 <p className="text-white/50 text-sm mb-4">No se encontraron productos que coincidan con tu búsqueda.</p>
                 <button
-                  onClick={() => { setSearchTerm(''); setSelectedCategory(null); }}
+                  onClick={() => {
+                    setFilterText('');
+                    handleCategoryChange(null);
+                  }}
                   className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-white/80 transition-all duration-200 text-sm"
                 >
                   Limpiar filtros

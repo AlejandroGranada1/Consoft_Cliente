@@ -16,11 +16,17 @@ const calcDiasRestantes = (start?: string) => {
 	}
 };
 
-export const useGetOrders = () => {
+export const useGetOrders = (page: number = 1, limit: number = 20, search: string = '') => {
 	return useQuery({
-		queryKey: ['orders'],
+		queryKey: ['orders', page, limit, search],
 		queryFn: async () => {
-			const { data } = await api.get('/api/orders');
+			const queryParams = new URLSearchParams({
+				page: String(page),
+				limit: String(limit)
+			});
+			if (search) queryParams.append('search', search);
+
+			const { data } = await api.get(`/api/orders?${queryParams.toString()}`);
 			return data;
 		},
 		staleTime: 1000 * 60 * 5,
@@ -159,11 +165,13 @@ export const useSendPayment = () => {
 			receiptUrl?: string;
 			ocrText?: string;
 			method?: string;
+			reference?: string;
 		}) => {
 			const res = await api.post(`/api/orders/${data.orderId}/payments/ocr/submit`, {
 				amount: data.amount,
 				method: data.method ?? 'comprobante',
 				receiptUrl: data.receiptUrl,
+				reference: data.reference,
 				ocrText: data.ocrText,
 			});
 
@@ -224,6 +232,7 @@ export interface OcrResult {
 	orderId: string;
 	current: { total: number; paid: number; restante: number };
 	detectedAmount: number;
+	detectedReference?: string | null;
 	projected: { amountToPay: number; restanteAfter: number };
 	receipt: { receiptUrl: string; ocrText: string };
 }

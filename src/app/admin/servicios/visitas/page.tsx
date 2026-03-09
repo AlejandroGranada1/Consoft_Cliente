@@ -9,48 +9,59 @@ import api from '@/components/Global/axios';
 import { deleteElement } from '@/components/admin/global/alerts';
 import VisitRow from '@/components/admin/servicios/visitas/VisitRow';
 import Pagination from '@/components/Global/Pagination';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useGetVisits } from '@/hooks/apiHooks';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [editModal, setEditModal] = useState(false);
-	const [visits, setVisits] = useState<Visit[]>([]);
 	const [visit, setVisit] = useState<Visit>();
-	const [filterText, setFilterText] = useState('');
-	const [currentPage, setCurrentPage] = useState(1);
+
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+
+	const pageQuery = searchParams.get('page');
+	const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
 	const itemsPerPage = 5;
 
-	const fetchVisits = async () => {
-		try {
-			const response = await api.get('/api/visits');
-			setVisits(response.data.visits);
-		} catch (err) {
-			console.error('Error al traer visitas:', err);
+	useEffect(() => {
+		if (!searchParams.has('page')) {
+			const params = new URLSearchParams(searchParams.toString());
+			params.set('page', '1');
+			router.replace(`${pathname}?${params.toString()}`, { scroll: false });
 		}
-	};
+	}, [pathname, router, searchParams]);
+
+	const initialSearch = searchParams.get('search') || '';
+	const [filterText, setFilterText] = useState(initialSearch);
+	const [appliedSearch, setAppliedSearch] = useState(initialSearch);
 
 	useEffect(() => {
-		fetchVisits();
-	}, []);
+		const timeout = setTimeout(() => {
+			if (appliedSearch !== filterText) {
+				setAppliedSearch(filterText);
+				const params = new URLSearchParams(searchParams.toString());
+				params.set('page', '1');
+				if (filterText) {
+					params.set('search', filterText);
+				} else {
+					params.delete('search');
+				}
+				router.push(`${pathname}?${params.toString()}`, { scroll: false });
+			}
+		}, 400);
+		return () => clearTimeout(timeout);
+	}, [filterText, appliedSearch, pathname, router, searchParams]);
 
-	const filteredVisits = visits.filter(
-		(v) =>
-			v._id?.toLowerCase().includes(filterText.toLowerCase()) ||
-			v.user.name.toLowerCase().includes(filterText.toLowerCase()) ||
-			v.status.toLowerCase().includes(filterText.toLowerCase())
-	);
+	const { data: visitsData, refetch } = useGetVisits(currentPage, itemsPerPage, appliedSearch);
 
-	const totalPages = Math.ceil(filteredVisits.length / itemsPerPage);
-	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const currentVisits = filteredVisits.slice(startIndex, endIndex);
-
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [filterText]);
+	const currentVisits = visitsData?.visits || [];
+	const totalPages = visitsData?.pagination?.pages || 0;
 
 	const handleDeleteVisit = (visitId: string) => {
-		deleteElement('Visita', `/api/visits/${visitId}`, fetchVisits);
+		deleteElement('Visita', `/api/visits/${visitId}`, () => refetch());
 	};
 
 	return (
@@ -170,7 +181,11 @@ function Page() {
 							<Pagination
 								count={totalPages}
 								page={currentPage}
-								onChange={(_, newPage) => setCurrentPage(newPage)}
+								onChange={(_, newPage) => {
+									const params = new URLSearchParams(searchParams.toString());
+									params.set('page', newPage.toString());
+									router.push(`${pathname}?${params.toString()}`, { scroll: false });
+								}}
 								className=""
 							/>
 						</div>
@@ -185,20 +200,20 @@ function Page() {
 					isOpen={createModal}
 					onClose={() => {
 						setCreateModal(false);
-						fetchVisits();
+						refetch();
 					}}
 				/>
 				<VisitDetailsModal
 					isOpen={detailsModal}
 					onClose={() => setDetailsModal(false)}
 					extraProps={visit}
-					updateList={() => fetchVisits()}
+					updateList={() => refetch()}
 				/>
 				<EditVisitModal
 					isOpen={editModal}
 					onClose={() => setEditModal(false)}
 					extraProps={visit}
-					updateList={() => fetchVisits()}
+					updateList={() => refetch()}
 				/>
 			</div>
 		</div>

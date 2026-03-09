@@ -4,47 +4,75 @@ import { Payment, PaymentDetails, PaymentSummary } from '@/lib/types';
 import PaymentDetailsModal from '@/components/admin/ventas/Pagos/PaymentDetails';
 import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Pagination from '@/components/Global/Pagination';
 import PaymentRow from '@/components/admin/ventas/Pagos/PaymentRow';
 
 function Page() {
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [selectedPayment, setSelectedPayment] = useState<PaymentDetails>();
-	const [payments, setPayments] = useState<PaymentSummary[]>([]);
-	const [filterText, setFilterText] = useState('');
-	const [currentPage, setCurrentPage] = useState(1);
+
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+
+	const pageQuery = searchParams.get('page');
+	const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
 	const itemsPerPage = 5;
+
+	useEffect(() => {
+		if (!searchParams.has('page')) {
+			const params = new URLSearchParams(searchParams.toString());
+			params.set('page', '1');
+			router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+		}
+	}, [pathname, router, searchParams]);
+
+	const initialSearch = searchParams.get('search') || '';
+	const [filterText, setFilterText] = useState(initialSearch);
+	const [appliedSearch, setAppliedSearch] = useState(initialSearch);
+
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			if (appliedSearch !== filterText) {
+				setAppliedSearch(filterText);
+				const params = new URLSearchParams(searchParams.toString());
+				params.set('page', '1');
+				if (filterText) {
+					params.set('search', filterText);
+				} else {
+					params.delete('search');
+				}
+				router.push(`${pathname}?${params.toString()}`, { scroll: false });
+			}
+		}, 400);
+		return () => clearTimeout(timeout);
+	}, [filterText, appliedSearch, pathname, router, searchParams]);
 
 	const fetchPayments = async () => {
 		try {
-			const response = await api.get('/api/payments');
-			setPayments(response.data.payments);
+			const queryParams = new URLSearchParams({
+				page: String(currentPage),
+				limit: String(itemsPerPage),
+			});
+			if (appliedSearch) queryParams.append('search', appliedSearch);
+
+			const response = await api.get(`/api/payments?${queryParams.toString()}`);
+			return response.data;
 		} catch (err) {
 			console.error('Error al traer pagos', err);
+			return { payments: [], pagination: { pages: 0 } };
 		}
 	};
 
-	useEffect(() => {
-		fetchPayments();
-	}, []);
-
-	const filteredPayments = payments
-		.map((order) => order.payments.map((payment: any) => ({ summary: order, payment })))
-		.flat()
-		.filter(
-			(p) =>
-				p.payment._id.toLowerCase().includes(filterText.toLowerCase()) ||
-				p.summary._id.toLowerCase().includes(filterText.toLowerCase())
-		);
-
-	const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
-	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const currentPayments = filteredPayments.slice(startIndex, endIndex);
+	const [data, setData] = useState<{ payments: any[]; pagination: { pages: number } }>({ payments: [], pagination: { pages: 0 } });
 
 	useEffect(() => {
-		setCurrentPage(1);
-	}, [filterText]);
+		fetchPayments().then(res => setData(res));
+	}, [currentPage, appliedSearch, searchParams]);
+
+	const currentPayments = data.payments || [];
+	const totalPages = data.pagination?.pages || 0;
 
 	return (
 		<div
@@ -145,7 +173,11 @@ function Page() {
 							<Pagination
 								count={totalPages}
 								page={currentPage}
-								onChange={(_, newPage) => setCurrentPage(newPage)}
+								onChange={(_, newPage) => {
+									const params = new URLSearchParams(searchParams.toString());
+									params.set('page', newPage.toString());
+									router.push(`${pathname}?${params.toString()}`, { scroll: false });
+								}}
 								className=""
 							/>
 						</div>

@@ -9,34 +9,57 @@ import Pagination from '@/components/Global/Pagination';
 import React, { useEffect, useState } from 'react';
 import UserRow from '@/components/admin/usuarios/UserRow';
 import { useDeleteUser, useGetUsers } from '@/hooks/useUsers';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [editModal, setEditModal] = useState(false);
 	const [user, setUser] = useState<User>();
-	const [filterText, setFilterText] = useState('');
-	const deleteUser = useDeleteUser();
-	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 5;
-
-	const { data, refetch } = useGetUsers();
-	const users = data?.users;
-
-	const filteredUsers = users?.filter(
-		(u: User) =>
-			u.name.toLowerCase().includes(filterText.toLowerCase()) ||
-			u.email.toLowerCase().includes(filterText.toLowerCase()),
-	);
-
-	const totalPages = Math.ceil(filteredUsers?.length / itemsPerPage);
-	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const currentUsers = filteredUsers?.slice(startIndex, endIndex);
+	
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	
+	const pageQuery = searchParams.get('page');
+	const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
 
 	useEffect(() => {
-		setCurrentPage(1);
-	}, [filterText]);
+		if (!searchParams.has('page')) {
+			const params = new URLSearchParams(searchParams.toString());
+			params.set('page', '1');
+			router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+		}
+	}, [pathname, router, searchParams]);
+	
+	const initialSearch = searchParams.get('search') || '';
+	const [filterText, setFilterText] = useState(initialSearch);
+	const [appliedSearch, setAppliedSearch] = useState(initialSearch);
+
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			if (appliedSearch !== filterText) {
+				setAppliedSearch(filterText);
+				const params = new URLSearchParams(searchParams.toString());
+				params.set('page', '1');
+				if (filterText) {
+					params.set('search', filterText);
+				} else {
+					params.delete('search');
+				}
+				router.push(`${pathname}?${params.toString()}`, { scroll: false });
+			}
+		}, 400);
+		return () => clearTimeout(timeout);
+	}, [filterText, appliedSearch, pathname, router, searchParams]);
+
+	const deleteUser = useDeleteUser();
+	const { data, refetch } = useGetUsers(currentPage, itemsPerPage, appliedSearch);
+
+	const users = data?.users || [];
+	const totalPages = data?.pagination?.pages || 0;
+	const currentUsers = users;
 
 	const handleDeleteUser = async (id: string) => {
 		const Swal = (await import('sweetalert2')).default;
@@ -241,7 +264,11 @@ function Page() {
 							<Pagination
 								count={totalPages}
 								page={currentPage}
-								onChange={(_, newPage) => setCurrentPage(newPage)}
+								onChange={(_, newPage) => {
+									const params = new URLSearchParams(searchParams.toString());
+									params.set('page', newPage.toString());
+									router.push(`${pathname}?${params.toString()}`, { scroll: false });
+								}}
 								className=''
 							/>
 						</div>

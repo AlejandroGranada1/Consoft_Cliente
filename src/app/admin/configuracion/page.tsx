@@ -8,39 +8,63 @@ import React, { useEffect, useState } from 'react';
 import Pagination from '@/components/Global/Pagination';
 import { useDeleteRole, useGetRoles } from '@/hooks/apiHooks';
 import RoleRow from '@/components/admin/configuracion/RoleRow';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 function Page() {
   const [createModal, setCreateModal] = useState(false);
   const [detailsModal, setDetailsModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [role, setRole] = useState<Role>();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filterText, setFilterText] = useState('');
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const pageQuery = searchParams.get('page');
+  const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
+
+  useEffect(() => {
+    if (!searchParams.has('page')) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('page', '1');
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  }, [pathname, router, searchParams]);
+
+  const initialSearch = searchParams.get('search') || '';
+  const [filterText, setFilterText] = useState(initialSearch);
+  const [appliedSearch, setAppliedSearch] = useState(initialSearch);
 
   const itemsPerPage = 5;
 
-  const deleteRole = useDeleteRole();
-  const { data, refetch } = useGetRoles();
-  const roles = data?.roles || [];
-
-  const filteredRoles = roles.filter((r: Role) =>
-    r.name.toLowerCase().includes(filterText.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredRoles.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentRoles = filteredRoles.slice(startIndex, endIndex);
-
   useEffect(() => {
-    setCurrentPage(1);
-  }, [filterText]);
+    const timeout = setTimeout(() => {
+      if (appliedSearch !== filterText) {
+        setAppliedSearch(filterText);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', '1');
+        if (filterText) {
+          params.set('search', filterText);
+        } else {
+          params.delete('search');
+        }
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      }
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [filterText, appliedSearch, pathname, router, searchParams]);
+
+  const deleteRole = useDeleteRole();
+  const { data, refetch } = useGetRoles(currentPage, itemsPerPage, appliedSearch);
+  
+  const currentRoles = data?.roles || [];
+  const totalPages = data?.pagination?.pages || 0;
 
   const handleDeleteRole = async (id: string) => {
     const Swal = (await import('sweetalert2')).default;
     try {
       // Validar si el rol es Master
-      const roleToDelete = roles.find((r: Role) => r._id === id);
+      const roleToDelete = currentRoles.find((r: Role) => r._id === id);
       if (roleToDelete?.name.toLowerCase() === 'master') {
         return Swal.fire({
           title: 'Acción bloqueada',
@@ -135,7 +159,7 @@ function Page() {
             <div className='relative w-full md:w-80'>
               <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-white/30' size={18} />
               <datalist id='roles'>
-                {roles.map((role: Role) => (
+                {currentRoles.map((role: Role) => (
                   <option key={role._id} value={role.name}></option>
                 ))}
               </datalist>
@@ -218,7 +242,11 @@ function Page() {
               <Pagination
                 count={totalPages}
                 page={currentPage}
-                onChange={(_, newPage) => setCurrentPage(newPage)}
+                onChange={(_, newPage) => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set('page', newPage.toString());
+                  router.push(`${pathname}?${params.toString()}`, { scroll: false });
+                }}
                 className=''
               />
             </div>
