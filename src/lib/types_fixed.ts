@@ -103,6 +103,8 @@ export interface OrderItem {
 	_id?: string;
 	id_servicio?: string | Service; // ðŸ”¥ AHORA OPCIONAL
 	detalles?: string;
+	color?: string; // 👈 AÑADIDO
+	size?: string;  // 👈 AÑADIDO
 	valor: number;
 	adminNotes?: string;
 	imageUrl?: string; // ðŸ‘ˆ SI SE USA, AGREGA ESTO TAMBIÃ‰N

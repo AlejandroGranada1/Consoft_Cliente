@@ -102,14 +102,16 @@ export interface Visit {
 export interface OrderItem {
 	_id?: string;
 	id_servicio?: string | Service;
-	id_producto?: string | Product; // 👈 AÑADIDO: Referencia al producto del catálogo
-	customDetails?: {              // 👈 AÑADIDO: Detalles para productos personalizados
+	id_producto?: string | Product;
+	customDetails?: {
 		name: string;
 		description: string;
 		referenceImage: string;
 		woodType?: string;
 	};
 	detalles?: string;
+	color?: string; // 👈 AÑADIDO
+	size?: string;  // 👈 AÑADIDO
 	valor: number;
 	adminNotes?: string;
 	imageUrl?: string;
@@ -261,6 +263,7 @@ export type QuotationsResponse = {
 			quantity: number;
 			color: string;
 			size: string;
+			notes?: string;
 			adminNotes: string;
 			isCustom: boolean;
 			customDetails: {
@@ -268,6 +271,8 @@ export type QuotationsResponse = {
 				description: string;
 				referenceImage: string;
 				woodType: string;
+				color?: string;
+				size?: string;
 			};
 			_id: string;
 		}>;

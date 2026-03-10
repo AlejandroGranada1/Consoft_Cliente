@@ -41,51 +41,54 @@ export default function Pagination({ count, page, onChange, className = '' }: Pa
 	};
 
 	return (
-		<div className={`flex items-center justify-center gap-1 ${className}`}>
+		<div className={`flex items-center justify-center gap-2 ${className}`}>
 			{/* Botón anterior */}
 			<button
 				onClick={() => handlePageChange(page - 1)}
 				disabled={page === 1}
-				className='flex items-center justify-center w-9 h-9 rounded-md border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+				className='flex items-center justify-center w-10 h-10 rounded-xl border border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 backdrop-blur-sm'
 				aria-label='Página anterior'>
-				<ChevronLeft className='w-4 h-4' />
+				<ChevronLeft className='w-4.5 h-4.5' />
 			</button>
 
 			{/* Números de página */}
-			{getPageNumbers().map((pageNum, index) => {
-				if (pageNum === '...') {
-					return (
-						<span
-							key={`ellipsis-${index}`}
-							className='flex items-center justify-center w-9 h-9 text-gray-400'>
-							...
-						</span>
-					);
-				}
+			<div className="flex items-center gap-1.5">
+				{getPageNumbers().map((pageNum, index) => {
+					if (pageNum === '...') {
+						return (
+							<span
+								key={`ellipsis-${index}`}
+								className='flex items-center justify-center w-10 h-10 text-white/20 font-medium'>
+								...
+							</span>
+						);
+					}
 
-				return (
-					<button
-						key={pageNum}
-						onClick={() => handlePageChange(pageNum as number)}
-						className={`flex items-center justify-center w-9 h-9 rounded-md border transition-colors ${
-							page === pageNum
-								? 'bg-blue-600 text-white border-blue-600 font-medium'
-								: 'border-gray-300 bg-white hover:bg-gray-50 text-gray-700'
-						}`}
-						aria-label={`Página ${pageNum}`}
-						aria-current={page === pageNum ? 'page' : undefined}>
-						{pageNum}
-					</button>
-				);
-			})}
+					const isActive = page === pageNum;
+
+					return (
+						<button
+							key={pageNum}
+							onClick={() => handlePageChange(pageNum as number)}
+							className={`flex items-center justify-center w-10 h-10 rounded-xl border transition-all duration-300 text-sm font-medium ${isActive
+								? 'bg-[#8B5E3C] text-white border-[#8B5E3C] shadow-lg shadow-[#8B5E3C]/20'
+								: 'border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white hover:border-white/20'
+								}`}
+							aria-label={`Página ${pageNum}`}
+							aria-current={isActive ? 'page' : undefined}>
+							{pageNum}
+						</button>
+					);
+				})}
+			</div>
 
 			{/* Botón siguiente */}
 			<button
 				onClick={() => handlePageChange(page + 1)}
 				disabled={page === count}
-				className='flex items-center justify-center w-9 h-9 rounded-md border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+				className='flex items-center justify-center w-10 h-10 rounded-xl border border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 backdrop-blur-sm'
 				aria-label='Página siguiente'>
-				<ChevronRight className='w-4 h-4' />
+				<ChevronRight className='w-4.5 h-4.5' />
 			</button>
 		</div>
 	);

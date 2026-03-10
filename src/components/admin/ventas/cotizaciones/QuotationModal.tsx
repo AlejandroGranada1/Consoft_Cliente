@@ -99,7 +99,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 				totalEstimate,
 				adminNotes,
 				items: items.map((item: any) => ({
-					_id: item._id,
+					...item, // 👈 PRESERVAR TODO (color, size, quantity, isCustom, etc.)
 					price: prices[item._id],
 					adminNotes: itemNotes[item._id] || '',
 				})),

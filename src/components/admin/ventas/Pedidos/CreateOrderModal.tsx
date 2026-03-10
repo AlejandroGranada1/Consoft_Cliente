@@ -29,10 +29,12 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 		startedAt: string;
 		items: Array<{
 			id_servicio: string;
-			id_producto?: string; // 👈 AÑADIDO
-			customDetails?: any;  // 👈 AÑADIDO
+			id_producto?: string;
+			customDetails?: any;
 			detalles: string;
 			valor: number;
+			color?: string; // 👈 AÑADIDO
+			size?: string;  // 👈 AÑADIDO
 			service?: Service;
 		}>;
 		paymentStatus: string;
@@ -122,7 +124,7 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 	const addItem = () => {
 		setOrderData((prev) => ({
 			...prev,
-			items: [...prev.items, { id_servicio: '', id_producto: '', detalles: '', valor: 0, service: undefined }],
+			items: [...prev.items, { id_servicio: '', id_producto: '', detalles: '', valor: 0, color: '', size: '', service: undefined }],
 		}));
 	};
 
@@ -209,6 +211,8 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 					customDetails: item.customDetails || undefined,
 					detalles: item.detalles,
 					valor: item.valor,
+					color: item.color || undefined,
+					size: item.size || undefined,
 				})),
 				total: total,
 				status: getOrderStatus(),
@@ -499,6 +503,29 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 																</option>
 															))}
 														</select>
+
+														{/* Color y Tamaño (Admin) */}
+														<div className="grid grid-cols-2 gap-2">
+															<input
+																type="text"
+																placeholder="Color"
+																value={item.color || ''}
+																onChange={(e) => handleItemChange(idx, 'color', e.target.value)}
+																className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-1.5
+																	text-[10px] text-white placeholder:text-white/30
+																	focus:outline-none focus:border-[#C8A882]/50"
+															/>
+															<input
+																type="text"
+																placeholder="Tamaño"
+																value={item.size || ''}
+																onChange={(e) => handleItemChange(idx, 'size', e.target.value)}
+																className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-1.5
+																	text-[10px] text-white placeholder:text-white/30
+																	focus:outline-none focus:border-[#C8A882]/50"
+															/>
+														</div>
+
 														<textarea
 															placeholder='Notas adicionales...'
 															value={item.detalles || ''}
