@@ -157,11 +157,10 @@ function PaymentDetailsModal({
 							<input
 								type='text'
 								value={paymentData.reference}
-								onChange={(e) => setPaymentData(prev => ({ ...prev, reference: e.target.value }))}
 								placeholder={payment?._id.slice(-6).toUpperCase()}
 								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
 								text-sm text-white/90 font-mono focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8 transition-all duration-200'
-								disabled={updating}
+								disabled={true}
 							/>
 						</div>
 

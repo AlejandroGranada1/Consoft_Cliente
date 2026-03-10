@@ -30,10 +30,12 @@ interface EditOrderData {
   deliveredAt?: string;
   items: Array<{
     id_servicio: string;
-    id_producto?: string; // 👈 AÑADIDO
-    customDetails?: any;  // 👈 AÑADIDO
+    id_producto?: string;
+    customDetails?: any;
     detalles: string;
     valor: number;
+    color?: string; // 👈 AÑADIDO
+    size?: string;  // 👈 AÑADIDO
     progressImage?: File | null;
     imagePreview?: string | null;
     _id?: string;
@@ -90,6 +92,8 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
       customDetails: item.customDetails || null,
       detalles: item.detalles || '',
       valor: item.valor || 0,
+      color: item.color || '', // 👈 AÑADIDO
+      size: item.size || '',   // 👈 AÑADIDO
       progressImage: null,
       imagePreview: null,
       _id: item._id,
@@ -497,18 +501,48 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
                         {/* Detalles */}
                         <div className="col-span-4">
                           <label className="text-[10px] text-white/40 mb-1 block">
-                            Detalles
+                            Detalles / Color / Tamaño
                           </label>
-                          <textarea
-                            placeholder="Notas..."
-                            value={item.detalles || ''}
-                            onChange={(e) => handleItemChange(idx, 'detalles', e.target.value)}
-                            className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2
-                              text-xs text-white placeholder:text-white/30
-                              focus:outline-none focus:border-[#C8A882]/50
-                              transition-all duration-200 resize-none"
-                            rows={2}
-                          />
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                placeholder="Color"
+                                value={item.color || ''}
+                                onChange={(e) => {
+                                  const newItems = [...orderData.items];
+                                  newItems[idx] = { ...newItems[idx], color: e.target.value };
+                                  setOrderData((p) => ({ ...p, items: newItems }));
+                                }}
+                                className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-1.5
+                                  text-[10px] text-white placeholder:text-white/30
+                                  focus:outline-none focus:border-[#C8A882]/50"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Tamaño"
+                                value={item.size || ''}
+                                onChange={(e) => {
+                                  const newItems = [...orderData.items];
+                                  newItems[idx] = { ...newItems[idx], size: e.target.value };
+                                  setOrderData((p) => ({ ...p, items: newItems }));
+                                }}
+                                className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-1.5
+                                  text-[10px] text-white placeholder:text-white/30
+                                  focus:outline-none focus:border-[#C8A882]/50"
+                              />
+                            </div>
+                            <textarea
+                              placeholder="Notas..."
+                              value={item.detalles || ''}
+                              onChange={(e) => handleItemChange(idx, 'detalles', e.target.value)}
+                              className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2
+                                text-xs text-white placeholder:text-white/30
+                                focus:outline-none focus:border-[#C8A882]/50
+                                transition-all duration-200 resize-none"
+                              rows={2}
+                            />
+                          </div>
                         </div>
 
                         {/* Eliminar */}

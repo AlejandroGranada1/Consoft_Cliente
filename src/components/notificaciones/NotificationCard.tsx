@@ -65,13 +65,28 @@ export default function NotificationCard({
 
 		if (result.isConfirmed) {
 			// Mapear items de cotización a estructura de items de pedido
-			const processedItems = items.map((item) => ({
-				id_producto: item.isCustom ? undefined : item.product?._id,
-				customDetails: item.isCustom ? item.customDetails : undefined,
-				detalles: item.adminNotes || '',
-				cantidad: item.quantity,
-				valor: (item as any).price || 0,
-			}));
+			const processedItems = items.map((item) => {
+				const colorParaRespaldo = item.color || item.customDetails?.color || item.customDetails?.woodType;
+				const sizeParaRespaldo = item.size || item.customDetails?.size;
+
+				// Combinar notas de admin, cliente y especificaciones para máxima redundancia
+				const notasCombinadas = [
+					colorParaRespaldo ? `Color: ${colorParaRespaldo}` : null,
+					sizeParaRespaldo ? `Tamaño: ${sizeParaRespaldo}` : null,
+					item.notes ? `Notas cliente: ${item.notes}` : null,
+					item.adminNotes ? `Notas admin: ${item.adminNotes}` : null
+				].filter(Boolean).join(' | ');
+
+				return {
+					id_producto: item.isCustom ? undefined : item.product?._id,
+					customDetails: item.isCustom ? item.customDetails : undefined,
+					detalles: notasCombinadas || '',
+					cantidad: item.quantity,
+					valor: (item as any).price || 0,
+					color: colorParaRespaldo,
+					size: sizeParaRespaldo,
+				};
+			});
 
 			await setDesicion.mutateAsync({
 				quotationId: _id,
@@ -130,10 +145,13 @@ export default function NotificationCard({
 					{items.map((item, index) => {
 						const unitPrice = (item as any).price ?? 0;
 						const subtotal = unitPrice * item.quantity;
-						const name = item.isCustom ? item.customDetails.name : item.product.name;
+						const name = item.isCustom ? item.customDetails?.name : item.product?.name || 'Producto';
 						const image = item.isCustom
-							? item.customDetails.referenceImage
-							: item.product.imageUrl || '/placeholder.png';
+							? item.customDetails?.referenceImage
+							: item.product?.imageUrl || '/placeholder.png';
+
+						const color = item.color || item.customDetails?.color || item.customDetails?.woodType;
+						const size = item.size || item.customDetails?.size;
 
 						return (
 							<div
@@ -163,6 +181,18 @@ export default function NotificationCard({
 											Cantidad:{' '}
 											<span className="text-[#c4b8a8]">{item.quantity}</span>
 										</span>
+										{color && (
+											<span className="text-xs text-[#6b5b4e]">
+												Color:{' '}
+												<span className="text-[#c4b8a8] capitalize">{color}</span>
+											</span>
+										)}
+										{size && (
+											<span className="text-xs text-[#6b5b4e]">
+												Tamaño:{' '}
+												<span className="text-[#c4b8a8] uppercase">{size}</span>
+											</span>
+										)}
 										{unitPrice > 0 && (
 											<span className="text-xs text-[#6b5b4e]">
 												Subtotal:{' '}
@@ -171,10 +201,19 @@ export default function NotificationCard({
 										)}
 									</div>
 
-									{item.adminNotes && (
-										<p className="text-xs text-[#6b5b4e] mt-1 border-l-2 border-[#8B5E3C]/40 pl-2">
-											{item.adminNotes}
-										</p>
+									{(item.notes || item.adminNotes) && (
+										<div className="flex flex-col gap-1 mt-1 border-l-2 border-[#8B5E3C]/40 pl-2">
+											{item.notes && (
+												<p className="text-[11px] text-[#6b5b4e]">
+													<span className="font-medium text-[#8B5E3C]/60">Mis notas:</span> {item.notes}
+												</p>
+											)}
+											{item.adminNotes && (
+												<p className="text-[11px] text-[#6b5b4e]">
+													<span className="font-medium text-[#8B5E3C]/60">Admin:</span> {item.adminNotes}
+												</p>
+											)}
+										</div>
 									)}
 								</div>
 							</div>
