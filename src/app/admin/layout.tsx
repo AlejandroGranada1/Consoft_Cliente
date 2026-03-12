@@ -29,7 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 	if (!user) return null;
 
-		if (user.role?.name !== 'Administrador' && user.role?.name !== 'Master') {
+	if (user.role?.name !== 'Administrador' && user.role?.name !== 'Master') {
 		router.replace('/client');
 		return null;
 	}
@@ -112,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 							className='px-3 py-1.5 rounded-xl bg-white/5 border border-white/10
             text-xs text-[#C8A882] font-medium flex items-center gap-2'>
 							<span className='w-1.5 h-1.5 rounded-full bg-[#C8A882] animate-pulse'></span>
-							<span className='hidden sm:inline'>Administrador</span>
+							<span className='hidden sm:inline'>{user.role.name}</span>
 						</div>
 						<button
 							onClick={handleLogout}

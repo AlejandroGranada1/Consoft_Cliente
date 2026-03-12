@@ -51,7 +51,7 @@ function Page() {
 		return () => clearTimeout(timeout);
 	}, [filterText, appliedSearch, pathname, router, searchParams]);
 
-	const { data: quotationsData, refetch } = useGetAllCarts(currentPage, itemsPerPage, appliedSearch, 'Solicitada');
+	const { data: quotationsData, refetch } = useGetAllCarts(currentPage, itemsPerPage, appliedSearch, ['Solicitada', 'Cotizada']);
 
 	const currentQuotations = quotationsData?.quotations || [];
 	const totalPages = quotationsData?.pagination?.pages || 0;

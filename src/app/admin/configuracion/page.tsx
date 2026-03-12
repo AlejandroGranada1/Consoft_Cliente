@@ -62,57 +62,60 @@ function Page() {
 
   const handleDeleteRole = async (id: string) => {
     const Swal = (await import('sweetalert2')).default;
-    try {
-      // Validar si el rol es Master
-      const roleToDelete = currentRoles.find((r: Role) => r._id === id);
-      if (roleToDelete?.name.toLowerCase() === 'master') {
-        return Swal.fire({
-          title: 'Acción bloqueada',
-          text: 'El rol Master es del sistema y no se puede eliminar.',
+    
+    // Validar si el rol es Master
+    const roleToDelete = currentRoles.find((r: Role) => r._id === id);
+    if (roleToDelete?.name.toLowerCase() === 'master') {
+      return Swal.fire({
+        title: 'Acción bloqueada',
+        text: 'El rol Master es del sistema y no se puede eliminar.',
+        icon: 'error',
+        background: '#1e1e1c',
+        color: '#fff',
+        confirmButtonColor: '#8B5E3C',
+      });
+    }
+
+    const { isConfirmed } = await Swal.fire({
+      title: '¿Estás seguro de eliminar este rol?',
+      text: 'Esta acción es irreversible',
+      icon: 'warning',
+      background: '#1e1e1c',
+      color: '#fff',
+      showCancelButton: true,
+      showConfirmButton: true,
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#8B5E3C',
+      cancelButtonText: 'Cancelar',
+      cancelButtonColor: '#4a4a4a',
+    });
+
+    if (isConfirmed) {
+      try {
+        await deleteRole.mutateAsync(id);
+        Swal.fire({
+          toast: true,
+          animation: false,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          title: 'Rol eliminado exitosamente',
+          icon: 'success',
+          position: 'top-right',
+          timer: 1500,
+          background: '#1e1e1c',
+          color: '#fff',
+        });
+        refetch();
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || 'No se pudo eliminar el rol';
+        Swal.fire({
+          title: 'Error',
+          text: errorMessage,
           icon: 'error',
           background: '#1e1e1c',
           color: '#fff',
-          confirmButtonColor: '#8B5E3C',
         });
       }
-
-      Swal.fire({
-        title: '¿Estás seguro de eliminar este rol?',
-        text: 'Esta acción es irreversible',
-        icon: 'warning',
-        background: '#1e1e1c',
-        color: '#fff',
-        showCancelButton: true,
-        showConfirmButton: true,
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: '#8B5E3C',
-        cancelButtonText: 'Cancelar',
-        cancelButtonColor: '#4a4a4a',
-      }).then(async (response) => {
-        if (response.isConfirmed) {
-          await deleteRole.mutateAsync(id);
-          Swal.fire({
-            toast: true,
-            animation: false,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            title: 'Rol eliminado exitosamente',
-            icon: 'success',
-            position: 'top-right',
-            timer: 1500,
-            background: '#1e1e1c',
-            color: '#fff',
-          });
-          refetch();
-        }
-      });
-    } catch (error: any) {
-      Swal.fire({
-        title: 'Error',
-        text: error.message,
-        background: '#1e1e1c',
-        color: '#fff',
-      });
     }
   };
 

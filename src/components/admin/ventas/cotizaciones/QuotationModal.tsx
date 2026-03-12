@@ -162,7 +162,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 					</button>
 					<h2 className="text-lg font-medium text-white text-center flex items-center justify-center gap-2">
 						<FileText size={18} className="text-[#C8A882]" />
-						Cotización #{quotation._id?.slice(-6).toUpperCase()}
+						{quotation.status === 'Cotizada' ? 'Editar' : ''} Cotización #{quotation._id?.slice(-6).toUpperCase()}
 					</h2>
 				</header>
 
@@ -420,7 +420,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 							) : (
 								<>
 									<Save size={14} />
-									Guardar cotización
+									{quotation.status === 'Cotizada' ? 'Guardar Cambios' : 'Guardar cotización'}
 								</>
 							)}
 						</button>
