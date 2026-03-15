@@ -2,24 +2,62 @@ import { X, User, Mail, Phone, MapPin, UserCircle, Info, Edit, Calendar, Shield 
 import { DefaultModalProps, Role } from '@/lib/types';
 import React, { useState } from 'react';
 import EditUserModal from './EditUserModal';
-import { deleteElement } from '../global/alerts';
+import { useDeleteUser } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
+import Swal from 'sweetalert2';
 
 function DetailsUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<any>) {
-  const [editModal, setEditModal] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+	const [editModal, setEditModal] = useState(false);
+	const [deleteLoading, setDeleteLoading] = useState(false);
+	const deleteUserMutation = useDeleteUser();
 
-  const handleDeleteUser = async () => {
-    if (!extraProps?._id) return;
+	const handleDeleteUser = async () => {
+		if (!extraProps?._id) return;
 
-    setDeleteLoading(true);
-    const result = await deleteElement('Usuario', `/api/users/${extraProps._id}`, updateList!);
-    setDeleteLoading(false);
+		const result = await Swal.fire({
+			title: `Estás a punto de eliminar este Usuario`,
+			text: 'Deseas realizar esta acción?',
+			icon: 'warning',
+			showCancelButton: true,
+			cancelButtonText: 'Cancelar',
+			confirmButtonText: 'Eliminar',
+			confirmButtonColor: 'red',
+			background: '#1e1e1c',
+			color: '#fff',
+		});
 
-    if (result) {
-      onClose();
-    }
-  };
+		if (result.isConfirmed) {
+			setDeleteLoading(true);
+			try {
+				await deleteUserMutation.mutateAsync(extraProps._id);
+				Swal.fire({
+					toast: true,
+					animation: false,
+					timerProgressBar: true,
+					showConfirmButton: false,
+					title: 'Usuario Eliminado',
+					icon: 'success',
+					position: 'top-right',
+					timer: 1500,
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+				updateList?.();
+				onClose();
+			} catch (error: any) {
+				console.error('Error deleting user:', error);
+				Swal.fire({
+					title: 'Error',
+					text: error?.response?.data?.message || 'Hubo un error al eliminar el usuario',
+					icon: 'error',
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+			} finally {
+				setDeleteLoading(false);
+			}
+		}
+	};
 
   const formatDate = (date: string) => {
     if (!date) return 'No disponible';

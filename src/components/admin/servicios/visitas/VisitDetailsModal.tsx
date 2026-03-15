@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { DefaultModalProps, Visit } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
-import { updateElement } from '../../global/alerts';
+import { useUpdateVisit } from '@/hooks/apiHooks';
 import Swal from 'sweetalert2';
 import { createPortal } from 'react-dom';
 import EditVisitModal from './EditVisitModal';
@@ -22,6 +22,7 @@ import EditVisitModal from './EditVisitModal';
 function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Visit>) {
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [status, setStatus] = useState(extraProps?.status || 'Programada');
+	const updateVisitMutation = useUpdateVisit();
 	const [visitData, setVisitData] = useState<Visit>({
 		_id: extraProps?._id || undefined,
 		user: extraProps?.user!,
@@ -63,7 +64,8 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 
 	const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const newStatus = e.target.value;
-		setStatus(newStatus);
+		const previousStatus = status;
+		setStatus(newStatus); // optimistic update
 
 		const payload = {
 			...visitData,
@@ -72,24 +74,46 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 		};
 
 		try {
-			await updateElement('Visita', `/api/visits/${extraProps?._id}`, payload, updateList);
-			setVisitData((prev) => ({ ...prev, status: newStatus }));
-
-			Swal.fire({
-				toast: true,
-				animation: false,
-				timerProgressBar: true,
-				showConfirmButton: false,
-				title: 'Estado actualizado',
-				icon: 'success',
-				position: 'top-right',
-				timer: 1500,
+			const result = await Swal.fire({
+				title: `¿Cambiar el estado a ${newStatus}?`,
+				icon: 'warning',
+				showCancelButton: true,
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Actualizar',
 				background: '#1e1e1c',
 				color: '#fff',
 			});
-		} catch (err) {
+
+			if (result.isConfirmed) {
+				await updateVisitMutation.mutateAsync({ id: extraProps?._id as string, data: payload });
+				setVisitData((prev) => ({ ...prev, status: newStatus }));
+				updateList?.();
+
+				Swal.fire({
+					toast: true,
+					animation: false,
+					timerProgressBar: true,
+					showConfirmButton: false,
+					title: 'Estado actualizado',
+					icon: 'success',
+					position: 'top-right',
+					timer: 1500,
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+			} else {
+				setStatus(previousStatus);
+			}
+		} catch (err: any) {
 			console.error('Error actualizando estado', err);
-			setStatus(extraProps?.status || 'Programada');
+			setStatus(previousStatus);
+			Swal.fire({
+				title: 'Error',
+				text: err?.response?.data?.message || 'Error al actualizar el estado',
+				icon: 'error',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		}
 	};
 

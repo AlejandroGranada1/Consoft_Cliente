@@ -3,7 +3,7 @@ import { X, Tag, FileText, Save, Layers, AlertCircle } from 'lucide-react';
 import { DefaultModalProps, Category } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { updateElement } from '../../global/alerts';
+import { useUpdateCategory } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
 
 const initialState: Category = {
@@ -22,6 +22,7 @@ function EditCategoryModal({
 	const [categoryData, setCategoryData] = useState<Category>(initialState);
 	const [isPending, setIsPending] = useState(false);
 	const [hasChanges, setHasChanges] = useState(false);
+	const updateCategoryMutation = useUpdateCategory();
 
 	useEffect(() => {
 		if (isOpen && extraProps) {
@@ -70,35 +71,44 @@ function EditCategoryModal({
 		setIsPending(true);
 
 		try {
-			await updateElement(
-				'Categoría',
-				`/api/categories/${categoryData._id}`,
-				{
-					name: categoryData.name,
-					description: categoryData.description,
-				},
-				updateList
-			);
-
-			Swal.fire({
-				toast: true,
-				animation: false,
-				timerProgressBar: true,
-				showConfirmButton: false,
-				title: 'Categoría actualizada exitosamente',
-				icon: 'success',
-				position: 'top-right',
-				timer: 1500,
+			const result = await Swal.fire({
+				title: `Actualizarás la información de esta Categoría`,
+				icon: 'warning',
+				showCancelButton: true,
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Actualizar',
 				background: '#1e1e1c',
 				color: '#fff',
 			});
 
-			onClose();
-		} catch (error) {
+			if (result.isConfirmed) {
+				await updateCategoryMutation.mutateAsync({
+					_id: categoryData._id,
+					name: categoryData.name,
+					description: categoryData.description,
+				});
+
+				Swal.fire({
+					toast: true,
+					animation: false,
+					timerProgressBar: true,
+					showConfirmButton: false,
+					title: 'Categoría actualizada exitosamente',
+					icon: 'success',
+					position: 'top-right',
+					timer: 1500,
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+
+				if (updateList) await updateList();
+				onClose();
+			}
+		} catch (error: any) {
 			console.error('Error al actualizar categoría:', error);
 			Swal.fire({
 				title: 'Error',
-				text: 'No se pudo actualizar la categoría',
+				text: error?.response?.data?.message || 'No se pudo actualizar la categoría',
 				icon: 'error',
 				background: '#1e1e1c',
 				color: '#fff',

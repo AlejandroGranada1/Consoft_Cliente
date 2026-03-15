@@ -3,7 +3,7 @@ import { X, User, Mail, Phone, MapPin, UserCircle, Info, Save, Shield } from 'lu
 import React, { useState, useEffect } from 'react';
 import { DefaultModalProps, Role } from '@/lib/types';
 import api from '@/components/Global/axios';
-import { updateElement } from '../global/alerts';
+import { useUpdateUser } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
 
 function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<any>) {
@@ -11,6 +11,7 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const updateUserMutation = useUpdateUser();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -83,25 +84,47 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 
     setSaving(true);
     try {
-      await updateElement('Usuario', `/api/users/${userData._id}`, userData, updateList!);
-      
       const Swal = (await import('sweetalert2')).default;
-      Swal.fire({
-        toast: true,
-        animation: false,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        title: 'Usuario actualizado exitosamente',
-        icon: 'success',
-        position: 'top-right',
-        timer: 1500,
+      const result = await Swal.fire({
+        title: `Actualizar información del usuario`,
+        text: `¿Actualizar detalles de ${userData.name}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Actualizar',
         background: '#1e1e1c',
         color: '#fff',
       });
-      
-      onClose();
-    } catch (error) {
+
+      if (result.isConfirmed) {
+        await updateUserMutation.mutateAsync(userData);
+        
+        Swal.fire({
+          toast: true,
+          animation: false,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          title: 'Usuario actualizado exitosamente',
+          icon: 'success',
+          position: 'top-right',
+          timer: 1500,
+          background: '#1e1e1c',
+          color: '#fff',
+        });
+        
+        updateList?.();
+        onClose();
+      }
+    } catch (error: any) {
       console.error('Error al actualizar usuario:', error);
+      const Swal = (await import('sweetalert2')).default;
+      Swal.fire({
+        title: 'Error',
+        text: error?.response?.data?.message || 'No se pudo actualizar el usuario',
+        icon: 'error',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
     } finally {
       setSaving(false);
     }

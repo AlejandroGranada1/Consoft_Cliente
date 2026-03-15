@@ -16,7 +16,7 @@ import {
 import { DefaultModalProps, Payment, PaymentDetails } from '@/lib/types';
 import api from '@/components/Global/axios';
 import React, { useState } from 'react';
-import { updateElement } from '../../global/alerts';
+import { useUpdatePaymentStatus } from '@/hooks/apiHooks';
 import { formatDateForInput } from '@/lib/formatDate';
 import { createPortal } from 'react-dom';
 
@@ -42,6 +42,7 @@ function PaymentDetailsModal({
 	});
 
 	const [updating, setUpdating] = useState(false);
+	const updatePaymentMutation = useUpdatePaymentStatus();
 
 	const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const newStatus = e.target.value;
@@ -51,36 +52,48 @@ function PaymentDetailsModal({
 	const handleSubmit = async () => {
 		const payload = { ...paymentData, status: paymentData.status, paymentId: paymentData._id };
 
-		setUpdating(true);
-		try {
-			await updateElement('Pago', `/api/payments/${order?._id}`, payload);
-			const Swal = (await import('sweetalert2')).default;
-			Swal.fire({
-				toast: true,
-				animation: false,
-				timerProgressBar: true,
-				showConfirmButton: false,
-				title: 'Estado actualizado exitosamente',
-				icon: 'success',
-				position: 'top-right',
-				timer: 1500,
-				background: '#1e1e1c',
-				color: '#fff',
-			});
-			onClose();
-		} catch (err) {
-			console.error('Error al actualizar el pago', err);
-			const Swal = (await import('sweetalert2')).default;
-			Swal.fire({
-				title: 'Error',
-				text: 'No se pudo actualizar el estado del pago',
-				icon: 'error',
-				background: '#1e1e1c',
-				color: '#fff',
-			});
-		} finally {
-			updateList!();
-			setUpdating(false);
+		const Swal = (await import('sweetalert2')).default;
+		const result = await Swal.fire({
+			title: `Actualizar estado de pago`,
+			text: `¿Desea cambiar el estado del pago a ${paymentData.status}?`,
+			icon: 'warning',
+			showCancelButton: true,
+			cancelButtonText: 'Cancelar',
+			confirmButtonText: 'Actualizar',
+			background: '#1e1e1c',
+			color: '#fff',
+		});
+
+		if (result.isConfirmed) {
+			setUpdating(true);
+			try {
+				await updatePaymentMutation.mutateAsync({ orderId: order?._id, data: payload });
+				Swal.fire({
+					toast: true,
+					animation: false,
+					timerProgressBar: true,
+					showConfirmButton: false,
+					title: 'Estado actualizado exitosamente',
+					icon: 'success',
+					position: 'top-right',
+					timer: 1500,
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+				onClose();
+			} catch (err: any) {
+				console.error('Error al actualizar el pago', err);
+				Swal.fire({
+					title: 'Error',
+					text: err?.response?.data?.message || 'No se pudo actualizar el estado del pago',
+					icon: 'error',
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+			} finally {
+				updateList?.();
+				setUpdating(false);
+			}
 		}
 	};
 

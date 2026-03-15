@@ -15,7 +15,7 @@ import { DefaultModalProps, Category, Product } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from '@/components/Global/axios';
-import { createElement } from '../../global/alerts';
+import { useAddProduct } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
 
 const initialState = {
@@ -42,6 +42,7 @@ function CreateProductModal({
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [isPending, setIsPending] = useState(false);
 	const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+	const addProductMutation = useAddProduct();
 
 	useEffect(() => {
 		const fetchCategories = async () => {
@@ -146,14 +147,20 @@ function CreateProductModal({
 			fd.append('status', String(formData.status));
 			fd.append('image', formData.imageFile);
 
-			const confirm = await createElement(
-				'Producto',
-				'/api/products',
-				fd,
-				updateList
-			);
+			const result = await Swal.fire({
+				title: `Agregar un nuevo Producto`,
+				icon: 'info',
+				showCancelButton: true,
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Agregar',
+				confirmButtonColor: 'blue',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 
-			if (confirm) {
+			if (result.isConfirmed) {
+				await addProductMutation.mutateAsync(fd as any);
+
 				Swal.fire({
 					toast: true,
 					animation: false,
@@ -171,11 +178,11 @@ function CreateProductModal({
 				onClose();
 				setFormData(initialState);
 			}
-		} catch (err) {
+		} catch (err: any) {
 			console.error('Error al crear producto', err);
 			Swal.fire({
 				title: 'Error',
-				text: 'No se pudo crear el producto',
+				text: err?.response?.data?.message || 'No se pudo crear el producto',
 				icon: 'error',
 				background: '#1e1e1c',
 				color: '#fff',

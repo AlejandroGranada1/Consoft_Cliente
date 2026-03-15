@@ -67,6 +67,19 @@ export const useCreateUser = () => {
 	});
 };
 
+export const useAdminRegister = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (userData: { name: string; email: string; password: string; role: string }) => {
+			const { data } = await api.post('/api/auth/admin/register', userData);
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['users'] });
+		},
+	});
+};
+
 export const useDeleteUser = () => {
 	const queryClient = useQueryClient();
 	return useMutation({

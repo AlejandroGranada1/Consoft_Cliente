@@ -3,7 +3,7 @@ import { X, Tag, FileText, Save, Layers, AlertCircle } from 'lucide-react';
 import { DefaultModalProps, Category } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { createElement } from '../../global/alerts';
+import { useAddCategory } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
 
 const initialState: Omit<Category, 'id'> = {
@@ -16,6 +16,7 @@ const initialState: Omit<Category, 'id'> = {
 function CreateCategoryModal({ isOpen, onClose, updateList }: DefaultModalProps<Category>) {
 	const [categoryData, setCategoryData] = useState<Omit<Category, 'id'>>(initialState);
 	const [isPending, setIsPending] = useState(false);
+	const addCategoryMutation = useAddCategory();
 
 	useEffect(() => {
 		if (!isOpen) {
@@ -48,14 +49,20 @@ function CreateCategoryModal({ isOpen, onClose, updateList }: DefaultModalProps<
 		setIsPending(true);
 
 		try {
-			const confirm = await createElement(
-				'categoría',
-				'/api/categories',
-				categoryData,
-				updateList
-			);
+			const result = await Swal.fire({
+				title: `Agregar una nueva categoría`,
+				icon: 'info',
+				showCancelButton: true,
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Agregar',
+				confirmButtonColor: 'blue',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 
-			if (confirm) {
+			if (result.isConfirmed) {
+				await addCategoryMutation.mutateAsync(categoryData);
+
 				Swal.fire({
 					toast: true,
 					animation: false,
@@ -73,11 +80,11 @@ function CreateCategoryModal({ isOpen, onClose, updateList }: DefaultModalProps<
 				onClose();
 				setCategoryData(initialState);
 			}
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Error al crear categoría:', error);
 			Swal.fire({
 				title: 'Error',
-				text: 'No se pudo crear la categoría',
+				text: error?.response?.data?.message || 'No se pudo crear la categoría',
 				icon: 'error',
 				background: '#1e1e1c',
 				color: '#fff',

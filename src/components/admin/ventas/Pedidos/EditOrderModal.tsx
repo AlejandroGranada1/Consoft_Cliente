@@ -16,10 +16,9 @@ import {
 } from 'lucide-react';
 import { DefaultModalProps, Order, Service, User as UserType } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
-import { useGetServices, useGetUsers, useUpdateOrder, useGetProducts } from '@/hooks/apiHooks';
+import { useGetServices, useGetUsers, useUpdateOrder, useGetProducts, useCreatePayment } from '@/hooks/apiHooks';
 import api from '@/components/Global/axios';
 import { createPortal } from 'react-dom';
-import { createElement } from '@/components/admin/global/alerts';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 interface EditOrderData {
   _id: string;
@@ -50,6 +49,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
   const { data: usersData, isLoading: usersLoading } = useGetUsers();
   const { data: productsData } = useGetProducts();
   const updateOrderMutation = useUpdateOrder();
+  const createPaymentMutation = useCreatePayment();
 
   const services = servicesData?.data || [];
   const users = usersData?.users || [];
@@ -189,21 +189,52 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
   const handleRegisterPayment = async (orderId: string) => {
     if (!registerPayment || paymentAmount <= 0) return;
 
-    try {
-      await createElement(
-        'Pago',
-        '/api/payments',
-        {
+    const Swal = (await import('sweetalert2')).default;
+
+    const result = await Swal.fire({
+      title: `Agregar un nuevo Pago`,
+      icon: 'info',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Agregar',
+      confirmButtonColor: 'blue',
+      background: '#1e1e1c',
+      color: '#fff',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await createPaymentMutation.mutateAsync({
           orderId,
           amount: paymentAmount,
           method: paymentMethod,
           paidAt: new Date(),
-          status: 'aprobado', // Por defecto aprobado si lo registra el admin
-        }
-      );
-    } catch (error) {
-      console.error('Error al registrar el pago:', error);
-      throw error;
+          status: 'aprobado',
+        });
+
+        Swal.fire({
+          toast: true,
+          animation: false,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          title: 'Pago agregado con éxito',
+          icon: 'success',
+          position: 'top-right',
+          timer: 1500,
+          background: '#1e1e1c',
+          color: '#fff',
+        });
+      } catch (error: any) {
+        console.error('Error al registrar el pago:', error);
+        Swal.fire({
+          title: 'Error al agregar pago',
+          text: error?.response?.data?.message || 'Hubo un problema al crear el pago',
+          icon: 'error',
+          background: '#1e1e1c',
+          color: '#fff',
+        });
+        throw error;
+      }
     }
   };
 
