@@ -1,10 +1,10 @@
 'use client';
 import { X, User, Mail, Lock, UserCircle, Save, Shield } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { createElement } from '@/components/admin/global/alerts';
 import api from '@/components/Global/axios';
 import { DefaultModalProps } from '@/lib/types';
 import { createPortal } from 'react-dom';
+import { useAdminRegister } from '@/hooks/useUsers';
 
 function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>) {
 	const [userData, setUserData] = useState({
@@ -16,6 +16,7 @@ function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>
 
 	const [roles, setRoles] = useState<{ _id: string; name: string }[]>([]);
 	const [loading, setLoading] = useState(false);
+	const { mutateAsync: registerUser } = useAdminRegister();
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -78,7 +79,8 @@ function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>
 
 		setLoading(true);
 		try {
-			await createElement('usuario', '/api/users', userData, updateList!);
+			await registerUser(userData);
+			if (updateList) updateList();
 
 			Swal.fire({
 				toast: true,
@@ -94,11 +96,11 @@ function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>
 			});
 
 			onClose();
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Error al crear usuario:', error);
 			Swal.fire({
 				title: 'Error',
-				text: 'Hubo un problema al crear el usuario',
+				text: error?.response?.data?.message || 'Hubo un problema al crear el usuario',
 				icon: 'error',
 				background: '#1e1e1c',
 				color: '#fff',

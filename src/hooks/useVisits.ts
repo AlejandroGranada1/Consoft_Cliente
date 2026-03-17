@@ -32,6 +32,34 @@ export const useCreateVisit = () => {
 	});
 };
 
+export const useDeleteVisit = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async (id: string) => {
+			const { data } = await api.delete(`/api/visits/${id}`);
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['visits'] });
+		},
+	});
+};
+
+export const useUpdateVisit = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({ id, data }: { id: string; data: any }) => {
+			const { data: res } = await api.put(`/api/visits/${id}`, data);
+			return res;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['visits'] });
+		},
+	});
+};
+
 export const useCreateVisitForMe = () => {
 	const queryClient = useQueryClient();
 

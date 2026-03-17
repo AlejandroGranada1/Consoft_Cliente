@@ -20,9 +20,11 @@ import {
 import SidebarLink from './SidebarLink';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useUser } from '@/providers/userContext';
 
 export default function Sidebar() {
 	const [mobileOpen, setMobileOpen] = useState(false);
+	const { user } = useUser()
 	const [scrolled, setScrolled] = useState(false);
 	const [openGroup, setOpenGroup] = useState<string | null>(null); // Estado para controlar qué grupo está abierto
 
@@ -37,6 +39,8 @@ export default function Sidebar() {
 	const handleToggleGroup = (groupTitle: string) => {
 		setOpenGroup(openGroup === groupTitle ? null : groupTitle);
 	};
+
+	console.log(user)
 
 	return (
 		<>
@@ -89,8 +93,8 @@ export default function Sidebar() {
 							A
 						</div>
 						<div>
-							<p className='text-sm font-medium text-white'>Administrador</p>
-							<p className='text-xs text-white/40'>admin@confort.com</p>
+							<p className='text-sm font-medium text-white'>{user?.role.name}</p>
+							<p className='text-xs text-white/40'>{user?.email}</p>
 						</div>
 					</div>
 				</div>

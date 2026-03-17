@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye, MoreVertical, FileText, Package, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Eye, MoreVertical, FileText, Package, Clock, CheckCircle, AlertCircle, Edit } from 'lucide-react';
 import { useState } from 'react';
 
 interface QuotationRowProps {
@@ -18,6 +18,8 @@ export default function QuotationRow({ q, onView }: QuotationRowProps) {
 		switch (status.toLowerCase()) {
 			case 'solicitada':
 				return <Clock size={14} className="text-yellow-400" />;
+			case 'cotizada':
+				return <CheckCircle size={14} className="text-[#C8A882]" />;
 			case 'aprobada':
 				return <CheckCircle size={14} className="text-green-400" />;
 			case 'rechazada':
@@ -31,6 +33,8 @@ export default function QuotationRow({ q, onView }: QuotationRowProps) {
 		switch (status.toLowerCase()) {
 			case 'solicitada':
 				return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
+			case 'cotizada':
+				return 'bg-[#C8A882]/10 text-[#C8A882] border border-[#C8A882]/20';
 			case 'aprobada':
 				return 'bg-green-500/10 text-green-400 border border-green-500/20';
 			case 'rechazada':
@@ -93,6 +97,15 @@ export default function QuotationRow({ q, onView }: QuotationRowProps) {
 						title="Ver detalles">
 						<Eye size={16} />
 					</button>
+					{status === 'Cotizada' && (
+						<button
+							onClick={onView}
+							className="p-1.5 rounded-lg text-white/40 hover:text-[#C8A882]
+								hover:bg-white/5 transition-all duration-200"
+							title="Editar cotización">
+							<Edit size={16} />
+						</button>
+					)}
 				</div>
 			</div>
 
@@ -130,6 +143,14 @@ export default function QuotationRow({ q, onView }: QuotationRowProps) {
 							hover:bg-white/5 transition-all duration-200">
 						<Eye size={18} />
 					</button>
+					{status === 'Cotizada' && (
+						<button
+							onClick={onView}
+							className="p-2 rounded-lg text-white/40 hover:text-[#C8A882]
+								hover:bg-white/5 transition-all duration-200">
+							<Edit size={18} />
+						</button>
+					)}
 				</div>
 			</div>
 		</div>

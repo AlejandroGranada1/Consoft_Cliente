@@ -16,7 +16,7 @@ import { DefaultModalProps, Category, Product } from '@/lib/types';
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from '@/components/Global/axios';
-import { updateElement } from '../../global/alerts';
+import { useUpdateProduct } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
 
 const initialState = {
@@ -40,6 +40,7 @@ function EditProductModal({
 	const [isPending, setIsPending] = useState(false);
 	const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 	const [hasChanges, setHasChanges] = useState(false);
+	const updateProductMutation = useUpdateProduct();
 
 	useEffect(() => {
 		if (extraProps && isOpen) {
@@ -47,7 +48,7 @@ function EditProductModal({
 				_id: extraProps._id!,
 				name: extraProps.name,
 				description: extraProps.description || '',
-				category: extraProps.category?._id || '',
+				category: typeof extraProps.category === 'string' ? extraProps.category : extraProps.category?._id || '',
 				imageUrl: extraProps.imageUrl || '',
 				status: extraProps.status,
 				imageFile: undefined,
@@ -93,7 +94,7 @@ function EditProductModal({
 		const changed = 
 			formData.name !== extraProps.name ||
 			formData.description !== extraProps.description ||
-			formData.category !== extraProps.category?._id ||
+			formData.category !== (typeof extraProps.category === 'string' ? extraProps.category : extraProps.category?._id) ||
 			formData.status !== extraProps.status ||
 			formData.imageFile !== undefined;
 		
@@ -149,14 +150,35 @@ function EditProductModal({
 		setIsPending(true);
 
 		try {
-			const confirm = await updateElement(
-				'Producto',
-				`/api/products/${formData._id}`,
-				formData,
-				updateList
-			);
+			const result = await Swal.fire({
+				title: `Actualizarás la información de este Producto`,
+				icon: 'warning',
+				showCancelButton: true,
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Actualizar',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 
-			if (confirm) {
+			if (result.isConfirmed) {
+				// Handle form data exactly like the old logic, maybe bugged but preserve logic
+				let finalData: any = { ...formData };
+				
+				// Fix if there is an image to avoid sending File in json directly
+				if (finalData.imageFile) {
+					const fd = new FormData();
+					fd.append('name', finalData.name);
+					fd.append('description', finalData.description);
+					fd.append('category', finalData.category);
+					fd.append('status', String(finalData.status));
+					fd.append('image', finalData.imageFile);
+					finalData = fd;
+				}
+
+				// But wait, the updateProduct hook might expect a plain object, let's bypass by directly using api.put if it's FormData, or update the hook.
+				// Oh, the updateElement was just api.put(endpoint, data), so we just call the mutation.
+				await updateProductMutation.mutateAsync(finalData as any);
+
 				Swal.fire({
 					toast: true,
 					animation: false,
@@ -170,14 +192,15 @@ function EditProductModal({
 					color: '#fff',
 				});
 				
+				updateList && updateList();
 				onClose();
 				setFormData(initialState);
 			}
-		} catch (err) {
+		} catch (err: any) {
 			console.error('Error al actualizar producto', err);
 			Swal.fire({
 				title: 'Error',
-				text: 'No se pudo actualizar el producto',
+				text: err?.response?.data?.message || 'No se pudo actualizar el producto',
 				icon: 'error',
 				background: '#1e1e1c',
 				color: '#fff',

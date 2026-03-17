@@ -416,7 +416,7 @@ export default function ProfilePage() {
                     Explora nuestros productos y guarda tus favoritos para verlos aquí
                   </p>
                   <button
-                    onClick={() => router.push('/productos')}
+                    onClick={() => router.push('/client/productos')}
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
                       bg-[#8B5E3C] hover:bg-[#6F452A] text-white text-sm font-medium
                       shadow-lg shadow-[#8B5E3C]/20 transition-all duration-200"

@@ -207,6 +207,38 @@ export const useCreateOrder = () => {
 	});
 };
 
+export const useCreatePayment = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (paymentData: any) => {
+			const { data } = await api.post('/api/payments', paymentData);
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['orders'] });
+			queryClient.invalidateQueries({ queryKey: ['myOrders'] });
+			queryClient.invalidateQueries({ queryKey: ['pedidoDetalle'] });
+		},
+	});
+};
+
+export const useUpdatePaymentStatus = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({ orderId, data }: { orderId?: string; data: any }) => {
+			// Assuming the endpoint for updating a payment is /api/payments/:id
+			// as useCreatePayment uses /api/payments
+			const { data: response } = await api.put(`/api/payments/${data.paymentId || data._id}`, { status: data.status });
+			return response;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['orders'] });
+			queryClient.invalidateQueries({ queryKey: ['myOrders'] });
+			queryClient.invalidateQueries({ queryKey: ['pedidoDetalle'] });
+		},
+	});
+};
+
 
 export const useUpdateOrder = () => {
 	const queryClient = useQueryClient();

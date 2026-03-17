@@ -8,12 +8,14 @@ import { Calendar, TimePicker } from '@/components/agenda';
 import { useGetAvailableSlots } from '@/hooks/useVisits';
 import { format } from 'date-fns';
 import api from '@/components/Global/axios';
-import { updateElement } from '../../global/alerts';
+import { useUpdateVisit } from '@/hooks/apiHooks';
+import Swal from 'sweetalert2';
 
 function EditVisitModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Visit>) {
 	const [date, setDate] = useState<Date | undefined>(undefined);
 	const [time, setTime] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const updateVisitMutation = useUpdateVisit();
 
 	const formattedDateStr = date ? format(date, 'yyyy-MM-dd') : undefined;
 	const { data: slotsData, isLoading: isLoadingSlots } = useGetAvailableSlots(formattedDateStr);
@@ -42,16 +44,45 @@ function EditVisitModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 				visitTime: time,
 			};
 
-			await updateElement(
-				'Visita',
-				`/api/visits/${extraProps._id}`,
-				payload,
-				updateList
-			);
+			const result = await Swal.fire({
+				title: `Reprogramar visita`,
+				text: `¿Actualizar fecha y hora de la visita?`,
+				icon: 'warning',
+				showCancelButton: true,
+				cancelButtonText: 'Cancelar',
+				confirmButtonText: 'Actualizar',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 
-			onClose();
-		} catch (error) {
+			if (result.isConfirmed) {
+				await updateVisitMutation.mutateAsync({ id: extraProps._id, data: payload });
+				
+				Swal.fire({
+					toast: true,
+					animation: false,
+					timerProgressBar: true,
+					showConfirmButton: false,
+					title: 'Visita reprogramada con éxito',
+					icon: 'success',
+					position: 'top-right',
+					timer: 1500,
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+
+				updateList?.();
+				onClose();
+			}
+		} catch (error: any) {
 			console.error('Error updating visit:', error);
+			Swal.fire({
+				title: 'Error',
+				text: error?.response?.data?.message || 'No se pudo actualizar la visita',
+				icon: 'error',
+				background: '#1e1e1c',
+				color: '#fff',
+			});
 		} finally {
 			setIsSubmitting(false);
 		}

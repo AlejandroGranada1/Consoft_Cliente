@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
    ADMIN — GET ALL CARTS / QUOTATIONS
 ========================= */
 
-export const useGetAllCarts = (page: number = 1, limit: number = 20, search: string = '', status: string = '') => {
+export const useGetAllCarts = (page: number = 1, limit: number = 20, search: string = '', status: string | string[] = '') => {
 	return useQuery({
 		queryKey: ['allCarts', page, limit, search, status],
 		queryFn: async () => {
@@ -14,7 +14,14 @@ export const useGetAllCarts = (page: number = 1, limit: number = 20, search: str
 				limit: String(limit)
 			});
 			if (search) queryParams.append('search', search);
-			if (status) queryParams.append('status', status);
+			
+			if (status) {
+				if (Array.isArray(status)) {
+					status.forEach(s => queryParams.append('status', s));
+				} else {
+					queryParams.append('status', status);
+				}
+			}
 
 			const { data } = await api.get(`/api/quotations?${queryParams.toString()}`);
 			return data;
@@ -168,6 +175,7 @@ export const useSetQuote = () => {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['quotations'] });
+			queryClient.invalidateQueries({ queryKey: ['allCarts'] });
 		},
 	});
 };

@@ -4,18 +4,19 @@ import { Product } from '@/lib/types';
 import ProductDetailsModal from '@/components/admin/compras/productos/ProductDetailsModal';
 import CreateProductModal from '@/components/admin/compras/productos/CreateProductModal';
 import EditProductModal from '@/components/admin/compras/productos/EditProductModal';
-import { deleteElement } from '@/components/admin/global/alerts';
 import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
 import ProductRow from '@/components/admin/compras/productos/ProductRow';
 import Pagination from '@/components/Global/Pagination';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useDeleteProduct } from '@/hooks/apiHooks';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [editModal, setEditModal] = useState(false);
 	const [product, setProduct] = useState<Product>();
+	const deleteProductMutation = useDeleteProduct();
 
 	const router = useRouter();
 	const pathname = usePathname();
@@ -85,8 +86,46 @@ function Page() {
 	const currentProducts = data.products || [];
 	const totalPages = data.pagination?.pages || 0;
 
-	const handleDeleteProduct = (productId: string) => {
-		deleteElement('Producto', `/api/products/${productId}`, () => fetchProducts().then(res => setData(res)));
+	const handleDeleteProduct = async (productId: string) => {
+		const Swal = (await import('sweetalert2')).default;
+		const result = await Swal.fire({
+			title: `Estas a punto de eliminar este Producto`,
+			html: 'Esta acción es irreversible',
+			icon: 'warning',
+			showCancelButton: true,
+			cancelButtonText: 'Cancelar',
+			confirmButtonText: 'Eliminar',
+			confirmButtonColor: 'red',
+			background: '#1e1e1c',
+			color: '#fff',
+		});
+
+		if (result.isConfirmed) {
+			try {
+				await deleteProductMutation.mutateAsync(productId);
+				Swal.fire({
+					toast: true,
+					animation: false,
+					timerProgressBar: true,
+					title: `Producto Eliminado con éxito`,
+					icon: 'success',
+					timer: 1500,
+					showConfirmButton: false,
+					position: 'top-right',
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+				fetchProducts().then(res => setData(res));
+			} catch (error: any) {
+				Swal.fire({
+					title: 'Error al Eliminar',
+					text: error?.response?.data?.message || 'Hubo un error al eliminar el producto',
+					icon: 'error',
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+			}
+		}
 	};
 
 	return (

@@ -4,11 +4,11 @@ import { Category } from '@/lib/types';
 import CategoryDetailsModal from '@/components/admin/compras/categorias/CategoryDetailsModal';
 import CreateCategoryModal from '@/components/admin/compras/categorias/CreateCategoryModal';
 import EditCategoryModal from '@/components/admin/compras/categorias/EditCategoryModal';
-import { deleteElement } from '@/components/admin/global/alerts';
 import api from '@/components/Global/axios';
 import React, { useEffect, useState } from 'react';
 import CategoryRow from '@/components/admin/compras/categorias/CategoryRow';
 import Pagination from '@/components/Global/Pagination';
+import { useDeleteCategory } from '@/hooks/apiHooks';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 function Page() {
@@ -20,6 +20,7 @@ function Page() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const deleteCategoryMutation = useDeleteCategory();
 
   const pageQuery = searchParams.get('page');
   const currentPage = pageQuery ? parseInt(pageQuery, 10) : 1;
@@ -84,8 +85,46 @@ function Page() {
 	const currentCategories = data.categories || [];
 	const totalPages = data.pagination?.pages || 0;
 
-	const handleDeleteCategory = (categoryId: string) => {
-		deleteElement('Categoría', `/api/categories/${categoryId}`, () => fetchCategories().then(res => setData(res)));
+	const handleDeleteCategory = async (categoryId: string) => {
+		const Swal = (await import('sweetalert2')).default;
+		const result = await Swal.fire({
+			title: `Estas a punto de eliminar esta Categoría`,
+			html: 'Esta acción es irreversible',
+			icon: 'warning',
+			showCancelButton: true,
+			cancelButtonText: 'Cancelar',
+			confirmButtonText: 'Eliminar',
+			confirmButtonColor: 'red',
+			background: '#1e1e1c',
+			color: '#fff',
+		});
+
+		if (result.isConfirmed) {
+			try {
+				await deleteCategoryMutation.mutateAsync(categoryId);
+				Swal.fire({
+					toast: true,
+					animation: false,
+					timerProgressBar: true,
+					title: `Categoría Eliminada con éxito`,
+					icon: 'success',
+					timer: 1500,
+					showConfirmButton: false,
+					position: 'top-right',
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+				fetchCategories().then(res => setData(res));
+			} catch (error: any) {
+				Swal.fire({
+					title: 'Error al Eliminar',
+					text: error?.response?.data?.message || 'Hubo un error al eliminar la categoría',
+					icon: 'error',
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+			}
+		}
 	};
 
 	return (

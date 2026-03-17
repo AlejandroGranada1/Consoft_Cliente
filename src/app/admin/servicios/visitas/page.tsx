@@ -6,17 +6,17 @@ import VisitDetailsModal from '@/components/admin/servicios/visitas/VisitDetails
 import EditVisitModal from '@/components/admin/servicios/visitas/EditVisitModal';
 import React, { useState, useEffect } from 'react';
 import api from '@/components/Global/axios';
-import { deleteElement } from '@/components/admin/global/alerts';
 import VisitRow from '@/components/admin/servicios/visitas/VisitRow';
 import Pagination from '@/components/Global/Pagination';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useGetVisits } from '@/hooks/apiHooks';
+import { useGetVisits, useDeleteVisit } from '@/hooks/apiHooks';
 
 function Page() {
 	const [createModal, setCreateModal] = useState(false);
 	const [detailsModal, setDetailsModal] = useState(false);
 	const [editModal, setEditModal] = useState(false);
 	const [visit, setVisit] = useState<Visit>();
+	const deleteVisitMutation = useDeleteVisit();
 
 	const router = useRouter();
 	const pathname = usePathname();
@@ -60,8 +60,46 @@ function Page() {
 	const currentVisits = visitsData?.visits || [];
 	const totalPages = visitsData?.pagination?.pages || 0;
 
-	const handleDeleteVisit = (visitId: string) => {
-		deleteElement('Visita', `/api/visits/${visitId}`, () => refetch());
+	const handleDeleteVisit = async (visitId: string) => {
+		const Swal = (await import('sweetalert2')).default;
+		const result = await Swal.fire({
+			title: `Estas a punto de eliminar esta Visita`,
+			html: 'Esta acción es irreversible',
+			icon: 'warning',
+			showCancelButton: true,
+			cancelButtonText: 'Cancelar',
+			confirmButtonText: 'Eliminar',
+			confirmButtonColor: 'red',
+			background: '#1e1e1c',
+			color: '#fff',
+		});
+
+		if (result.isConfirmed) {
+			try {
+				await deleteVisitMutation.mutateAsync(visitId);
+				Swal.fire({
+					toast: true,
+					animation: false,
+					timerProgressBar: true,
+					title: `Visita Eliminada con éxito`,
+					icon: 'success',
+					timer: 1500,
+					showConfirmButton: false,
+					position: 'top-right',
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+				refetch();
+			} catch (error: any) {
+				Swal.fire({
+					title: 'Error al Eliminar',
+					text: error?.response?.data?.message || 'Hubo un error al eliminar la visita',
+					icon: 'error',
+					background: '#1e1e1c',
+					color: '#fff',
+				});
+			}
+		}
 	};
 
 	return (
