@@ -47,7 +47,7 @@ function CreateQuotationModal({ isOpen, onClose, updateList }: DefaultModalProps
 	const { data: productsData } = useGetProducts();
 
 	const users = usersData?.users || [];
-	const products = productsData || [];
+	const products = productsData?.products || [];
 
 	useEffect(() => {
 		if (!isOpen) {

@@ -63,142 +63,136 @@ function ProductDetailsModal({ isOpen, onClose, extraProps }: DefaultModalProps<
 						</h2>
 					</header>
 
-					<div className='grid grid-cols-2 gap-6 p-6 overflow-y-auto'>
-						{/* Columna izquierda - Información */}
-						<div className='space-y-5'>
-							{/* Nombre */}
-							<div className='space-y-2'>
-								<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
-									Nombre del producto
-								</label>
-								<div
-									className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-									text-sm text-white/90 truncate'>
-									{extraProps.name}
-								</div>
-							</div>
-
-							{/* Categoría */}
-							<div className='space-y-2'>
-								<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
-									Categoría
-								</label>
-								<div
-									className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-									text-sm text-white/90 truncate'>
-									{category?.name || 'Sin categoría'}
-								</div>
-							</div>
-
-							{/* Descripción */}
-							<div className='space-y-2'>
-								<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
-									Descripción
-								</label>
-								<div
-									className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-									text-sm text-white/70 min-h-[60px] line-clamp-4 break-words whitespace-normal'>
-									{extraProps.description || 'Sin descripción'}
-								</div>
-							</div>
-
-							{/* Estado */}
-							<div className='space-y-2'>
-								<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
-									Estado
-								</label>
-								<div className='flex items-center gap-3'>
+					<div className='p-6 overflow-y-auto space-y-6'>
+						<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+							{/* Columna izquierda - Información */}
+							<div className='space-y-5'>
+								{/* Nombre */}
+								<div className='space-y-2'>
+									<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+										Nombre del producto
+									</label>
 									<div
-										className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${extraProps.status
+										className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+										text-sm text-white/90 font-medium'>
+										{extraProps.name}
+									</div>
+								</div>
+
+								{/* Categoría */}
+								<div className='space-y-2'>
+									<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+										Categoría
+									</label>
+									<div
+										className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+										text-sm text-white/90'>
+										{category?.name || 'Sin categoría'}
+									</div>
+								</div>
+
+								{/* Descripción */}
+								<div className='space-y-2'>
+									<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+										Descripción
+									</label>
+									<div
+										className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+										text-sm text-white/70 min-h-[80px] break-words whitespace-normal leading-relaxed'>
+										{extraProps.description || 'Sin descripción'}
+									</div>
+								</div>
+
+								{/* Estado */}
+								<div className='space-y-2'>
+									<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
+										Estado
+									</label>
+									<div className='flex items-center gap-3'>
+										<div
+											className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${extraProps.status
 												? 'bg-green-500/10 text-green-400 border border-green-500/20'
 												: 'bg-red-500/10 text-red-400 border border-red-500/20'
-											}`}>
-										<span
-											className={`w-2 h-2 rounded-full ${extraProps.status ? 'bg-green-400' : 'bg-red-400'
-												}`}
+												}`}>
+											<span
+												className={`w-2 h-2 rounded-full ${extraProps.status ? 'bg-green-400' : 'bg-red-400'
+													}`}
+											/>
+											{extraProps.status ? 'Activo' : 'Inactivo'}
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{/* Columna derecha - Imagen */}
+							<div className='bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col'>
+								<h3 className='text-sm font-medium text-white mb-4 flex items-center gap-2'>
+									<ImageIcon
+										size={16}
+										className='text-[#C8A882]'
+									/>
+									Imagen del producto
+								</h3>
+
+								<div className='flex-1 flex flex-col justify-center space-y-4'>
+									<div className='rounded-xl border border-white/10 overflow-hidden bg-black/20 p-2 group relative'>
+										<img
+											src={imageUrl}
+											alt={extraProps.name}
+											className='w-full max-h-64 object-contain rounded-lg transition-transform duration-300 group-hover:scale-[1.02]'
 										/>
-										{extraProps.status ? 'Activo' : 'Inactivo'}
 									</div>
 								</div>
 							</div>
 						</div>
 
-						{/* Columna derecha - Imagen */}
-						<div className='bg-white/5 border border-white/10 rounded-xl p-6 flex flex-col items-center justify-start'>
-							<h3 className='text-sm font-medium text-white mb-4 flex items-center gap-2 self-start'>
-								<ImageIcon
-									size={16}
-									className='text-[#C8A882]'
-								/>
-								Imagen del producto
-							</h3>
-
-							<div className='w-full space-y-3'>
-								<div className='rounded-xl border border-white/10 overflow-hidden bg-white/5 p-2'>
-									<img
-										src={imageUrl}
-										alt={extraProps.name}
-										className='w-full max-h-64 object-contain rounded-lg'
-									/>
-								</div>
-								{extraProps.imageUrl ? (
-									<p className='text-xs text-white/30 text-center break-all'>
-										{extraProps.imageUrl.substring(0, 50)}...
-									</p>
-								) : (
-									<p className='text-xs text-yellow-400/70 text-center flex items-center justify-center gap-1'>
-										<Eye size={12} />
-										Imagen por defecto
-									</p>
-								)}
+						{/* Resumen - Box inferior mejorado */}
+						<div className='p-5 rounded-2xl border border-[#C8A882]/20 bg-[#C8A882]/5 relative overflow-hidden group'>
+							<div className='absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity'>
+								<Package size={48} className='text-[#C8A882]' />
 							</div>
-						</div>
-
-						{/* Resumen - ocupa ambas columnas */}
-						<div className='col-span-2 p-4 rounded-xl border border-white/10 bg-white/5 overflow-hidden'>
-							<div className='flex justify-between items-center gap-4'>
-								<div className='min-w-0 flex-1'>
-									<p className='text-sm font-medium text-white truncate'>Resumen</p>
-									<p className='text-xs text-white/40 mt-1 truncate'>{extraProps.name}</p>
-									<p className='text-xs text-white/40 truncate'>
-										{category?.name || 'Sin categoría'}
+							<div className='relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
+								<div className='space-y-1'>
+									<h4 className='text-xs font-semibold uppercase tracking-wider text-[#C8A882]'>Resumen del producto</h4>
+									<p className='text-lg font-serif text-white'>{extraProps.name}</p>
+									<p className='text-sm text-white/40'>
+										{category?.name || 'Sin categoría'} • {extraProps.status ? 'Disponible para venta' : 'No disponible'}
 									</p>
 								</div>
-								<div className='text-right'>
-									<span
-										className={`text-xs px-3 py-1.5 rounded-full ${extraProps.status
-												? 'bg-green-500/10 text-green-400 border border-green-500/20'
-												: 'bg-red-500/10 text-red-400 border border-red-500/20'
-											}`}>
-										{extraProps.status ? 'Activo' : 'Inactivo'}
-									</span>
+								<div className='shrink-0'>
+									<div className={`px-4 py-2 rounded-xl border text-sm font-medium ${extraProps.status
+											? 'border-green-500/30 bg-green-500/10 text-green-400'
+											: 'border-red-500/30 bg-red-500/10 text-red-400'
+										}`}>
+										{extraProps.status ? 'Producto Activo' : 'Producto Inactivo'}
+									</div>
 								</div>
 							</div>
 						</div>
 
-						{/* Botones - ocupan ambas columnas */}
-						<div className='col-span-2 flex justify-end gap-3 pt-4 border-t border-white/10'>
+						{/* Botones de acción */}
+						<div className='flex justify-end gap-3 pt-4 border-t border-white/10'>
 							<button
 								type='button'
 								onClick={onClose}
-								className='px-5 py-2.5 rounded-lg
-									border border-white/15 bg-white/5
-									text-white/70 text-sm
+								className='px-6 py-2.5 rounded-xl
+									border border-white/10 bg-white/5
+									text-white/70 text-sm font-medium
 									hover:bg-white/10 hover:text-white
 									transition-all duration-200'>
-								Cerrar
+								Cerrar modal
 							</button>
 							<button
 								type='button'
 								onClick={() => setEditModal(true)}
-								className='px-5 py-2.5 rounded-lg
-									border border-[#C8A882]/30 bg-[#C8A882]/10
-									text-[#C8A882] text-sm font-medium
-									hover:bg-[#C8A882]/20 hover:border-[#C8A882]/50
+								className='px-6 py-2.5 rounded-xl
+									bg-[#8B5E3C] hover:bg-[#6F452A]
+									text-white text-sm font-medium
+									shadow-lg shadow-[#8B5E3C]/10
 									flex items-center gap-2
 									transition-all duration-200'>
-								<Edit size={14} />
-								Editar Producto
+								<Edit size={16} />
+								Editar información
 							</button>
 						</div>
 					</div>

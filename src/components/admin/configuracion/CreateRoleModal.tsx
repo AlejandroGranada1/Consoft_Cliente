@@ -2,7 +2,7 @@
 
 import { X, Shield, Package, Check, Users, FileText, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { DefaultModalProps, GroupPermission, Permission, Role } from '@/lib/types';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { useGetPermissions, useCreateRole } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
@@ -22,6 +22,14 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 	const [roleData, setRoleData] = useState<Role>(initialState);
 	const [expandedModule, setExpandedModule] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
+
+	useEffect(() => {
+		if (!isOpen) {
+			setRoleData({ ...initialState, _id: crypto.randomUUID() });
+			setExpandedModule(null);
+			setIsLoading(false);
+		}
+	}, [isOpen]);
 	const { data } = useGetPermissions();
 	const createRole = useCreateRole();
 	const permissions = (data?.permisos as GroupPermission[]) || [];
@@ -104,7 +112,7 @@ function CreateRoleModal({ isOpen, onClose, updateList }: DefaultModalProps<Role
 			};
 
 			// Llamar a la API para crear el rol
-			await createRole.mutateAsync(dataToSend);
+			await createRole.mutateAsync(dataToSend as any);
 
 			// Mostrar éxito
 			Swal.fire({

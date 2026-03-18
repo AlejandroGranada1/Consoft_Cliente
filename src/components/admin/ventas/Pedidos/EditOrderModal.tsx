@@ -44,6 +44,17 @@ interface EditOrderData {
   total: number;
 }
 
+const initialState = {
+  _id: '',
+  user: '',
+  status: 'En proceso',
+  address: '',
+  startedAt: new Date().toISOString().split('T')[0],
+  items: [],
+  paymentStatus: 'Pendiente',
+  total: 0,
+};
+
 function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Order>) {
   const { data: servicesData, isLoading: servicesLoading } = useGetServices();
   const { data: usersData, isLoading: usersLoading } = useGetUsers();
@@ -53,18 +64,11 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
   const services = servicesData?.data || [];
   const users = usersData?.users || [];
-  const products = productsData || [];
+  const products = productsData?.products || [];
 
-  const [orderData, setOrderData] = useState<EditOrderData>({
-    _id: '',
-    user: '',
-    status: 'En proceso',
-    address: '',
-    startedAt: new Date().toISOString().split('T')[0],
-    items: [],
-    paymentStatus: 'Pendiente',
-    total: 0,
-  });
+  const [userSearchText, setUserSearchText] = useState('');
+
+  const [orderData, setOrderData] = useState<EditOrderData>(initialState as any);
 
   const [uploadingImages, setUploadingImages] = useState(false);
 
@@ -78,15 +82,15 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
   useEffect(() => {
     if (!extraProps) return;
 
-    const userId = typeof extraProps.user === 'object'
+    const userId = (extraProps.user && typeof extraProps.user === 'object')
       ? (extraProps.user as UserType)._id
       : (extraProps.user as string);
 
     const processedItems = (extraProps.items || []).map((item: any) => ({
-      id_servicio: typeof item.id_servicio === 'object'
+      id_servicio: (item.id_servicio && typeof item.id_servicio === 'object')
         ? (item.id_servicio as Service)._id
         : item.id_servicio,
-      id_producto: typeof item.id_producto === 'object'
+      id_producto: (item.id_producto && typeof item.id_producto === 'object')
         ? (item.id_producto as any)._id
         : item.id_producto,
       customDetails: item.customDetails || null,
@@ -115,7 +119,23 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
       paymentStatus: extraProps.paymentStatus || 'Pendiente',
       total: processedItems.reduce((s: number, i: any) => s + i.valor, 0),
     });
-  }, [extraProps]);
+
+    const foundUser = users.find((u: UserType) => u._id === userId);
+    if (foundUser) {
+      setUserSearchText(`${foundUser.name} - ${foundUser.email}`);
+    }
+  }, [extraProps, users, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setOrderData(initialState as any);
+      setUserSearchText('');
+      setRegisterPayment(false);
+      setPaymentAmount(0);
+      setPaymentMethod('cash');
+      setUploadingImages(false);
+    }
+  }, [isOpen]);
 
   const total = orderData.items.reduce((s, i) => s + (i.valor || 0), 0);
 
@@ -318,27 +338,32 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
               <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
                 Cliente *
               </label>
-              <select
-                name="user"
-                value={orderData.user}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-                  text-sm text-white
-                  focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
-                  transition-all duration-200 appearance-none"
-                required
-                disabled={usersLoading}>
-                <option value="" className="bg-[#1e1e1c]">Seleccione un cliente</option>
-                {usersLoading ? (
-                  <option value="" disabled className="bg-[#1e1e1c]">Cargando...</option>
-                ) : (
-                  users.map((user: UserType) => (
-                    <option key={user._id} value={user._id} className="bg-[#1e1e1c]">
-                      {user.name} - {user.email}
-                    </option>
-                  ))
-                )}
-              </select>
+              <div className='relative'>
+                <input
+                  list='users-list-edit'
+                  placeholder='Buscar cliente por nombre o correo...'
+                  value={userSearchText}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setUserSearchText(val);
+                    const selected = users.find((u: UserType) => u.name === val || u.email === val || `${u.name} - ${u.email}` === val);
+                    if (selected) {
+                      handleChange({ target: { name: 'user', value: selected._id } } as any);
+                    }
+                  }}
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                    text-sm text-white placeholder:text-white/30
+                    focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                    transition-all duration-200"
+                  required
+                  disabled={usersLoading}
+                />
+                <datalist id='users-list-edit'>
+                  {users.map((user: UserType) => (
+                    <option key={user._id} value={`${user.name} - ${user.email}`} />
+                  ))}
+                </datalist>
+              </div>
             </div>
 
             {/* Estado */}

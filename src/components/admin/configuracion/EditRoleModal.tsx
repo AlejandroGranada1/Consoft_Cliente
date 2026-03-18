@@ -31,6 +31,11 @@ function EditRoleModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
 				permissions: extraProps.permissions || [],
 			});
 		}
+
+		if (!isOpen) {
+			setRoleData(null);
+			setExpandedModule(null);
+		}
 	}, [extraProps, isOpen]);
 
 	if (!isOpen || !roleData) return null;

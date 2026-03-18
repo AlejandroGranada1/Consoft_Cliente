@@ -45,15 +45,34 @@ function VisitDetailsModal({ isOpen, onClose, extraProps, updateList }: DefaultM
 
 	const formatDateTime = () => {
 		if (!extraProps?.visitDate) return { date: '', time: '' };
-		const date = new Date(extraProps.visitDate);
-		return {
-			date: date.toLocaleDateString('es-CO', {
+		
+		const dateStr = String(extraProps.visitDate);
+		let dateObj = new Date(dateStr);
+		
+		// Safer date formatting for Medellín (-05:00) shift
+		let displayDate = "";
+		if (dateStr.includes('T')) {
+			const [y, m, d] = dateStr.split('T')[0].split('-');
+			// Re-create as local midnight to get the correct day string
+			const localDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+			displayDate = localDate.toLocaleDateString('es-CO', {
 				weekday: 'long',
 				day: 'numeric',
 				month: 'long',
 				year: 'numeric',
-			}),
-			time: date.toLocaleTimeString('es-CO', {
+			});
+		} else {
+			displayDate = dateObj.toLocaleDateString('es-CO', {
+				weekday: 'long',
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric',
+			});
+		}
+
+		return {
+			date: displayDate,
+			time: extraProps.visitTime || dateObj.toLocaleTimeString('es-CO', {
 				hour: '2-digit',
 				minute: '2-digit',
 			}),

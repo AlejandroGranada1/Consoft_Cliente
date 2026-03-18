@@ -100,7 +100,7 @@ function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>
 			console.error('Error al crear usuario:', error);
 			Swal.fire({
 				title: 'Error',
-				text: error?.response?.data?.message || 'Hubo un problema al crear el usuario',
+				text: error?.response?.data?.message == "Password must include at least one uppercase letter, one number, and one special character" ? "La contraseña debe incluir al menos una letra mayúscula, un número y un carácter especial" : 'Hubo un problema al crear el usuario',
 				icon: 'error',
 				background: '#1e1e1c',
 				color: '#fff',
@@ -300,7 +300,7 @@ function CreateUserModal({ isOpen, onClose, updateList }: DefaultModalProps<any>
 				</form>
 			</div>
 		</div>,
-    document.body
+		document.body
 	);
 }
 

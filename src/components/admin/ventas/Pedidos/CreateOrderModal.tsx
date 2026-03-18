@@ -7,13 +7,25 @@ import { useCreateOrder } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 
+const initialState = {
+	user: '',
+	status: 'En proceso',
+	address: '',
+	startedAt: new Date().toISOString().split('T')[0],
+	items: [],
+	paymentStatus: 'Pendiente',
+	payments: [],
+	total: 0,
+};
+
 function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Order>) {
 	const { data: usersData, isLoading: usersLoading } = useGetUsers();
 	const { data: servicesData, isLoading: servicesLoading } = useGetServices();
 	const { data: productsData } = useGetProducts();
 	const createOrderMutation = useCreateOrder();
 
-	const products = productsData || [];
+	const products = productsData?.products || [];
+	const [userSearchText, setUserSearchText] = useState('');
 
 	// Estados para el abono (ahora opcional)
 	const [initialPayment, setInitialPayment] = useState(0);
@@ -40,16 +52,16 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 		paymentStatus: string;
 		payments: any[];
 		total: number;
-	}>({
-		user: '',
-		status: 'En proceso',
-		address: '',
-		startedAt: new Date().toISOString().split('T')[0],
-		items: [],
-		paymentStatus: 'Pendiente',
-		payments: [],
-		total: 0,
-	});
+	}>(initialState as any);
+
+	useEffect(() => {
+		if (!isOpen) {
+			setOrderData(initialState as any);
+			setInitialPayment(0);
+			setPaymentMethod('cash');
+			setUserSearchText('');
+		}
+	}, [isOpen]);
 
 	const selectedUser = users.find((u: UserType) => u._id === orderData.user);
 
@@ -240,18 +252,10 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 			});
 
 			// Resetear formulario
-			setOrderData({
-				user: '',
-				status: 'En proceso',
-				address: '',
-				startedAt: new Date().toISOString().split('T')[0],
-				items: [],
-				paymentStatus: 'Pendiente',
-				payments: [],
-				total: 0,
-			});
+			setOrderData(initialState as any);
 			setInitialPayment(0);
 			setPaymentMethod('cash');
+			setUserSearchText('');
 
 			onClose();
 			if (updateList) updateList();
@@ -302,27 +306,32 @@ function CreateOrderModal({ isOpen, onClose, updateList }: DefaultModalProps<Ord
 						<label className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block'>
 							Cliente *
 						</label>
-						<select
-							name='user'
-							value={orderData.user}
-							onChange={handleUserChange}
-							className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-                text-sm text-white placeholder:text-white/30
-                focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
-                transition-all duration-200 appearance-none'
-							required
-							disabled={usersLoading}>
-							<option value='' className='bg-[#1e1e1c]'>Seleccione un cliente</option>
-							{usersLoading ? (
-								<option value='' disabled className='bg-[#1e1e1c]'>Cargando clientes...</option>
-							) : (
-								users.map((user: UserType) => (
-									<option key={user._id} value={user._id} className='bg-[#1e1e1c]'>
-										{user.name} - {user.email}
-									</option>
-								))
-							)}
-						</select>
+						<div className='relative'>
+							<input
+								list='users-list'
+								placeholder='Buscar cliente por nombre o correo...'
+								value={userSearchText}
+								onChange={(e) => {
+									const val = e.target.value;
+									setUserSearchText(val);
+									const selected = users.find((u: UserType) => u.name === val || u.email === val || `${u.name} - ${u.email}` === val);
+									if (selected) {
+										handleUserChange({ target: { name: 'user', value: selected._id } } as any);
+									}
+								}}
+								className='w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
+                  text-sm text-white placeholder:text-white/30
+                  focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                  transition-all duration-200'
+								required
+								disabled={usersLoading}
+							/>
+							<datalist id='users-list'>
+								{users.map((user: UserType) => (
+									<option key={user._id} value={`${user.name} - ${user.email}`} />
+								))}
+							</datalist>
+						</div>
 						{selectedUser && (
 							<div className='mt-2 p-3 rounded-xl bg-[#C8A882]/10 border border-[#C8A882]/20'>
 								<p className='text-xs text-white/70'>

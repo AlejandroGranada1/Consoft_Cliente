@@ -22,7 +22,7 @@ export default function OrderRow({ order, onView, onEdit, onDelete }: OrderRowPr
     const status = String(p.status || '').toLowerCase();
     if (APPROVED.has(status) || PENDING.has(status)) return sum + (p.amount || 0);
     return sum;
-  }, 0) + (order.initialPayment?.amount || 0);
+  }, 0);
   const itemsCount = order.items.length;
 
   const getStatusIcon = (status: string) => {

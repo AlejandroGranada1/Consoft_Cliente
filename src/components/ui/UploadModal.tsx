@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { Dialog } from "@headlessui/react"
 
 interface UploadModalProps {
@@ -8,6 +9,14 @@ interface UploadModalProps {
 }
 
 export default function UploadModal({ open, onClose }: UploadModalProps) {
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  React.useEffect(() => {
+    if (!open && fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }, [open])
+
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
       {/* Fondo oscuro */}
@@ -23,6 +32,7 @@ export default function UploadModal({ open, onClose }: UploadModalProps) {
           <div className="border-2 border-dashed border-[#8B5E3C] rounded-lg p-6">
             <p className="mb-2 text-gray-700">Cargar imagen</p>
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4

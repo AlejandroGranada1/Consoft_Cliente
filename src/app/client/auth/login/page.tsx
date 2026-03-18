@@ -37,6 +37,7 @@ export default function LoginPage() {
         const userData = await loadUser();
         if (userData) {
           const userRole = userData.role?.name;
+          console.log(userRole);
           if (userRole === 'Administrador' || userRole === 'Master') {
             router.push('/admin/configuracion');
           } else {
