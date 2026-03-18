@@ -97,8 +97,8 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
       });
 
       if (result.isConfirmed) {
-        await updateUserMutation.mutateAsync(userData);
-        
+        await updateUserMutation.mutateAsync({ _id: userData._id, formData: userData });
+
         Swal.fire({
           toast: true,
           animation: false,
@@ -111,7 +111,7 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
           background: '#1e1e1c',
           color: '#fff',
         });
-        
+
         updateList?.();
         onClose();
       }
@@ -133,15 +133,15 @@ function EditUserModal({ isOpen, onClose, extraProps, updateList }: DefaultModal
   if (!isOpen || !userData) return null;
 
   return createPortal(
-		<div
-			className='fixed inset-0 z-50 flex items-center justify-center p-4'
-			style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-      
+    <div
+      className='fixed inset-0 z-50 flex items-center justify-center p-4'
+      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+
       <div className="w-full max-w-[600px] rounded-2xl border border-white/10
         shadow-[0_8px_32px_rgba(0,0,0,0.3)]
         flex flex-col max-h-[90vh]"
         style={{ background: 'rgba(30,30,28,0.95)', backdropFilter: 'blur(20px)' }}>
-        
+
         {/* Header */}
         <header className="relative px-6 py-5 border-b border-white/10">
           <button

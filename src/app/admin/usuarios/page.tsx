@@ -59,7 +59,23 @@ function Page() {
 
 	const users = data?.users || [];
 	const totalPages = data?.pagination?.pages || 0;
-	const currentUsers = users;
+
+	const rolePriority: Record<string, number> = {
+		'master': 1,
+		'administrador': 2,
+	};
+
+	const sortedUsers = [...users].sort((a, b) => {
+		const roleA = ((a.role as any)?.name || '').toLowerCase();
+		const roleB = ((b.role as any)?.name || '').toLowerCase();
+		const priorityA = rolePriority[roleA] || 3;
+		const priorityB = rolePriority[roleB] || 3;
+
+		if (priorityA !== priorityB) return priorityA - priorityB;
+		return a.name.localeCompare(b.name);
+	});
+
+	const currentUsers = sortedUsers;
 
 	const handleDeleteUser = async (id: string) => {
 		const Swal = (await import('sweetalert2')).default;

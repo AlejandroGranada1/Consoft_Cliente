@@ -47,20 +47,18 @@ export const useMyOrders = () => {
 				// El total puede venir en o.total o en o.raw.total
 				const total = Number(o.total || o.raw?.total || 0);
 
-				// Calcular pagado desde payments (si existen en o.raw)
+				// Preferir el campo 'pagado' del backend (suma ya corregida en el servidor)
+				// Solo calcular localmente si no viene del backend
 				let pagado = 0;
-				if (o.raw?.payments && Array.isArray(o.raw.payments)) {
+				if (o.pagado != null || o.raw?.pagado != null) {
+					pagado = Number(o.pagado || o.raw?.pagado || 0);
+				} else if (o.raw?.payments && Array.isArray(o.raw.payments)) {
 					pagado = o.raw.payments.reduce((acc: number, p: any) => {
 						if (['aprobado', 'approved', 'confirmado', 'pagado', 'paid'].includes(p.status?.toLowerCase())) {
 							return acc + (Number(p.amount) || 0);
 						}
 						return acc;
 					}, 0);
-				}
-
-				// Si no hay payments, usar o.pagado o o.raw.pagado
-				if (pagado === 0) {
-					pagado = Number(o.pagado || o.raw?.pagado || 0);
 				}
 
 				const restante = total - pagado;
@@ -109,8 +107,11 @@ export const useMyOrder = (id: string) => {
 			const { data: o } = await api.get(`/api/orders/${id}`);
 
 			const total = Number(o.total || 0);
+			// Preferir el campo 'pagado' del backend
 			let pagado = 0;
-			if (o.payments && Array.isArray(o.payments)) {
+			if (o.pagado != null) {
+				pagado = Number(o.pagado);
+			} else if (o.payments && Array.isArray(o.payments)) {
 				pagado = o.payments.reduce((acc: number, p: any) => {
 					if (['aprobado', 'approved', 'confirmado', 'pagado', 'paid'].includes(p.status?.toLowerCase())) {
 						return acc + (Number(p.amount) || 0);
@@ -118,8 +119,6 @@ export const useMyOrder = (id: string) => {
 					return acc;
 				}, 0);
 			}
-
-			if (pagado === 0) pagado = Number(o.pagado || 0);
 			const restante = total - pagado;
 			const requiereAbono = pagado < total * 0.3;
 

@@ -41,7 +41,13 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
 	// Inicializar estados cuando cambian los props
 	useEffect(() => {
-		if (!isOpen || !quotation) return;
+		if (!isOpen || !quotation) {
+			setPrices({});
+			setItemNotes({});
+			setAdminNotes('');
+			setOpenItems({});
+			return;
+		}
 
 		const priceInit: any = {};
 		const notesInit: any = {};
@@ -57,7 +63,7 @@ function QuotationModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 		setItemNotes(notesInit);
 		setOpenItems(openInit);
 		setAdminNotes(quotation.adminNotes || '');
-	}, [isOpen, quotation, items]);
+	}, [isOpen, quotation]);
 
 	// Handlers
 	const toggleItem = (id: string) => {

@@ -45,6 +45,10 @@ export default function VisitRow({ visit, onView, onEdit, onDelete }: VisitRowPr
 	};
 
 	const formatDate = (date: string | Date) => {
+		if (typeof date === 'string' && date.includes('T')) {
+			const [y, m, d] = date.split('T')[0].split('-');
+			return `${d}/${m}/${y}`;
+		}
 		return new Date(date).toLocaleDateString('es-CO', {
 			day: '2-digit',
 			month: '2-digit',
@@ -53,6 +57,7 @@ export default function VisitRow({ visit, onView, onEdit, onDelete }: VisitRowPr
 	};
 
 	const formatTime = (date: string | Date) => {
+		if (visit.visitTime) return visit.visitTime;
 		return new Date(date).toLocaleTimeString('es-CO', {
 			hour: '2-digit',
 			minute: '2-digit',

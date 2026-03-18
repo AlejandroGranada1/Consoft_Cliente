@@ -1,7 +1,7 @@
 'use client';
-import { X, User, MapPin, Calendar, Clock, CheckSquare, Plus, Minus, Save, AlertCircle } from 'lucide-react';
+import { X, User, MapPin, Calendar, Clock, CheckSquare, Plus, Minus, Save, AlertCircle, Search, Check } from 'lucide-react';
 import { DefaultModalProps, Visit, Service, User as UserType } from '@/lib/types';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGetUsers, useGetServices } from '@/hooks/apiHooks';
 import { useCreateVisit } from '@/hooks/apiHooks';
 import { createPortal } from 'react-dom';
@@ -11,6 +11,21 @@ const AVAILABLE_TIMES = [
 	'13:00', '14:00', '15:00', '16:00', '17:00', '18:00'
 ];
 
+const initialState = {
+	user: '',
+	address: '',
+	visitDate: new Date().toISOString().split('T')[0],
+	scheduledTime: '10:00',
+	status: 'Programada',
+	notes: '',
+	services: [] as string[],
+	selectedServices: [] as Array<{
+		id: string;
+		name: string;
+		description?: string;
+	}>,
+};
+
 function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Visit>) {
 	const { data: usersData, isLoading: usersLoading } = useGetUsers();
 	const { data: servicesData, isLoading: servicesLoading } = useGetServices();
@@ -19,23 +34,25 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 	const users = usersData?.users || [];
 	const services = servicesData?.services || [];
 
-	const [visitData, setVisitData] = useState({
-		user: '',
-		address: '',
-		visitDate: new Date().toISOString().split('T')[0],
-		scheduledTime: '10:00',
-		status: 'Programada',
-		notes: '',
-		services: [] as string[],
-		selectedServices: [] as Array<{
-			id: string;
-			name: string;
-			description?: string;
-		}>,
-	});
+	const [visitData, setVisitData] = useState(initialState);
 
 	const [customService, setCustomService] = useState('');
-	const selectedUser = users.find((u: UserType) => u._id === visitData.user);
+
+	const [userName, setUserName] = useState('');
+	const [selectedUser, setSelectedUser] = useState<any>(null);
+
+	useEffect(() => {
+		if (!isOpen) {
+			setVisitData(initialState);
+			setCustomService('');
+			setUserName('');
+			setSelectedUser(null);
+		}
+	}, [isOpen]);
+	const filteredUsers = users.filter((u: any) =>
+		u.name?.toLowerCase().includes(userName.toLowerCase()) ||
+		u.email?.toLowerCase().includes(userName.toLowerCase())
+	);
 
 	const handleChange = (
 		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -141,15 +158,20 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 		}
 
 		try {
-			const scheduledDateTime = `${visitData.visitDate}T${visitData.scheduledTime}:00`;
+			const statusMap: { [key: string]: string } = {
+				'Programada': 'pendiente',
+				'Confirmada': 'confirmada',
+				'En camino': 'en_progreso'
+			};
 
 			const visitToCreate = {
 				user: visitData.user,
 				address: visitData.address,
-				visitDate: scheduledDateTime,
-				status: visitData.status,
-				notes: visitData.notes || undefined,
-				services: visitData.services,
+				visitDate: visitData.visitDate, // YYYY-MM-DD
+				visitTime: visitData.scheduledTime, // HH:mm
+				status: statusMap[visitData.status] || 'pendiente',
+				description: visitData.notes || undefined,
+				services: visitData.services.filter(id => !id.startsWith('custom-')),
 				customServices: visitData.selectedServices
 					.filter((s) => s.id.startsWith('custom-'))
 					.map((s) => s.name),
@@ -171,16 +193,7 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 				color: '#fff',
 			});
 
-			setVisitData({
-				user: '',
-				address: '',
-				visitDate: new Date().toISOString().split('T')[0],
-				scheduledTime: '10:00',
-				status: 'Programada',
-				notes: '',
-				services: [],
-				selectedServices: [],
-			});
+			setVisitData(initialState);
 			setCustomService('');
 
 			onClose();
@@ -237,30 +250,70 @@ function CreateVisitModal({ isOpen, onClose, updateList }: DefaultModalProps<Vis
 						</h3>
 
 						<div className="space-y-2">
-							<select
-								name="user"
-								value={visitData.user}
-								onChange={handleChange}
-								className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-									text-sm text-white
-									focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
-									transition-all duration-200 appearance-none"
-								required
-								disabled={usersLoading}>
-								<option value="" className="bg-[#1e1e1c]">Seleccione un cliente</option>
-								{usersLoading ? (
-									<option value="" disabled className="bg-[#1e1e1c]">Cargando...</option>
-								) : (
-									users.map((user: UserType) => (
-										<option key={user._id} value={user._id} className="bg-[#1e1e1c]">
-											{user.name} - {user.email}
-										</option>
-									))
-								)}
-							</select>
+							<div className="relative">
+								<Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+								<input
+									type="text"
+									placeholder="Buscar por nombre o correo..."
+									value={
+										selectedUser
+											? `${selectedUser.name} (${selectedUser.email})`
+											: userName
+									}
+									onChange={(e) => {
+										setUserName(e.target.value);
+										setSelectedUser(null);
+										setVisitData(prev => ({ ...prev, user: '' }));
+									}}
+									className="w-full rounded-xl border border-white/15 bg-white/5 pl-9 pr-4 py-3
+										text-sm text-white placeholder:text-white/30
+										focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+										transition-all duration-200"
+								/>
+							</div>
+
+							{!selectedUser && userName && filteredUsers.length > 0 && (
+								<div className="rounded-xl border border-white/10 bg-white/5 shadow-lg max-h-36 overflow-y-auto">
+									{filteredUsers.slice(0, 6).map((u: any) => (
+										<button
+											key={u._id}
+											type="button"
+											onClick={() => {
+												setSelectedUser(u);
+												setUserName('');
+												setVisitData(prev => ({ 
+													...prev, 
+													user: u._id,
+													address: u.address || prev.address 
+												}));
+											}}
+											className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/8 transition border-b border-white/10 last:border-none flex items-center justify-between">
+											<div>
+												<span className="font-medium text-white">{u.name}</span>
+												<span className="text-white/40 ml-2 text-xs">
+													{u.email}
+												</span>
+											</div>
+											<Check size={14} className="text-[#C8A882]" />
+										</button>
+									))}
+								</div>
+							)}
 
 							{selectedUser && (
 								<div className="mt-3 p-3 rounded-lg bg-[#C8A882]/10 border border-[#C8A882]/20">
+									<div className="flex items-center justify-between mb-2 pb-2 border-b border-[#C8A882]/20">
+										<p className="text-xs font-semibold text-[#C8A882] uppercase tracking-wider">Cliente seleccionado</p>
+										<button
+											type="button"
+											onClick={() => {
+												setSelectedUser(null);
+												setVisitData(prev => ({ ...prev, user: '' }));
+											}}
+											className="p-1 rounded-lg text-white/40 hover:text-red-400 hover:bg-white/5 transition">
+											<X size={14} />
+										</button>
+									</div>
 									<div className="grid grid-cols-2 gap-3 text-xs">
 										<div>
 											<p className="text-white/40">Nombre</p>

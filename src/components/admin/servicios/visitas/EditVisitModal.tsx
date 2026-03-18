@@ -11,9 +11,14 @@ import api from '@/components/Global/axios';
 import { useUpdateVisit } from '@/hooks/apiHooks';
 import Swal from 'sweetalert2';
 
+const initialState = {
+	date: undefined as Date | undefined,
+	time: null as string | null,
+};
+
 function EditVisitModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Visit>) {
-	const [date, setDate] = useState<Date | undefined>(undefined);
-	const [time, setTime] = useState<string | null>(null);
+	const [date, setDate] = useState<Date | undefined>(initialState.date);
+	const [time, setTime] = useState<string | null>(initialState.time);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const updateVisitMutation = useUpdateVisit();
 
@@ -22,8 +27,20 @@ function EditVisitModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
 	useEffect(() => {
 		if (extraProps && isOpen) {
-			setDate(new Date(extraProps.visitDate));
+			const dateStr = String(extraProps.visitDate);
+			if (dateStr.includes('T')) {
+				const [y, m, d] = dateStr.split('T')[0].split('-');
+				setDate(new Date(parseInt(y), parseInt(m) - 1, parseInt(d)));
+			} else {
+				setDate(new Date(extraProps.visitDate));
+			}
 			setTime(extraProps.visitTime);
+		}
+
+		if (!isOpen) {
+			setDate(initialState.date);
+			setTime(initialState.time);
+			setIsSubmitting(false);
 		}
 	}, [extraProps, isOpen]);
 

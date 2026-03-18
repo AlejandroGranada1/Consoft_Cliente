@@ -53,10 +53,15 @@ function Page() {
     return () => clearTimeout(timeout);
   }, [filterText, appliedSearch, pathname, router, searchParams]);
 
+  const [showCompleted, setShowCompleted] = useState(false);
   const deleteOrder = useDeleteOrder();
   const { data, refetch } = useGetOrders(currentPage, itemsPerPage, appliedSearch);
   
   const currentOrders = data?.orders || [];
+  const filteredOrders = showCompleted 
+    ? currentOrders 
+    : currentOrders.filter((o: Order) => o.status !== 'Completado');
+    
   const totalPages = data?.pagination?.pages || 0;
 
   const handleDeleteOrder = async (id: string) => {
@@ -141,26 +146,51 @@ function Page() {
 
           {/* Filtros y botón */}
           <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
-            {/* Buscador */}
-            <div className="relative w-full md:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-              <datalist id="orders">
-                {currentOrders?.map((o: Order) => (
-                  <option key={o._id} value={o._id}></option>
-                ))}
-              </datalist>
-              <input
-                type="text"
-                list="orders"
-                placeholder="Buscar pedido por ID o cliente..."
-                value={filterText}
-                onChange={(e) => setFilterText(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl
-                  border border-white/15 bg-white/5
-                  text-sm text-white placeholder:text-white/30
-                  focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
-                  transition-all duration-200"
-              />
+            {/* Buscador y Toggle */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 flex-1">
+              <div className="relative w-full md:w-80">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                <datalist id="orders">
+                  {currentOrders?.map((o: Order) => (
+                    <option key={o._id} value={o._id}></option>
+                  ))}
+                </datalist>
+                <input
+                  type="text"
+                  list="orders"
+                  placeholder="Buscar pedido por ID o cliente..."
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl
+                    border border-white/15 bg-white/5
+                    text-sm text-white placeholder:text-white/30
+                    focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
+                    transition-all duration-200"
+                />
+              </div>
+
+              {/* Toggle Filtro Completados */}
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className={`
+                  relative w-10 h-5 rounded-full transition-colors duration-200
+                  ${showCompleted ? 'bg-[#8B5E3C]' : 'bg-white/10'}
+                  border border-white/5
+                `}>
+                  <input 
+                    type="checkbox" 
+                    className="sr-only" 
+                    checked={showCompleted}
+                    onChange={(e) => setShowCompleted(e.target.checked)}
+                  />
+                  <div className={`
+                    absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform duration-200
+                    ${showCompleted ? 'translate-x-5' : 'translate-x-0'}
+                  `} />
+                </div>
+                <span className="text-xs text-white/60 group-hover:text-white/90 transition-colors">
+                  Mostrar completados
+                </span>
+              </label>
             </div>
 
             {/* Botón Agregar */}
@@ -195,8 +225,8 @@ function Page() {
 
           {/* Lista de pedidos */}
           <div className="space-y-2 mt-4 flex-1">
-            {currentOrders?.length > 0 ? (
-              currentOrders?.map((o: Order) => (
+            {filteredOrders?.length > 0 ? (
+              filteredOrders?.map((o: Order) => (
                 <OrderRow
                   key={o._id}
                   order={o}
