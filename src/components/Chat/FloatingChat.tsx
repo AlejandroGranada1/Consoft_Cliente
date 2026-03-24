@@ -29,9 +29,7 @@ export default function FloatingChat({ chatId, chatType, socket }: FloatingChatP
 		: ordersData?.find((o: any) => o.id === chatId);
 
 	// Obtener mensajes
-	const { data: messagesData, refetch: refetchMessages } = useGetMessages(
-		chatType === 'quotation' ? chatId : undefined
-	);
+	const { data: messagesData, refetch: refetchMessages } = useGetMessages(chatId);
 
 	// Cargar mensajes iniciales
 	useEffect(() => {
@@ -43,7 +41,7 @@ export default function FloatingChat({ chatId, chatType, socket }: FloatingChatP
 				? { _id: msg.sender, name: '', email: '' }
 				: msg.sender,
 		})) || [];
-		
+
 		setMessages(normalized);
 	}, [messagesData]);
 
@@ -57,33 +55,44 @@ export default function FloatingChat({ chatId, chatType, socket }: FloatingChatP
 		if (!socket || !chatId || !open) return;
 
 		// Unirse a la sala del chat
-		socket.emit('chat:join', { 
+		socket.emit('chat:join', {
+			quotationId: chatId,
+		});
+		socket.emit('quotation:join', {
 			quotationId: chatId,
 		});
 
 		const handleMessage = (newMsg: any) => {
 			// Verificar si el mensaje pertenece a este chat
-			if (newMsg.quotation !== chatId) return;
-			
+			const msgChatId = newMsg.quotation?._id || newMsg.quotation || newMsg.order?._id || newMsg.order;
+			if (msgChatId !== chatId) return;
+
 			// Verificar si el mensaje ya existe en el estado (evitar duplicados)
 			setMessages((prev) => {
 				if (prev.some(m => m._id === newMsg._id)) return prev;
-				
+
+				// Filtramos mensajes temporales que tengan el mismo texto
+				// para evitar que se vea doble (el optimista y el real)
+				const filtered = prev.filter(m => !(m._temp && m.message === newMsg.message));
+
 				const msgNormalized = {
 					...newMsg,
 					sender: typeof newMsg.sender === 'string'
 						? { _id: newMsg.sender, name: '', email: '' }
 						: newMsg.sender,
 				};
-				return [...prev, msgNormalized];
+				return [...filtered, msgNormalized];
 			});
 		};
 
 		socket.on('chat:message', handleMessage);
+		socket.on('quotation:message', handleMessage);
 
 		return () => {
 			socket.off('chat:message', handleMessage);
+			socket.off('quotation:message', handleMessage);
 			socket.emit('chat:leave', { quotationId: chatId });
+			socket.emit('quotation:leave', { quotationId: chatId });
 		};
 	}, [socket, chatId, open]);
 
@@ -177,7 +186,7 @@ export default function FloatingChat({ chatId, chatType, socket }: FloatingChatP
 							</div>
 							<div className="flex-1">
 								<h3 className="text-white font-medium text-sm">
-									{chatType === 'quotation' ? 'Cotización' : 'Pedido'} #{chatId.slice(-6)}
+									{chatType === 'quotation' ? 'Cotización' : 'Pedido'} #{chatId.slice(-6).toUpperCase()}
 								</h3>
 								<div className="flex items-center gap-2 mt-1">
 									<span className={`text-[10px] px-2 py-0.5 rounded-full ${getStatusColor(
@@ -209,9 +218,9 @@ export default function FloatingChat({ chatId, chatType, socket }: FloatingChatP
 						) : (
 							messages.map((msg: any, idx: number) => {
 								const isOwn = msg.sender._id === user?.id;
-								const showDate = idx === 0 || 
-									new Date(msg.createdAt).toDateString() !== 
-									new Date(messages[idx-1]?.createdAt).toDateString();
+								const showDate = idx === 0 ||
+									new Date(msg.createdAt).toDateString() !==
+									new Date(messages[idx - 1]?.createdAt).toDateString();
 
 								return (
 									<div key={msg._id}>
@@ -233,11 +242,10 @@ export default function FloatingChat({ chatId, chatType, socket }: FloatingChatP
 													</div>
 												)}
 												<div
-													className={`p-3 rounded-2xl text-sm ${
-														isOwn
+													className={`p-3 rounded-2xl text-sm ${isOwn
 															? 'bg-[#C8A882] text-[#1e1e1c] rounded-br-none'
 															: 'bg-white/10 text-white rounded-bl-none border border-white/10'
-													}`}>
+														}`}>
 													{msg.message}
 												</div>
 												<div className={`flex items-center gap-1 mt-1 text-[8px] text-white/30
