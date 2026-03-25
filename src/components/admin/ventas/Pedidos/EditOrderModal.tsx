@@ -272,6 +272,40 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
     const Swal = (await import('sweetalert2')).default;
 
+    if (!orderData.user || !orderData.status || !orderData.address?.trim() || !orderData.startedAt) {
+      Swal.fire({
+        title: 'Campos incompletos',
+        text: 'Por favor, complete todos los campos obligatorios del pedido.',
+        icon: 'warning',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
+      return;
+    }
+
+    if (orderData.items.length === 0) {
+      Swal.fire({
+        title: 'Sin servicios',
+        text: 'Debe agregar al menos un servicio al pedido.',
+        icon: 'warning',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
+      return;
+    }
+
+    const hasInvalidItems = orderData.items.some(item => !item.id_servicio);
+    if (hasInvalidItems) {
+      Swal.fire({
+        title: 'Servicios incompletos',
+        text: 'Por favor, seleccione un servicio para cada ítem agregado.',
+        icon: 'warning',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
+      return;
+    }
+
     try {
       await updateOrderMutation.mutateAsync({
         id: orderData._id,
@@ -792,8 +826,16 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
             </button>
             <button
               type="submit"
-              disabled={updateOrderMutation.isPending || uploadingImages ||
-                orderData.items.length === 0 || !orderData.user}
+              disabled={
+                updateOrderMutation.isPending || 
+                uploadingImages ||
+                !orderData.user ||
+                !orderData.status ||
+                !orderData.address?.trim() ||
+                !orderData.startedAt ||
+                orderData.items.length === 0 ||
+                orderData.items.some(item => !item.id_servicio)
+              }
               className="px-5 py-2.5 rounded-lg
                 bg-[#8B5E3C] hover:bg-[#6F452A]
                 text-white text-sm font-medium
