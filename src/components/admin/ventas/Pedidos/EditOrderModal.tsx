@@ -86,6 +86,10 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
       ? (extraProps.user as UserType)._id
       : (extraProps.user as string);
 
+    const userObj = (extraProps.user && typeof extraProps.user === 'object')
+      ? (extraProps.user as UserType)
+      : null;
+
     const processedItems = (extraProps.items || []).map((item: any) => ({
       id_servicio: (item.id_servicio && typeof item.id_servicio === 'object')
         ? (item.id_servicio as Service)._id
@@ -108,7 +112,7 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
       _id: extraProps._id || '',
       user: userId!,
       status: extraProps.status || 'En proceso',
-      address: extraProps.address || '',
+      address: extraProps.address || userObj?.address || '',
       startedAt: extraProps.startedAt
         ? new Date(extraProps.startedAt).toISOString().split('T')[0]
         : new Date().toISOString().split('T')[0],
@@ -119,12 +123,16 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
       paymentStatus: extraProps.paymentStatus || 'Pendiente',
       total: processedItems.reduce((s: number, i: any) => s + i.valor, 0),
     });
+  }, [extraProps, isOpen]);
 
-    const foundUser = users.find((u: UserType) => u._id === userId);
-    if (foundUser) {
+  // Actualizar el texto del cliente por separado cuando los usuarios cargan
+  useEffect(() => {
+    if (!isOpen || !orderData.user || users.length === 0) return;
+    const foundUser = users.find((u: UserType) => u._id === orderData.user);
+    if (foundUser && !userSearchText.includes(foundUser.name)) {
       setUserSearchText(`${foundUser.name} - ${foundUser.email}`);
     }
-  }, [extraProps, users, isOpen]);
+  }, [users, isOpen, orderData.user]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -157,8 +165,8 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
         newItems[index] = {
           ...newItems[index],
           id_servicio: s._id,
-          detalles: s.description || '',
-          valor: s.price || 0,
+          detalles: newItems[index].detalles || s.description || '',
+          valor: newItems[index].valor || s.price || 0,
         };
     } else if (field === 'valor')
       newItems[index] = { ...newItems[index], valor: Number(value) };
@@ -264,6 +272,40 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
 
     const Swal = (await import('sweetalert2')).default;
 
+    if (!orderData.user || !orderData.status || !orderData.address?.trim() || !orderData.startedAt) {
+      Swal.fire({
+        title: 'Campos incompletos',
+        text: 'Por favor, complete todos los campos obligatorios del pedido.',
+        icon: 'warning',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
+      return;
+    }
+
+    if (orderData.items.length === 0) {
+      Swal.fire({
+        title: 'Sin servicios',
+        text: 'Debe agregar al menos un servicio al pedido.',
+        icon: 'warning',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
+      return;
+    }
+
+    const hasInvalidItems = orderData.items.some(item => !item.id_servicio);
+    if (hasInvalidItems) {
+      Swal.fire({
+        title: 'Servicios incompletos',
+        text: 'Por favor, seleccione un servicio para cada ítem agregado.',
+        icon: 'warning',
+        background: '#1e1e1c',
+        color: '#fff',
+      });
+      return;
+    }
+
     try {
       await updateOrderMutation.mutateAsync({
         id: orderData._id,
@@ -335,35 +377,16 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
           <div className="grid grid-cols-2 gap-4">
             {/* Cliente */}
             <div className="space-y-2">
-              <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block">
-                Cliente *
+              <label className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium block flex items-center gap-2">
+                Cliente <span className="normal-case text-[9px] text-white/30 border border-white/10 px-1.5 py-0.5 rounded-md">No modificable</span>
               </label>
-              <div className='relative'>
-                <input
-                  list='users-list-edit'
-                  placeholder='Buscar cliente por nombre o correo...'
-                  value={userSearchText}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setUserSearchText(val);
-                    const selected = users.find((u: UserType) => u.name === val || u.email === val || `${u.name} - ${u.email}` === val);
-                    if (selected) {
-                      handleChange({ target: { name: 'user', value: selected._id } } as any);
-                    }
-                  }}
-                  className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3
-                    text-sm text-white placeholder:text-white/30
-                    focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8
-                    transition-all duration-200"
-                  required
-                  disabled={usersLoading}
-                />
-                <datalist id='users-list-edit'>
-                  {users.map((user: UserType) => (
-                    <option key={user._id} value={`${user.name} - ${user.email}`} />
-                  ))}
-                </datalist>
-              </div>
+              <input
+                type="text"
+                value={userSearchText || 'Cargando cliente...'}
+                className="w-full rounded-xl border border-white/5 bg-black/20 px-4 py-3
+                  text-sm text-white/50 cursor-not-allowed"
+                disabled
+              />
             </div>
 
             {/* Estado */}
@@ -803,8 +826,16 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
             </button>
             <button
               type="submit"
-              disabled={updateOrderMutation.isPending || uploadingImages ||
-                orderData.items.length === 0 || !orderData.user}
+              disabled={
+                updateOrderMutation.isPending || 
+                uploadingImages ||
+                !orderData.user ||
+                !orderData.status ||
+                !orderData.address?.trim() ||
+                !orderData.startedAt ||
+                orderData.items.length === 0 ||
+                orderData.items.some(item => !item.id_servicio)
+              }
               className="px-5 py-2.5 rounded-lg
                 bg-[#8B5E3C] hover:bg-[#6F452A]
                 text-white text-sm font-medium

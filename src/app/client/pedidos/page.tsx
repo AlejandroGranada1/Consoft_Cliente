@@ -226,10 +226,7 @@ export default function PedidosPage() {
 											key={p.id}
 											className='hover:bg-white/5 transition'>
 											<td className='py-4 px-6'>
-												<p className='font-medium text-white text-sm'>
-													{p.nombre}
-												</p>
-												<p className='text-xs text-white/30 mt-0.5 font-mono'>
+												<p className='text-sm text-white/30 mt-0.5 font-mono'>
 													#{p.id?.slice(-6).toUpperCase()}
 												</p>
 											</td>

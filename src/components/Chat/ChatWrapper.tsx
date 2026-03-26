@@ -52,7 +52,8 @@ export default function ChatWrapper() {
 		let socketInstance: Socket;
 
 		import('socket.io-client').then((io) => {
-			socketInstance = io.default(process.env.NEXT_PUBLIC_API_URL, {
+			const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+			socketInstance = io.default(apiUrl, {
 				withCredentials: true,
 			});
 			setSocket(socketInstance);
