@@ -87,6 +87,7 @@ export default function LoginPage() {
       >
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           <AuthInput
+            id="tour-login-email"
             value={loginData.email}
             name="email"
             label="Correo electrónico"
@@ -96,6 +97,7 @@ export default function LoginPage() {
           />
 
           <PasswordInput
+            id="tour-login-password"
             name="password"
             label="Contraseña"
             value={loginData.password}
@@ -109,7 +111,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <AuthButton text="Continuar" type="submit" loading={login.isPending} />
+          <AuthButton id="tour-login-submit" text="Continuar" type="submit" loading={login.isPending} />
 
           {/* Divisor Google */}
           <div className="flex items-center gap-3">

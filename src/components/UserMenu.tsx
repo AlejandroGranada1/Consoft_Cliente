@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LogOut, User, Settings, Package, ShoppingCart, Mail, ChevronDown } from 'lucide-react';
+import { LogOut, User, Settings, Package, ShoppingCart, Mail, ChevronDown, Sparkles } from 'lucide-react';
 import { useUser } from '@/providers/userContext';
 import { Role } from '@/lib/types';
 import { useLogout } from '@/hooks/useAuth';
@@ -97,6 +97,7 @@ export default function UserMenu({ floating = false }: UserMenuProps) {
 			{/* ── DESKTOP ── */}
 			<div className='hidden md:flex items-center gap-0.5'>
 				<Link
+					id="tour-perfil"
 					href='/client/perfil'
 					className={itemBase}>
 					<User size={16} />
@@ -104,6 +105,7 @@ export default function UserMenu({ floating = false }: UserMenuProps) {
 				</Link>
 
 				<button
+					id="tour-cart"
 					type='button'
 					onClick={() => setOpenCart(!openCart)}
 					className={`${itemBase} relative`}>
@@ -116,6 +118,7 @@ export default function UserMenu({ floating = false }: UserMenuProps) {
 				</button>
 
 				<Link
+					id="tour-pedidos"
 					href='/client/pedidos'
 					className={itemBase}>
 					<Package size={16} />
@@ -123,6 +126,7 @@ export default function UserMenu({ floating = false }: UserMenuProps) {
 				</Link>
 
 				<Link
+					id="tour-notificaciones"
 					href='/client/notificaciones'
 					className={`${itemBase} relative`}>
 					<Mail size={16} />
@@ -133,8 +137,6 @@ export default function UserMenu({ floating = false }: UserMenuProps) {
 						</span>
 					)}
 				</Link>
-
-
 				<button
 					type='button'
 					onClick={() => {

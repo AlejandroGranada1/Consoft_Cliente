@@ -225,9 +225,16 @@ export const useUpdatePaymentStatus = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async ({ orderId, data }: { orderId?: string; data: any }) => {
-			// Assuming the endpoint for updating a payment is /api/payments/:id
-			// as useCreatePayment uses /api/payments
-			const { data: response } = await api.put(`/api/payments/${data.paymentId || data._id}`, { status: data.status });
+			// The backend PaymentController expects:
+			// req.params.id -> orderId
+			// req.body.paymentId -> the specific payment ID to update
+			const id = orderId || data.orderId;
+			if (!id) throw new Error("OrderID is required to update a payment");
+
+			const { data: response } = await api.put(`/api/payments/${id}`, {
+				...data,
+				paymentId: data.paymentId || data._id
+			});
 			return response;
 		},
 		onSuccess: () => {

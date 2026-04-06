@@ -1,7 +1,7 @@
 'use client';
 
 import { Visit } from '@/lib/types';
-import { Eye, Trash2, MoreVertical, MapPin, Calendar, Clock, CheckCircle, XCircle, AlertCircle, Edit2 } from 'lucide-react';
+import { Eye, Trash2, MoreVertical, MapPin, Calendar, Clock, CheckCircle, XCircle, AlertCircle, Edit2, Edit } from 'lucide-react';
 import { useState } from 'react';
 
 interface VisitRowProps {
@@ -104,18 +104,18 @@ export default function VisitRow({ visit, onView, onEdit, onDelete }: VisitRowPr
 				{/* Acciones */}
 				<div className="flex items-center gap-2">
 					<button
-						onClick={onEdit}
-						className="p-1.5 rounded-lg text-white/40 hover:text-[#C8A882]
-							hover:bg-white/5 transition-all duration-200"
-						title="Reprogramar">
-						<Edit2 size={16} />
-					</button>
-					<button
 						onClick={onView}
 						className="p-1.5 rounded-lg text-white/40 hover:text-[#C8A882]
 							hover:bg-white/5 transition-all duration-200"
 						title="Ver detalles">
 						<Eye size={16} />
+					</button>
+					<button
+						onClick={onEdit}
+						className="p-1.5 rounded-lg text-white/40 hover:text-[#C8A882]
+							hover:bg-white/5 transition-all duration-200"
+						title="Reprogramar">
+						<Edit size={16} />
 					</button>
 					<button
 						onClick={onDelete}

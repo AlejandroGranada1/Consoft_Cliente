@@ -32,7 +32,7 @@ function PaymentDetailsModal({
 	const order = extraProps?.summary;
 
 	const [paymentData, setPaymentData] = useState<Payment>({
-		_id: payment?._id || '',
+		_id: payment?._id || (payment as any)?.id || '',
 		amount: payment?.amount || 0,
 		method: payment?.method || '',
 		paidAt: payment?.paidAt || new Date(),
@@ -40,6 +40,20 @@ function PaymentDetailsModal({
 		status: payment?.status || '',
 		reference: payment?.reference || '',
 	});
+
+	React.useEffect(() => {
+		if (isOpen && payment) {
+			setPaymentData({
+				_id: payment._id || (payment as any).id || '',
+				amount: payment.amount || 0,
+				method: payment.method || '',
+				paidAt: payment.paidAt || new Date(),
+				restante: order ? order.total - (payment.amount || 0) : 0,
+				status: payment.status || '',
+				reference: payment.reference || '',
+			});
+		}
+	}, [isOpen, extraProps]);
 
 	const [updating, setUpdating] = useState(false);
 	const updatePaymentMutation = useUpdatePaymentStatus();

@@ -3,6 +3,7 @@ import Navbar from '@/components/Global/Navbar';
 import { CartProvider } from '@/providers/CartContext';
 import ChatWrapper from '@/components/Chat/ChatWrapper';
 import Footer from '@/components/Global/Footer';
+import TourGuide from '@/components/Tour/TourGuide';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			</footer>
 			{/* Chat flotante */}
 			<ChatWrapper />
+			<TourGuide />
 		</CartProvider>
 	);
 }
