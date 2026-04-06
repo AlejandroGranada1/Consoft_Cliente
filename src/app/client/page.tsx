@@ -72,6 +72,7 @@ export default function HomePage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/client/agendarcita"
+                id="tour-hero-cta"
                 className="inline-flex items-center gap-2.5 bg-[#8B5E3C] hover:bg-[#6F452A] text-white px-7 py-3.5 rounded-full text-sm font-medium shadow-lg shadow-[#8B5E3C]/25 hover:gap-4 transition-all duration-200">
                 Agenda tu cita <ArrowRight size={16} />
               </Link>
@@ -125,7 +126,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div id="tour-services-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <ServiceCard icon={<Ruler size={18} className="text-[#8B5E3C]" />} title="Diseño a medida"
               desc="Creamos muebles pensados exactamente para tu espacio. Te asesoramos desde la idea hasta el detalle final." />
             <ServiceCard icon={<Home size={18} className="text-[#8B5E3C]" />} title="Visita a domicilio"

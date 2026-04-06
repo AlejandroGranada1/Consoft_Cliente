@@ -142,7 +142,7 @@ export default function CartPage() {
         ) : (
           <>
             {/* Lista de items */}
-            <div className="rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+            <div id="tour-cart-list" className="rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
               style={{ backdropFilter: 'blur(20px)', background: 'rgba(255,255,255,0.04)' }}
             >
               <div className="divide-y divide-white/8">
@@ -200,6 +200,7 @@ export default function CartPage() {
             {/* Acciones */}
             <div className="flex items-center justify-between gap-4 pt-2">
               <button
+                id="tour-cart-clear"
                 onClick={handleClearCart}
                 disabled={deleteItem.isPending}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
@@ -211,6 +212,7 @@ export default function CartPage() {
               </button>
 
               <button
+                id="tour-cart-submit"
                 onClick={handleSendQuote}
                 disabled={submitQuotation.isPending}
                 className="inline-flex items-center gap-2.5

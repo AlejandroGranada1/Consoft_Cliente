@@ -9,6 +9,7 @@ interface AuthButtonProps {
   className?: string;
   disabled?: boolean;
   loading?: boolean;
+  id?: string;
 }
 
 export default function AuthButton({
@@ -18,9 +19,11 @@ export default function AuthButton({
   className,
   disabled,
   loading,
+  id,
 }: AuthButtonProps) {
   return (
     <button
+      id={id}
       type={type}
       onClick={onClick}
       disabled={disabled || loading}

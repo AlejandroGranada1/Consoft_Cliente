@@ -60,6 +60,7 @@ export default function RegisterPage() {
     >
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         <AuthInput
+          id="tour-register-email"
           label="Correo electrónico"
           type="email"
           name="email"
@@ -69,6 +70,7 @@ export default function RegisterPage() {
         />
 
         <AuthInput
+          id="tour-register-name"
           label="Nombre completo"
           type="text"
           name="name"
@@ -78,6 +80,7 @@ export default function RegisterPage() {
         />
 
         <PasswordInput
+          id="tour-register-password"
           label="Contraseña"
           name="password"
           value={form.password}
@@ -100,7 +103,7 @@ export default function RegisterPage() {
           </p>
         )}
 
-        <AuthButton text="Registrarme" type="submit" loading={registerUser.isPending} />
+        <AuthButton id="tour-register-submit" text="Registrarme" type="submit" loading={registerUser.isPending} />
       </form>
     </AuthLayout>
   );

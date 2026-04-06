@@ -8,6 +8,7 @@ interface AuthInputProps {
   name?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
+  id?: string;
 }
 
 export default function AuthInput({
@@ -18,6 +19,7 @@ export default function AuthInput({
   value,
   name,
   required,
+  id,
 }: AuthInputProps) {
   return (
     <div className="flex flex-col gap-2">
@@ -28,6 +30,7 @@ export default function AuthInput({
         onChange={onChange}
         type={type}
         value={value}
+        id={id}
         name={name}
         placeholder={placeholder}
         required={required}

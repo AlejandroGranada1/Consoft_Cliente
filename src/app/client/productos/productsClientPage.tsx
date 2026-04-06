@@ -126,7 +126,7 @@ export default function ProductsPageClient() {
             {/* Buscador */}
             <div className="space-y-3">
               <h3 className="text-[11px] font-medium tracking-[.07em] uppercase text-white/50">Buscar</h3>
-              <div className="relative">
+              <div id="tour-search" className="relative">
                 <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
                 <input
                   type="text"
@@ -141,7 +141,7 @@ export default function ProductsPageClient() {
             {/* Lista de Categorías */}
             <div className="space-y-3">
               <h3 className="text-[11px] font-medium tracking-[.07em] uppercase text-white/50">Categorías</h3>
-              <div className="flex flex-col space-y-1 shrink-0 bg-white/[0.02] border border-white/5 rounded-2xl p-2">
+              <div id="tour-categories" className="flex flex-col space-y-1 shrink-0 bg-white/[0.02] border border-white/5 rounded-2xl p-2">
                 <button
                   onClick={() => handleCategoryChange(null)}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${selectedCategory === null
@@ -156,9 +156,9 @@ export default function ProductsPageClient() {
                     key={cat}
                     onClick={() => handleCategoryChange(cat)}
                     className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-left transition-all duration-200 ${selectedCategory === cat
-                      ? 'bg-[#C8A882]/15 text-[#C8A882] font-medium'
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
-                      }`}
+                       ? 'bg-[#C8A882]/15 text-[#C8A882] font-medium'
+                       : 'text-white/60 hover:text-white hover:bg-white/5'
+                       }`}
                   >
                     <span className="truncate pr-2">{cat}</span>
                     {selectedCategory === cat && <ChevronRight size={14} className="shrink-0" />}
@@ -182,18 +182,20 @@ export default function ProductsPageClient() {
             {currentProducts.length > 0 ? (
               <div className="space-y-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {currentProducts.map((product: any) => (
-                    <ProductCard
-                      key={product._id}
-                      id={product._id!}
-                      name={product.name}
-                      refetch={refetch}
-                      image={
-                        product.imageUrl && product.imageUrl.trim() !== ''
-                          ? product.imageUrl
-                          : '/def_prod.png'
-                      }
-                    />
+                  {currentProducts.map((product: any, index: number) => (
+                      <div id={index === 0 ? "tour-product-card-0" : undefined}>
+                        <ProductCard
+                          key={product._id}
+                          id={product._id!}
+                          name={product.name}
+                          refetch={refetch}
+                          image={
+                            product.imageUrl && product.imageUrl.trim() !== ''
+                              ? product.imageUrl
+                              : '/def_prod.png'
+                          }
+                        />
+                      </div>
                   ))}
                 </div>
                 {totalPages > 1 && (
@@ -257,6 +259,7 @@ export default function ProductsPageClient() {
             </div>
 
             <button
+              id="tour-product-custom-request"
               onClick={() => router.push('/client/productos/custom')}
               className="group inline-flex items-center gap-2.5 bg-[#8B5E3C] hover:bg-[#6F452A] text-white px-7 py-3.5 rounded-full text-sm font-medium shadow-lg hover:gap-4 transition-all duration-200 whitespace-nowrap shrink-0"
             >
