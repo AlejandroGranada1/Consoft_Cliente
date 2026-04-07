@@ -19,6 +19,7 @@ function InputField({
 	value,
 	onChange,
 	required,
+	id,
 }: {
 	icon: React.ReactNode;
 	placeholder: string;
@@ -26,6 +27,7 @@ function InputField({
 	value: string;
 	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	required?: boolean;
+	id?: string;
 }) {
 	return (
 		<div className='flex items-center gap-3 rounded-xl px-4 py-3 border border-white/20 bg-white/10 backdrop-blur-sm focus-within:border-white/50 focus-within:bg-white/15 transition-all'>
@@ -36,6 +38,7 @@ function InputField({
 				value={value}
 				onChange={onChange}
 				required={required}
+				id={id}
 				className='w-full bg-transparent text-sm text-white placeholder:text-white/45 outline-none'
 			/>
 		</div>
@@ -224,9 +227,10 @@ export default function ScheduleSection() {
 									<p className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium mb-3'>
 										Información de contacto
 									</p>
-									<div className='space-y-2.5'>
+									<div id="tour-booking-contact" className='space-y-2.5'>
 										<div className='grid grid-cols-2 gap-2.5'>
 											<InputField
+												id="tour-booking-name"
 												icon={<User size={14} />}
 												placeholder='Nombre completo'
 												value={userName}
@@ -234,6 +238,7 @@ export default function ScheduleSection() {
 												required
 											/>
 											<InputField
+												id="tour-booking-email"
 												icon={<Mail size={14} />}
 												placeholder='Email'
 												type='email'
@@ -244,6 +249,7 @@ export default function ScheduleSection() {
 										</div>
 										<div className='grid grid-cols-2 gap-2.5'>
 											<InputField
+												id="tour-booking-phone"
 												icon={<Phone size={14} />}
 												placeholder='Teléfono'
 												type='tel'
@@ -252,6 +258,7 @@ export default function ScheduleSection() {
 												required
 											/>
 											<InputField
+												id="tour-booking-address"
 												icon={<MapPin size={14} />}
 												placeholder='Dirección'
 												value={userAddress}
@@ -264,11 +271,12 @@ export default function ScheduleSection() {
 							)}
 
 							{isLogged && (
-								<div>
+								<div id="tour-booking-address-container">
 									<p className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium mb-3'>
 										Dirección de visita
 									</p>
 									<InputField
+										id="tour-booking-address"
 										icon={<MapPin size={14} />}
 										placeholder='Dirección completa'
 										value={userAddress}
@@ -278,7 +286,7 @@ export default function ScheduleSection() {
 								</div>
 							)}
 
-							<div>
+							<div id="tour-booking-description">
 								<p className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium mb-3'>
 									Descripción{' '}
 									<span className='normal-case text-white/35'>(opcional)</span>
@@ -301,7 +309,7 @@ export default function ScheduleSection() {
 
 						{/* Derecha */}
 						<div className='p-6 md:p-8 space-y-6'>
-							<div>
+							<div id="tour-booking-calendar">
 								<p className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium mb-3'>
 									Fecha de visita
 								</p>
@@ -314,7 +322,7 @@ export default function ScheduleSection() {
 								</div>
 							</div>
 
-							<div>
+							<div id="tour-booking-time">
 								<p className='text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium mb-3'>
 									Hora de visita
 								</p>
@@ -337,6 +345,7 @@ export default function ScheduleSection() {
 								</p>
 							</div>
 							<button
+								id="tour-booking-submit"
 								type='submit'
 								disabled={isSubmitting}
 								className='inline-flex items-center gap-2 bg-[#8B5E3C] hover:bg-[#6F452A] disabled:opacity-60 text-white px-6 py-2.5 rounded-full text-sm font-medium shadow-lg hover:gap-3 transition-all duration-200'>

@@ -10,6 +10,7 @@ type Props = {
   name?: string;
   placeholder?: string;
   showRules?: boolean;
+  id?: string;
 };
 
 export default function PasswordInput({
@@ -19,6 +20,7 @@ export default function PasswordInput({
   name,
   placeholder = '••••••••',
   showRules = true,
+  id,
 }: Props) {
   const [show, setShow] = useState(false);
 
@@ -49,6 +51,7 @@ export default function PasswordInput({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          id={id}
           className="w-full rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm
             px-4 py-3 pr-11 text-sm text-white placeholder:text-white/30
             focus:outline-none focus:border-[#C8A882]/50 focus:bg-white/8

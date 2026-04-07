@@ -171,7 +171,7 @@ export default function ProductDetailPage() {
           <div className="flex flex-col gap-7">
 
             {/* Encabezado */}
-            <div className="space-y-2">
+            <div id="tour-product-info" className="space-y-2">
               <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">
                 Colección 2025
               </span>
@@ -187,7 +187,7 @@ export default function ProductDetailPage() {
             <div className="h-px bg-white/10" />
 
             {/* Cantidad */}
-            <div className="space-y-3">
+            <div id="tour-product-qty" className="space-y-3">
               <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">Cantidad</span>
               <div className="inline-flex items-center rounded-xl border border-white/15 bg-white/5 overflow-hidden">
                 <button
@@ -207,7 +207,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Opción de personalización completa */}
-            <div className="space-y-4 p-5 rounded-xl border border-[#C8A882]/20 bg-[#C8A882]/5">
+            <div id="tour-product-customize-toggle" className="space-y-4 p-5 rounded-xl border border-[#C8A882]/20 bg-[#C8A882]/5">
               <label className="flex items-center gap-3 cursor-pointer">
                 <button
                   type="button"
@@ -235,7 +235,7 @@ export default function ProductDetailPage() {
 
             {/* Selector de color o personalización */}
             {customizeAll ? (
-              <div className="space-y-4">
+              <div id="tour-product-custom-fields" className="space-y-4">
                 {/* Color personalizado */}
                 <div className="space-y-2">
                   <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">
@@ -270,7 +270,7 @@ export default function ProductDetailPage() {
               </div>
             ) : (
               /* Colores predefinidos */
-              <div className="space-y-3">
+              <div id="tour-product-standard-colors" className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">Color</span>
                   {color && (
@@ -303,7 +303,7 @@ export default function ProductDetailPage() {
             )}
 
             {/* Tamaño personalizado (siempre disponible) */}
-            <div className="space-y-2">
+            <div id="tour-product-size" className="space-y-2">
               <span className="text-[11px] tracking-[.08em] uppercase text-[#C8A882] font-medium">
                 Tamaño personalizado <span className="normal-case text-white/30 text-[10px]">(opcional)</span>
               </span>
@@ -320,6 +320,7 @@ export default function ProductDetailPage() {
 
             {/* CTA */}
             <button
+              id="tour-product-add-cart"
               onClick={addToCart}
               className="w-full inline-flex items-center justify-center gap-2.5
                 bg-[#8B5E3C] hover:bg-[#6F452A]

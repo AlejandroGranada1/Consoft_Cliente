@@ -48,6 +48,7 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link
+            id="tour-logo"
             href="/client"
             className={`font-serif text-xl font-bold shrink-0 transition-colors duration-300
               ${floating ? 'text-white' : 'text-[#1C1208]'}`}
@@ -60,6 +61,7 @@ export default function Navbar() {
             {NAV_LINKS.map(({ href, label }) => (
               <Link
                 key={href}
+                id={`tour-nav-${label.toLowerCase().replace(/\s+/g, '-')}`}
                 href={href}
                 className={`relative px-3 py-1.5 text-sm rounded-md transition-all duration-300
                   ${floating
