@@ -55,6 +55,34 @@ const initialState = {
   total: 0,
 };
 
+// Función de ayuda para extraer datos de detalles antiguos
+const extractAndClean = (text: string) => {
+  let color = '';
+  let size = '';
+  let cleanedText = text || '';
+
+  // Regex para extraer Color
+  const colorMatch = cleanedText.match(/Color:\s*([^|]+)/i);
+  if (colorMatch) {
+    const fullMatch = colorMatch[0];
+    color = colorMatch[1].trim();
+    cleanedText = cleanedText.replace(fullMatch, '');
+  }
+
+  // Regex para extraer Tamaño
+  const sizeMatch = cleanedText.match(/Tamaño:\s*([^|]+)/i);
+  if (sizeMatch) {
+    const fullMatch = sizeMatch[0];
+    size = sizeMatch[1].trim();
+    cleanedText = cleanedText.replace(fullMatch, '');
+  }
+
+  // Limpiar posibles barras verticales sobrantes y espacios
+  cleanedText = cleanedText.replace(/^\s*\|\s*/, '').replace(/\s*\|\s*$/, '').replace(/\s*\|\s*\|\s*/g, ' | ');
+
+  return { color, size, cleanedText: cleanedText.trim() };
+};
+
 function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModalProps<Order>) {
   const { data: servicesData, isLoading: servicesLoading } = useGetServices();
   const { data: usersData, isLoading: usersLoading } = useGetUsers();
@@ -90,23 +118,29 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
       ? (extraProps.user as UserType)
       : null;
 
-    const processedItems = (extraProps.items || []).map((item: any) => ({
-      id_servicio: (item.id_servicio && typeof item.id_servicio === 'object')
-        ? (item.id_servicio as Service)._id
-        : item.id_servicio,
-      id_producto: (item.id_producto && typeof item.id_producto === 'object')
-        ? (item.id_producto as any)._id
-        : item.id_producto,
-      customDetails: item.customDetails || null,
-      detalles: item.detalles || '',
-      valor: item.valor || 0,
-      color: item.color || '', // 👈 AÑADIDO
-      size: item.size || '',   // 👈 AÑADIDO
-      progressImage: null,
-      imagePreview: null,
-      _id: item._id,
-      existingImages: item.images || [],
-    }));
+    const processedItems = (extraProps.items || []).map((item: any) => {
+      // Extraer datos si no existen por separado
+      const detailsText = item.detalles || '';
+      const { color: extractedColor, size: extractedSize, cleanedText } = extractAndClean(detailsText);
+
+      return {
+        id_servicio: (item.id_servicio && typeof item.id_servicio === 'object')
+          ? (item.id_servicio as Service)._id
+          : (item.id_servicio || ''), // 👈 Asegurar que no sea null para el <select>
+        id_producto: (item.id_producto && typeof item.id_producto === 'object')
+          ? (item.id_producto as any)._id
+          : (item.id_producto || ''),
+        customDetails: item.customDetails || null,
+        detalles: cleanedText || item.detalles || '',
+        valor: item.valor || 0,
+        color: item.color || extractedColor || '',
+        size: item.size || extractedSize || '',
+        progressImage: null,
+        imagePreview: null,
+        _id: item._id,
+        existingImages: item.images || [],
+      };
+    });
 
     setOrderData({
       _id: extraProps._id || '',
@@ -307,9 +341,18 @@ function EditOrderModal({ isOpen, onClose, extraProps, updateList }: DefaultModa
     }
 
     try {
+      // Limpiar los items para que el backend no falle con "" en campos de ObjectId
+      const itemsToUpdate = orderData.items.map(item => ({
+        ...item,
+        id_producto: item.id_producto || null,
+        // Eliminamos campos de previsualización que no necesita el backend
+        progressImage: undefined,
+        imagePreview: undefined,
+      }));
+
       await updateOrderMutation.mutateAsync({
         id: orderData._id,
-        data: { ...orderData, total },
+        data: { ...orderData, items: itemsToUpdate, total },
       });
 
       await uploadImages(orderData._id);
