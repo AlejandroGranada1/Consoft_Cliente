@@ -5,20 +5,18 @@ LABEL description="Contenedor Next.js" \
       maintainer="ingdanielbs" \
       vendor="SENA"
 
-# Habilitar pnpm con corepack (forma oficial, sin npm install -g)
+RUN apk update && apk upgrade --no-cache
+
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /opt/app-root/src
 
-# Cacheo de dependencias
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-# ⚠️ Variable de entorno en build time
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
-# Build de la app
 COPY . .
 RUN pnpm run build
 
@@ -28,6 +26,8 @@ LABEL description="Contenedor Next.js" \
       version="1.0" \
       maintainer="ingdanielbs" \
       vendor="SENA"
+
+RUN apk update && apk upgrade --no-cache
 
 RUN addgroup --system --gid 1001 appgroup && \
     adduser --system --uid 1001 --ingroup appgroup appuser
