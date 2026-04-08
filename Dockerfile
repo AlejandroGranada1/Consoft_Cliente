@@ -1,36 +1,48 @@
 # --- ETAPA 1: Build ---
-FROM node:20-slim AS builder
+FROM node:22-alpine AS builder
 LABEL description="Contenedor Next.js" \
       version="1.0" \
       maintainer="ingdanielbs" \
       vendor="SENA"
-# Actualizar paquetes del OS para corregir CVEs de Debian
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+
+# Habilitar pnpm con corepack (forma oficial, sin npm install -g)
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 WORKDIR /opt/app-root/src
+
 # Cacheo de dependencias
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
-# ⚠️ Variable de entorno en build time (Next.js la necesita al compilar)
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# ⚠️ Variable de entorno en build time
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
 # Build de la app
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # --- ETAPA 2: Runner (standalone) ---
-FROM node:20-slim AS runner
+FROM node:22-alpine AS runner
 LABEL description="Contenedor Next.js" \
       version="1.0" \
       maintainer="ingdanielbs" \
       vendor="SENA"
-# Actualizar paquetes del OS para corregir CVEs de Debian
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
-RUN addgroup --gid 1001 appgroup && \
-    adduser --disabled-password --uid 1001 --ingroup appgroup appuser
+
+RUN addgroup --system --gid 1001 appgroup && \
+    adduser --system --uid 1001 --ingroup appgroup appuser
+
 WORKDIR /opt/app-root/src
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
 COPY --from=builder --chown=1001:1001 /opt/app-root/src/public ./public
 COPY --from=builder --chown=1001:1001 /opt/app-root/src/.next/standalone ./
 COPY --from=builder --chown=1001:1001 /opt/app-root/src/.next/static ./.next/static
+
 EXPOSE 3000
 USER 1001
+
 CMD ["node", "server.js"]
