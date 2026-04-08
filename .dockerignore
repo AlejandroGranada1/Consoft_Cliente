@@ -1,6 +1,53 @@
-node_modules
-.next
-.git
-.env.local
-.env*.local
+# ---- Dependencias ----
+node_modules/
+.pnpm-store/
+.pnpm-debug.log
 
+# ---- Build anterior ----
+.next/
+out/
+
+# ---- Entorno (nunca copiar secretos) ----
+.env
+.env.*
+*.env
+!.env.example
+
+# ---- Git ----
+.git/
+.gitignore
+.gitattributes
+
+# ---- Editor / IDE ----
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ---- Docker ----
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# ---- Tests ----
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+coverage/
+__tests__/
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Docs ----
+README.md
+CHANGELOG.md
+docs/
+
+# ---- CI/CD ----
+.github/
+.gitlab-ci.yml
